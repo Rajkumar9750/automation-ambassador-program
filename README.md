@@ -1,7 +1,26 @@
 # Automation Ambassador Program
 
 A centralized tool suite for the CBRE Automation Ambassador team.
-One launcher opens a browser dashboard where you start, stop, and monitor all tools.
+One launcher starts a browser dashboard where you control all tools from a single place.
+
+---
+
+## Contents
+
+- [What's Included](#whats-included)
+- [Installation](#installation)
+  - [macOS](#macos)
+  - [Windows](#windows)
+- [Launching the Monitor](#launching-the-monitor)
+- [Monitor Dashboard](#monitor-dashboard)
+- [Tool — Dashboard Factory](#tool--dashboard-factory)
+- [Tool — Dashboard Factory QA](#tool--dashboard-factory-qa)
+- [Tool — Jira Tracker](#tool--jira-tracker)
+- [Utility — Calculated Fields Extractor](#utility--calculated-fields-extractor)
+- [Utility — Timesheet Report](#utility--timesheet-report)
+- [Getting Updates](#getting-updates)
+- [For Maintainers](#for-maintainers)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -9,200 +28,292 @@ One launcher opens a browser dashboard where you start, stop, and monitor all to
 
 | Tool | Port | Description |
 |---|---|---|
-| **Monitor** | 9000 | Central dashboard — manage all tools from one place |
-| **Dashboard Factory** | 8080 | Generate Tableau workbooks from Postgres |
-| **Dashboard Factory QA** | 5555 | Tableau workbook formatting & QA compliance checks |
-| **Jira Tracker** | 8082 | View Jira tickets & export timesheets to Excel |
+| **Monitor** | 9000 | Central dashboard — start, stop and monitor all tools |
+| **Dashboard Factory** | 8080 | Generate Tableau workbooks from a Postgres database |
+| **Dashboard Factory QA** | 5555 | Auto-fix formatting & run QA compliance checks on Tableau workbooks |
+| **Jira Tracker** | 8082 | View your Jira tickets and export timesheet reports to Excel |
 
 ---
 
-## First-Time Setup
+## Installation
 
 ### Prerequisites
-- Git installed → [git-scm.com](https://git-scm.com/downloads)
-- That's it — Python is installed automatically by the setup script
+
+Only **Git** is required before running setup. Python is installed automatically.
+
+- **Git** → download from [git-scm.com/downloads](https://git-scm.com/downloads)
 
 ---
 
 ### macOS
 
-Open **Terminal** and run:
+**Step 1 — Open Terminal**
+Press `Cmd + Space`, type `Terminal`, press Enter.
 
+**Step 2 — Clone the repository**
 ```bash
 git clone https://github.com/Rajkumar9750/automation-ambassador-program.git
 cd automation-ambassador-program
+```
+
+**Step 3 — Run setup**
+```bash
 bash setup.sh
 ```
 
-Setup will:
-1. Check for Python 3.9+ — installs it via Homebrew automatically if missing
-2. Create virtual environments for all 4 tools
-3. Install all dependencies
+This will:
+- Check if Python 3.9+ is installed — if not, installs it automatically via **Homebrew**
+- If Homebrew is also missing, installs Homebrew first (you may be prompted for your Mac password)
+- Create virtual environments for all 4 tools
+- Install all Python dependencies
 
-Then launch:
-```
-Double-click "Launch Monitor.command"
-```
-
-> **Note:** If macOS shows a security warning (only happens if you downloaded the folder as a ZIP instead of using `git clone`), right-click the file → **Open** → **Open**. Only needed once.
-
-Browser opens automatically at **http://localhost:9000**
+> Setup takes **2–5 minutes** on first run. You will only need to run it once.
 
 ---
 
 ### Windows
 
-Open **Command Prompt** and run:
+**Step 1 — Open Command Prompt**
+Press `Win + R`, type `cmd`, press Enter.
 
+**Step 2 — Clone the repository**
 ```bat
 git clone https://github.com/Rajkumar9750/automation-ambassador-program.git
 cd automation-ambassador-program
+```
+
+**Step 3 — Run setup**
+```bat
 setup.bat
 ```
 
-Setup will:
-1. Check for Python 3.9+ — installs it via **winget** automatically if missing
-2. Create virtual environments for all 4 tools
-3. Install all dependencies
+This will:
+- Check if Python 3.9+ is installed — if not, installs it automatically via **winget**
+- If winget is unavailable, falls back to **Chocolatey**
+- Create virtual environments for all 4 tools
+- Install all Python dependencies
 
-Then launch:
-```
-Double-click "Launch Monitor.bat"
-If Windows SmartScreen appears → click "More info" → "Run anyway"
-```
+> Setup takes **2–5 minutes** on first run. You will only need to run it once.
 
-Browser opens automatically at **http://localhost:9000**
+---
+
+## Launching the Monitor
+
+After setup is complete, start the monitor to access all tools.
+
+**macOS** — Double-click **`Launch Monitor.command`** in Finder.
+
+**Windows** — Double-click **`Launch Monitor.bat`**.
+
+> **macOS security note:** If you see *"cannot be opened because it is from an unidentified developer"*, this only happens when the folder is downloaded as a ZIP from GitHub. Since you cloned via `git clone` in Terminal, double-click works directly with no prompts.
+
+> **Windows security note:** If Windows SmartScreen appears, click **More info** → **Run anyway**.
+
+A terminal window opens and the browser launches automatically at **http://localhost:9000**.
+
+To stop everything, close the terminal window or press `Ctrl + C` inside it.
+
+---
+
+## Monitor Dashboard
+
+The monitor at **http://localhost:9000** is the central control panel for all tools.
+
+### Tool Cards
+
+Each tool has its own card showing:
+
+| Element | Description |
+|---|---|
+| **Status badge** | 🟢 Running · 🟡 Starting · 🔴 Stopped |
+| **Uptime** | How long the tool has been running |
+| **Start button** | Launches the tool |
+| **Stop button** | Shuts the tool down |
+| **Open button** | Opens the tool in a new browser tab (only active when running) |
+| **Logs button** | Shows live stdout/stderr output from the tool |
+
+### How to Start a Tool
+1. Find the tool card on the monitor page
+2. Click **Start** — status changes to 🟡 Starting
+3. Wait a few seconds — status changes to 🟢 Running
+4. Click **Open** to use the tool
+
+### How to Stop a Tool
+1. Click **Stop** on the tool card
+2. Status changes to 🔴 Stopped
+
+### Viewing Logs
+Click **Logs** on any managed tool to see its live output. Useful for diagnosing errors.
+Click **▾ Hide logs** to collapse the log panel.
+
+---
+
+## Tool — Dashboard Factory
+
+**URL:** http://localhost:8080
+
+Generates Tableau `.twbx` workbooks from a Postgres database.
+
+### How to use
+1. Start **Dashboard Factory** from the Monitor and click **Open**
+2. Enter your Postgres connection details (host, port, database, username, password)
+3. Select the tables and fields you want in the workbook
+4. Configure the layout and dashboard settings
+5. Click **Generate** — the `.twbx` file downloads automatically
+
+---
+
+## Tool — Dashboard Factory QA
+
+**URL:** http://localhost:5555
+
+Checks Tableau workbooks for formatting issues and compliance, then applies automatic fixes.
+
+### How to use
+1. Start **Dashboard Factory QA** from the Monitor and click **Open**
+2. Upload a `.twbx` file using the file picker
+3. The tool runs compliance checks and shows results
+4. Review the findings — issues are listed with descriptions
+5. Click to apply fixes
+6. Download the corrected workbook
+
+---
+
+## Tool — Jira Tracker
+
+**URL:** http://localhost:8082
+
+View your Jira tickets across active, completed, overdue, and all views. Filter by project, sort by different fields, and drill into ticket activity.
+
+### Connecting to Jira
+
+**First time only:**
+1. Start **Jira Tracker** from the Monitor and click **Open**
+2. Select your Jira type:
+   - **Cloud** — your Jira URL ends in `.atlassian.net`
+   - **Server / Data Center** — self-hosted Jira instance
+3. Enter your **Jira Base URL** (e.g. `https://yourcompany.atlassian.net`)
+4. Enter your **Email**
+5. Enter your **API Token** (see below)
+6. Click **Connect**
+
+### Getting a Jira API Token
+
+**Jira Cloud:**
+1. Go to [id.atlassian.com](https://id.atlassian.com) → **Security** → **API tokens**
+2. Click **Create API token**
+3. Give it a name (e.g. `Automation Ambassador`) → **Create**
+4. Copy the token — **you cannot see it again after closing the dialog**
+
+**Jira Server / Data Center:**
+1. Log into your Jira instance → click your profile picture → **Profile**
+2. Go to **Personal Access Tokens** in the left sidebar
+3. Click **Create token**, set a name and expiry → **Create**
+4. Copy the token
+
+> Your credentials are stored locally on your machine only. They are never uploaded to GitHub or shared with anyone.
+
+### Ticket Views
+
+| View | Shows |
+|---|---|
+| **Active** | To Do + In Progress tickets |
+| **Completed** | Resolved / Done tickets |
+| **Overdue** | Tickets past their due date |
+| **All Mine** | Every ticket assigned to or reported by you |
+
+### Filters & Sorting
+- **Project** — filter to a specific Jira project
+- **Sort** — Due Date, Last Updated, Priority, or Created date
+- **Past assignments** — include tickets previously assigned to you
+- **Include reported by me** — include tickets you created/reported
+
+### Ticket Details
+Click any ticket row to expand its **Activity** and **Details** panel, showing comments, status changes, and full field values.
+
+---
+
+## Utility — Calculated Fields Extractor
+
+Located directly on the Monitor page at **http://localhost:9000**.
+
+Extracts all calculated fields from a Tableau workbook and exports them to a formatted Excel file — no need to open Tableau.
+
+### How to use
+1. Go to the Monitor at http://localhost:9000
+2. Scroll to the **Calculated Fields Extractor** card under **Utility Tools**
+3. Drag and drop a `.twbx` file onto the upload area — or click to browse
+4. The extraction runs automatically
+5. Click **⬇ Download Excel** to save the report
+
+The Excel file lists every calculated field in the workbook with its name, formula, and the datasource it belongs to.
+
+---
+
+## Utility — Timesheet Report
+
+Located directly on the Monitor page at **http://localhost:9000**.
+
+Generates a formatted Excel timesheet based on your Jira comment activity. The client name is read from each ticket's summary (text before the `|`), and the Project Code and Activity Code are looked up automatically from the client list.
+
+### Setting Up Credentials (first time only)
+1. Scroll to the **Timesheet Report** card on the Monitor
+2. Click **Edit**
+3. Enter your Jira URL, email, API token, and server type
+4. Click **💾 Save Credentials**
+
+Credentials are saved locally and reused for every future report — you only enter them once.
+
+### Generating a Monthly Timesheet
+1. Select **Month** under Scope
+2. Choose the month and year
+3. Click **Generate**
+4. The Excel file downloads as `Timesheet_MonthName_YYYY.xlsx`
+
+### Generating a Full-Year Consolidated Timesheet
+1. Select **Year** under Scope
+2. Choose the year
+3. Click **Generate**
+4. The Excel file downloads as `Timesheet_Consolidated_YYYY.xlsx`
+   - Contains an **All Months** tab with all tickets across the year
+   - Plus individual tabs for each month that had activity
+
+### What the Timesheet Contains
+
+Each row is a ticket you commented on during the selected period.
+
+| Column | Description |
+|---|---|
+| Ticket # | Jira ticket key (e.g. BACS-123), hyperlinked to Jira |
+| Category | Issue type (Bug, Task, Story, etc.) |
+| Summary | Ticket title |
+| Reporter | Who raised the ticket |
+| Project Code | Looked up from client name in the ticket summary |
+| Activity Code | Looked up based on Jira project (e.g. ONGOING_SUPPORT) |
+| Due Date | Ticket due date |
+| Start Date | First date you commented on this ticket in the period |
+| End Date | Last date you commented on this ticket in the period |
 
 ---
 
 ## Getting Updates
 
-Whenever a teammate pushes a change, pull it with:
+When a teammate pushes a change, pull it in Terminal:
 
 ```bash
 cd automation-ambassador-program
 git pull
 ```
 
-No need to re-run setup unless new dependencies were added.
+Then restart the monitor (close the terminal window and double-click `Launch Monitor.command` / `Launch Monitor.bat` again).
+
+No need to re-run `setup.sh` / `setup.bat` unless new dependencies were added.
 
 ---
 
-## Using the Monitor (http://localhost:9000)
+## For Maintainers
 
-The monitor is your control centre for all tools.
-
-### Starting / Stopping a Tool
-- Click **Start** on any tool card to launch it
-- Click **Stop** to shut it down
-- Click **Open** to open the tool in a new browser tab
-- Click **Logs** to see live output from that tool
-
-### Tool Status Indicators
-| Status | Meaning |
-|---|---|
-| 🟢 Running | Tool is up and responding |
-| 🟡 Starting | Process launched, waiting for it to be ready |
-| 🔴 Stopped | Tool is not running |
-
----
-
-## Tool Guides
-
-### Dashboard Factory (port 8080)
-Generates Tableau workbooks from a Postgres database connection.
-
-1. Start the tool from the Monitor
-2. Click **Open** to go to http://localhost:8080
-3. Enter your Postgres connection details
-4. Select the fields and layout you need
-5. Click **Generate** — downloads the `.twbx` workbook
-
----
-
-### Dashboard Factory QA (port 5555)
-Checks and auto-fixes formatting issues in Tableau workbooks.
-
-1. Start the tool from the Monitor
-2. Click **Open** to go to http://localhost:5555
-3. Upload a `.twbx` file
-4. Review the compliance checks
-5. Apply fixes and download the corrected workbook
-
----
-
-### Jira Tracker (port 8082)
-View your active Jira tickets and export timesheet reports.
-
-1. Start the tool from the Monitor
-2. Click **Open** to go to http://localhost:8082
-3. Enter your Jira credentials (URL, email, API token)
-4. Your tickets load automatically
-
-**To get a Jira API Token:**
-- Jira Cloud: go to https://id.atlassian.com/manage-profile/security/api-tokens → Create API token
-- Jira Server: Profile → Personal Access Tokens → Create token
-
----
-
-### Calculated Fields Extractor (in Monitor)
-Extracts all calculated fields from a Tableau workbook into an Excel report — no need to open Tableau.
-
-1. Go to the Monitor at http://localhost:9000
-2. Scroll to the **Calculated Fields Extractor** card
-3. Drag and drop a `.twbx` file onto the upload area (or click to browse)
-4. Click **Extract** — downloads an Excel file with all calculated fields
-
----
-
-### Timesheet Report (in Monitor)
-Generates an Excel timesheet based on your Jira comment activity. Project Code and Activity Code are looked up automatically from the client list.
-
-1. Go to the Monitor at http://localhost:9000
-2. Scroll to the **Timesheet Report** card
-3. First time: click **Edit** and enter your Jira credentials → **Save**
-4. Select **Monthly** or **Full Year**
-5. Pick the month/year
-6. Click **Generate** — downloads an Excel file with:
-   - Ticket #, Category, Summary, Reporter
-   - Project Code & Activity Code (looked up by client name)
-   - Due Date, Start Date, End Date
-
----
-
-## Troubleshooting
-
-### macOS: "Cannot be opened because it is from an unidentified developer"
-This only happens if the folder was downloaded as a ZIP from GitHub instead of cloned via `git clone`.
-Fix: right-click the `.command` file → **Open** → **Open**. Only needed once.
-Next time you can double-click normally.
-
-### Windows: SmartScreen blocks the `.bat` file
-Click **More info** → **Run anyway**.
-
-### A tool shows "Failed to stop" or HTTP 500
-This is fixed in the current version. Make sure you have the latest code:
-```bash
-git pull
-```
-
-### Tool won't start — shows error in Logs
-Click the **Logs** button on the tool card to see the exact error.
-Most common cause: run `bash setup.sh` again to reinstall dependencies.
-
-### "Address already in use" on a port
-Another instance of that tool is already running.
-Either stop it from the Monitor, or restart your computer.
-
-### Python not found after setup
-Close the terminal, open a new one, and run the setup script again.
-The PATH update takes effect in new terminal sessions.
-
----
-
-## Pushing Updates (for maintainers)
-
-After making changes to any file:
+After making any changes, push them to GitHub:
 
 ```bash
 cd automation-ambassador-program
@@ -211,14 +322,59 @@ git commit -m "describe what changed"
 git push
 ```
 
-Teammates pull the update with:
+Teammates pull the update with `git pull`.
+
+### Updating the Client List (Detail.xlsx)
+
+The `Detail.xlsx` file in the project root maps client names to Project Codes and Activity Codes used in the Timesheet Report. To update it:
+
+1. Replace `Detail.xlsx` in the project folder with the new version
+2. Commit and push:
 ```bash
-git pull
+git add Detail.xlsx
+git commit -m "Update client list"
+git push
 ```
 
 ---
 
-## Notes
-- `monitor_config.json` stores your saved Jira credentials **locally only** — it is excluded from Git via `.gitignore` and never shared
-- `Detail.xlsx` contains the client → Project Code / Activity Code mapping used by the Timesheet Report
-- All virtual environments (`venv/`, `.venv/`) are excluded from Git — they are created fresh on each machine by `setup.sh`
+## Troubleshooting
+
+### macOS: "Cannot be opened" security warning
+Only happens when the folder is downloaded as a ZIP instead of cloned via `git clone`.
+**Fix:** Right-click `Launch Monitor.command` → **Open** → **Open**. One time only.
+
+### Windows: SmartScreen warning
+Click **More info** → **Run anyway**. One time only.
+
+### A tool won't start
+Click the **Logs** button on that tool's card to see the exact error.
+Then run setup again to reinstall dependencies:
+```bash
+bash setup.sh   # macOS
+setup.bat       # Windows
+```
+
+### "Address already in use" error
+Another instance of that tool is already running. Stop it from the Monitor, or restart your computer.
+
+### Python not found after setup completes
+Close the terminal, open a new one, and run `bash setup.sh` again. PATH changes take effect in new terminal sessions.
+
+### Timesheet shows empty Project Code / Activity Code
+The client name in the ticket summary must match a client name in `Detail.xlsx`.
+The tool reads the text before the `|` in the ticket summary (e.g. `Adobe | Issue title` → looks up `Adobe`).
+If the client is missing from `Detail.xlsx`, ask a maintainer to add it.
+
+### Jira credentials rejected (401 error)
+- Make sure you are using an **API token**, not your Jira password
+- For Jira Cloud, the token must come from [id.atlassian.com](https://id.atlassian.com)
+- Check that the **Jira Type** (Cloud vs Server) matches your instance
+
+---
+
+## Security Notes
+
+- `monitor_config.json` — stores your Jira credentials locally. Excluded from Git via `.gitignore`. Never shared.
+- `Detail.xlsx` — contains client and project code data. Included in the repo. Do not put sensitive data in this file.
+- All virtual environments (`venv/`, `.venv/`) — excluded from Git. Recreated locally by setup.
