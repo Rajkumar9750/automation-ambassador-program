@@ -3063,7 +3063,7 @@ function buildSummary() {
   document.getElementById('summary-list').innerHTML = `
     <li><span class="lbl">Client</span><strong>${escHtml(S.clientName)}</strong></li>
     <li><span class="lbl">Reference Workbook</span>${escHtml(S.workbookName)}</li>
-    <li><span class="lbl">Output Filename</span><code>${[S.clientName, S.conn.database, S.workbookName].filter(Boolean).map(p => p.replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/^_+|_+$/g,'')).join('_')}.twbx</code></li>
+    <li><span class="lbl">Output Filename</span><code>${(() => { const client = (S.clientName||'').replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/^_+|_+$/g,''); const db = (S.conn.database||'').replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/^_+|_+$/g,''); const wb = (S.workbookName||'').replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/^_+|_+$/g,''); const dbPart = db.toLowerCase() !== client.toLowerCase() ? db : ''; return [client, dbPart, wb].filter(Boolean).join('_'); })()}.twbx</code></li>
     <li><span class="lbl">New DB Server</span><code>${escHtml(S.conn.host)}:${S.conn.port}</code></li>
     <li><span class="lbl">New Database</span><code>${escHtml(S.conn.database)}</code></li>
     <li><span class="lbl">New Username</span><code>${escHtml(S.conn.username)}</code></li>
