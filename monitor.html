@@ -54,6 +54,16 @@
     .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
     .header-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .header-right { display: flex; align-items: center; gap: 12px; }
+    .version-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; background: var(--surface2);
+      color: var(--muted); border: 1px solid var(--border);
+      cursor: default; user-select: none;
+    }
+    .version-badge.update-available {
+      background: rgba(245,158,11,.15); color: #d29922;
+      border-color: rgba(245,158,11,.4); cursor: pointer;
+    }
 
     .refresh-badge {
       font-size: 12px;
@@ -384,6 +394,7 @@
     </div>
   </div>
   <div class="header-right">
+    <div id="version-badge" class="version-badge" title="Current version">v—</div>
     <div class="refresh-badge">
       Auto-refresh every 5s &nbsp;·&nbsp; Last: <span id="last-updated">—</span>
     </div>
@@ -930,6 +941,23 @@ function refreshCards() {
 // Initial load + poll
 loadTools();
 setInterval(loadTools, 5000);
+
+// ── Version badge ────────────────────────────────────────
+async function loadVersion() {
+  try {
+    const v = await fetch('/api/version').then(r => r.json());
+    const badge = document.getElementById('version-badge');
+    badge.textContent = `v${v.version}`;
+    badge.title = `Version ${v.version}`;
+    if (v.update_available) {
+      badge.classList.add('update-available');
+      badge.textContent = `v${v.version} · Update available (v${v.latest})`;
+      badge.title = `Update available: v${v.latest} — run git pull to update`;
+      badge.onclick = () => alert(`A new version (v${v.latest}) is available.\n\nRun this in Terminal to update:\n\ncd ~/automation-ambassador-program && git pull\n\nThen restart the monitor.`);
+    }
+  } catch {}
+}
+loadVersion();
 
 // ────────────────────────────────────────────────────────────
 // Data Dictionary Generator

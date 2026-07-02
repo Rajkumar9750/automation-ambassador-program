@@ -208,10 +208,36 @@ async def _kill_by_port(port: int) -> list:
 # Routes
 # ---------------------------------------------------------------------------
 
+_VERSION_FILE = BASE / "VERSION"
+
+def _local_version() -> str:
+    try:
+        return _VERSION_FILE.read_text().strip()
+    except Exception:
+        return "unknown"
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     html = Path(__file__).parent / "monitor.html"
     return HTMLResponse(html.read_text())
+
+
+@app.get("/api/version")
+async def api_version():
+    local = _local_version()
+    latest = None
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(
+                "https://api.github.com/repos/Rajkumar9750/automation-ambassador-program/releases/latest",
+                headers={"Accept": "application/vnd.github+json"}
+            )
+            if r.status_code == 200:
+                latest = r.json().get("tag_name", "").lstrip("v")
+    except Exception:
+        pass
+    update_available = bool(latest and latest != local)
+    return {"version": local, "latest": latest, "update_available": update_available}
 
 
 @app.get("/api/tools")
