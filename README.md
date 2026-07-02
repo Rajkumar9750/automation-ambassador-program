@@ -208,20 +208,20 @@ Click any ticket row to expand its **Activity** and **Details** panel, showing c
 
 ---
 
-## Utility — Calculated Fields Extractor
+## Utility — Data Dictionary Generator
 
 Located directly on the Monitor page at **http://localhost:9000**.
 
-Extracts all calculated fields from a Tableau workbook and exports them to a formatted Excel file — no need to open Tableau.
+Generates a full data dictionary from a Tableau workbook and exports it to a formatted Excel file — no need to open Tableau.
 
 ### How to use
 1. Go to the Monitor at http://localhost:9000
-2. Scroll to the **Calculated Fields Extractor** card under **Utility Tools**
+2. Scroll to the **Data Dictionary Generator** card under **Utility Tools**
 3. Drag and drop a `.twbx` file onto the upload area — or click to browse
 4. The extraction runs automatically
 5. Click **⬇ Download Excel** to save the report
 
-The Excel file lists every calculated field in the workbook with its name, formula, and the datasource it belongs to.
+The Excel file includes: Field Name, Original Name, Datasource, Formula, Field Type, Data Type, Hidden, # of Times Used, and Worksheets Used On.
 
 ---
 
