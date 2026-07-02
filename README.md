@@ -44,7 +44,7 @@ Paste **one command** into your terminal. It installs everything automatically �
 Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.sh -o /tmp/install.sh && bash /tmp/install.sh
 ```
 
 ---
