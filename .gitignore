@@ -1,0 +1,22 @@
+# Virtual environments
+venv/
+.venv/
+01_Dashboard_Factory/venv/
+02_Dashboard_Factory_QA/.venv/
+03_Jira_Tracker/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Generated output
+calc_fields_output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets / local config
+monitor_config.json

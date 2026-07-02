@@ -1,0 +1,196 @@
+================================================================================
+              DASHBOARD FACTORY TOOL - SIMPLE START GUIDE
+================================================================================
+
+WHAT YOU NEED
+=============
+Download the complete package with these files:
+
+  • install.py (the installer - RECOMMENDED)
+  • install.sh (for Mac/Linux)
+  • install.bat (for Windows)
+  • requirements.txt (dependencies)
+  • QUICK_START.md (detailed help)
+  • USER_GUIDE.md (feature guide)
+  • Tableau QA Compliance folder (the application)
+
+
+HOW TO INSTALL (ONE COMMAND)
+=============================
+
+Windows, Mac, or Linux?
+→ Run this command in your terminal/command prompt:
+
+    python3 install.py
+
+That's it. The installer will:
+  • Check your Python version
+  • Create a virtual environment
+  • Install 25+ packages
+  • Verify everything works
+  • Tell you what to do next
+
+Time needed: 5-10 minutes
+Success rate: 95%+
+
+
+AFTER INSTALLATION - START USING
+=================================
+
+Step 1: Activate the environment
+  
+  On Mac/Linux:
+    source .venv/bin/activate
+  
+  On Windows:
+    .venv\Scripts\activate.bat
+
+
+Step 2: Start the app
+
+    cd "Tableau QA Compliance "
+    python3 app.py
+
+
+Step 3: Open your browser
+
+    Go to: http://localhost:5555
+    
+    You should see the Dashboard Factory Tool web interface
+
+
+Step 4: Upload and format
+
+    • Upload your Tableau file (.twb or .twbx)
+    • Choose formatting options
+    • Download your formatted file
+    • Done!
+
+
+SYSTEM REQUIREMENTS
+===================
+
+Required:
+  • Python 3.9 or higher
+  • 2GB RAM
+  • 500MB disk space
+  • Modern web browser (Chrome, Firefox, Safari, Edge)
+
+
+WHAT GETS INSTALLED
+====================
+
+25+ packages including:
+  • Flask (web server)
+  • Pandas (data processing)
+  • Selenium (browser automation)
+  • Python-PPTX (presentation handling)
+  • Pillow (image processing)
+  • And 20+ more tools
+
+Everything is tested and locked to specific versions.
+No conflicts. No surprises.
+
+
+TROUBLESHOOTING
+===============
+
+Problem: "Python is not installed"
+Solution: Download Python 3.9+ from https://www.python.org
+
+Problem: "Permission denied" on Mac/Linux
+Solution: Run with bash instead:
+    bash install.sh
+
+Problem: "Port 5555 already in use"
+Solution: Kill the process or check if another app is using it
+
+Problem: Installation fails halfway
+Solution: Delete the .venv folder and try again:
+    rm -rf .venv
+    python3 install.py
+
+For more help, see USER_GUIDE.md or QUICK_START.md
+
+
+SUPPORT
+=======
+
+Questions about features?
+  → See USER_GUIDE.md
+
+Need installation help?
+  → See QUICK_START.md
+
+Issues with the app?
+  → Check INSTALLATION_GUIDE.md
+
+Developer questions?
+  → See API_REFERENCE.md
+
+
+KEY FILES TO REMEMBER
+=====================
+
+1. install.py ← RUN THIS FIRST
+2. QUICK_START.md ← READ THIS NEXT
+3. USER_GUIDE.md ← For feature help
+4. app.py ← The actual application
+
+
+TYPICAL WORKFLOW
+================
+
+1. Download complete package
+2. Extract/unzip it
+3. Open terminal in the folder
+4. Run: python3 install.py
+5. Wait 5-10 minutes
+6. Read "Installation Complete" message
+7. Run: source .venv/bin/activate (or activate.bat on Windows)
+8. Run: cd "Tableau QA Compliance " && python3 app.py
+9. Open browser to http://localhost:5555
+10. Start using the tool!
+
+Total time: ~15-20 minutes (first time only)
+
+
+QUICK REFERENCE COMMANDS
+========================
+
+Check Python version:
+    python3 --version
+
+Activate virtual environment:
+    source .venv/bin/activate  (Mac/Linux)
+    .venv\Scripts\activate.bat (Windows)
+
+Start the application:
+    python3 app.py
+
+Stop the application:
+    Press Ctrl+C in terminal
+
+Deactivate virtual environment:
+    deactivate
+
+
+THAT'S IT!
+==========
+
+Your Dashboard Factory Tool is ready to use in just a few minutes.
+
+No complicated setup.
+No manual configuration.
+No dependency version conflicts.
+
+Just one command, then you're done.
+
+Questions? See the included documentation files.
+
+Happy formatting! 🚀
+
+
+================================================================================
+                         CREATED: February 4, 2026
+================================================================================

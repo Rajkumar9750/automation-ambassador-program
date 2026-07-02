@@ -1,0 +1,3957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Factory · CBRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ══════════════════════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════════════════════ */
+:root {
+  --green:      #003f2d;
+  --green-dark: #002a1e;
+  --green-mid:  #005240;
+  --teal:       #17e88f;
+  --teal-dim:   rgba(23,232,143,.12);
+  --bg:         #f0f2f1;
+  --surface:    #ffffff;
+  --border:     #e2e8e5;
+  --text:       #0d1b16;
+  --muted:      #5a6b66;
+  --slate:      #3d5250;
+  --light:      #c4d0cc;
+  --radius:     12px;
+  --shadow:     0 2px 8px rgba(0,63,45,.08);
+  --shadow-md:  0 4px 20px rgba(0,63,45,.12);
+  --shadow-lg:  0 8px 32px rgba(0,63,45,.16);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════ */
+/* ── Header keyframes ───────────────────────────────────── */
+@keyframes header-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes logo-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(23,232,143,.45), 0 0 14px rgba(23,232,143,.25); }
+  50%       { box-shadow: 0 0 0 6px rgba(23,232,143,.0), 0 0 22px rgba(23,232,143,.45); }
+}
+@keyframes dot-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
+}
+
+header {
+  background: linear-gradient(100deg, #0d2b1f 0%, #163d2c 40%, #0f3325 70%, #0a2318 100%);
+  color: #fff;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 0 rgba(23,232,143,.12), 0 4px 24px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+
+/* animated shimmer sweep */
+header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(23,232,143,.06) 50%,
+    transparent 70%
+  );
+  background-size: 800px 100%;
+  animation: header-shimmer 6s linear infinite;
+  pointer-events: none;
+}
+
+/* bottom accent line */
+header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(23,232,143,.0) 10%,
+    rgba(23,232,143,.7) 40%,
+    rgba(23,232,143,.9) 50%,
+    rgba(23,232,143,.7) 60%,
+    rgba(23,232,143,.0) 90%,
+    transparent 100%
+  );
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+}
+
+/* logo icon */
+.header-logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, rgba(23,232,143,.22) 0%, rgba(23,232,143,.1) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(23,232,143,.4);
+  flex-shrink: 0;
+  animation: logo-pulse 3s ease-in-out infinite;
+  transition: transform .2s ease;
+}
+.header-logo:hover { transform: scale(1.08) rotate(-4deg); }
+
+.header-logo svg {
+  width: 20px;
+  height: 20px;
+  fill: #17e88f;
+  filter: drop-shadow(0 0 4px rgba(23,232,143,.6));
+}
+
+/* title block */
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-title h1 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #fff;
+  line-height: 1.2;
+  text-shadow: 0 1px 8px rgba(23,232,143,.2);
+}
+
+.header-title p {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  letter-spacing: .3px;
+  font-weight: 400;
+}
+
+/* live status dot (standalone, used next to tagline) */
+.header-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #17e88f;
+  box-shadow: 0 0 6px #17e88f;
+  animation: dot-blink 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* CBRE logo container */
+.header-cbre-logo {
+  display: flex;
+  align-items: center;
+  opacity: .82;
+  transition: opacity .2s;
+  cursor: default;
+  padding: 6px 0;
+}
+.header-cbre-logo:hover { opacity: 1; }
+.header-cbre-logo svg {
+  height: 20px;
+  width: auto;
+  fill: #fff;
+  filter: drop-shadow(0 1px 6px rgba(255,255,255,.15));
+}
+
+/* divider */
+.header-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,.1);
+  flex-shrink: 0;
+  margin: 0 20px;
+}
+
+/* right-side tagline */
+.header-tagline {
+  font-size: 11.5px;
+  color: rgba(255,255,255,.3);
+  letter-spacing: .2px;
+  font-style: italic;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-tagline svg {
+  width: 13px;
+  height: 13px;
+  fill: rgba(23,232,143,.5);
+  flex-shrink: 0;
+}
+
+/* spacer pushes tagline to right */
+.header-spacer { flex: 1; }
+
+/* ══════════════════════════════════════════════════════════
+   UPLOAD HERO (shown when no workbook loaded)
+══════════════════════════════════════════════════════════ */
+#upload-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 20px 36px;
+}
+
+#upload-drop {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface);
+  border: 2.5px dashed var(--border);
+  border-radius: 18px;
+  padding: 52px 40px 44px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color .22s, background .22s, box-shadow .22s;
+  box-shadow: var(--shadow-md);
+}
+
+#upload-drop:hover,
+#upload-drop.dragging {
+  border-color: var(--teal);
+  background: linear-gradient(135deg, #f8fffc 0%, #f0fff9 100%);
+  box-shadow: 0 0 0 4px rgba(23,232,143,.12), var(--shadow-md);
+}
+
+#upload-drop.loaded {
+  border-style: solid;
+  border-color: var(--teal);
+  background: linear-gradient(135deg, #f4fff9 0%, #edfff4 100%);
+}
+
+#upload-drop.dragging {
+  animation: pulse-border .9s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-border {
+  from { box-shadow: 0 0 0 3px rgba(23,232,143,.15), var(--shadow-md); }
+  to   { box-shadow: 0 0 0 8px rgba(23,232,143,.25), var(--shadow-md); }
+}
+
+#upload-drop input { display: none; }
+
+#upload-icon {
+  font-size: 0;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+#upload-icon svg {
+  width: 56px;
+  height: 56px;
+  color: var(--teal);
+  filter: drop-shadow(0 4px 12px rgba(23,232,143,.35));
+  transition: transform .2s;
+}
+
+#upload-drop:hover #upload-icon svg,
+#upload-drop.dragging #upload-icon svg {
+  transform: translateY(-3px);
+}
+
+#upload-heading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.3px;
+  margin-bottom: 10px;
+}
+
+#upload-heading.uf {
+  font-size: 18px;
+  color: var(--green);
+}
+
+#upload-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+#upload-spinner {
+  display: none;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+#upload-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(23,232,143,.15);
+  border: 1px solid var(--teal);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: .2px;
+  margin-top: 4px;
+}
+
+.upload-browse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--teal);
+  color: var(--green);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: filter .18s, transform .18s;
+  letter-spacing: .1px;
+  box-shadow: 0 3px 12px rgba(23,232,143,.35);
+}
+
+.upload-browse-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(23,232,143,.45);
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 14px;
+  font-weight: 400;
+}
+
+.upload-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 4px;
+  width: 100%;
+  max-width: 600px;
+}
+.upload-tab {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+.upload-tab.active {
+  background: var(--surface);
+  color: var(--green);
+  box-shadow: var(--shadow);
+}
+
+#fetch-panel {
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 40px;
+  box-shadow: var(--shadow-md);
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+.fetch-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+  margin-bottom: 6px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.fetch-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .18s;
+}
+.fetch-input:focus { border-color: var(--teal); }
+.fetch-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--teal);
+  color: var(--green);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter .18s, transform .18s;
+  box-shadow: 0 3px 12px rgba(23,232,143,.35);
+  margin-top: 4px;
+}
+.fetch-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.fetch-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+#fetch-status {
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#fetch-status.error { color: #e05c6a; }
+#fetch-status .spinner {
+  width: 14px; height: 14px;
+  border-width: 2px;
+  border-top-color: var(--teal);
+  border-color: rgba(23,232,143,.25);
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   WORKBOOK LOADED BAR
+══════════════════════════════════════════════════════════ */
+#workbook-loaded-bar {
+  display: none;
+  background: #edfff5;
+  border-bottom: 1px solid #b5f0d0;
+  padding: 10px 32px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+#workbook-loaded-bar .wb-icon {
+  width: 22px;
+  height: 22px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#workbook-loaded-bar .wb-icon svg {
+  width: 13px;
+  height: 13px;
+  fill: var(--green);
+}
+
+#workbook-loaded-bar .wb-name {
+  font-weight: 600;
+  color: var(--green);
+}
+
+#workbook-loaded-bar .wb-info {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#workbook-loaded-bar .wb-change {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+#workbook-loaded-bar .wb-change:hover { color: var(--green-mid); }
+
+/* ══════════════════════════════════════════════════════════
+   STEP INDICATOR
+══════════════════════════════════════════════════════════ */
+.steps-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 32px;
+  display: none;
+}
+
+.steps-bar.visible { display: block; }
+
+.steps {
+  display: flex;
+  align-items: center;
+  max-width: 480px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  position: relative;
+}
+
+.step-item:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 6px;
+  border-radius: 1px;
+  transition: background .35s ease;
+}
+
+.step-item.done:not(:last-child)::after {
+  background: var(--teal);
+}
+
+.step-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .28s ease;
+  flex-shrink: 0;
+}
+
+.step-item.active .step-circle {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(0,63,45,.12);
+}
+
+.step-item.done .step-circle {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: var(--green);
+  font-size: 14px;
+}
+
+.step-label {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 500;
+  transition: color .28s;
+}
+
+.step-item.active .step-label {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.step-item.done .step-label {
+  color: #1a9e66;
+  font-weight: 500;
+}
+
+/* Locked state */
+.steps-bar.locked .step-circle,
+.steps-bar.locked .step-label { opacity: .38; }
+
+/* ══════════════════════════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════════════════════════ */
+main {
+  max-width: 820px;
+  margin: 28px auto 48px;
+  padding: 0 20px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STEP PANELS
+══════════════════════════════════════════════════════════ */
+.step-panel { display: none; }
+.step-panel.active {
+  display: block;
+  animation: fadeSlideIn .25s ease both;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════════════════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 5px;
+  padding-left: 13px;
+  border-left: 3px solid var(--teal);
+  line-height: 1.3;
+}
+
+.card .subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 22px;
+  margin-top: 6px;
+  padding-left: 16px;
+  line-height: 1.6;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════════════════════ */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+input, select {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0,63,45,.10);
+}
+
+input::placeholder { color: var(--light); }
+
+input[type=password] { letter-spacing: 2px; }
+
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b66' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .18s ease;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  letter-spacing: .1px;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled { opacity: .42; cursor: not-allowed; transform: none; }
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,63,45,.25);
+}
+.btn-primary:hover { background: var(--green-mid); box-shadow: 0 4px 14px rgba(0,63,45,.3); }
+
+.btn-teal {
+  background: var(--teal);
+  color: var(--green);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(23,232,143,.28);
+}
+.btn-teal:hover { filter: brightness(1.06); box-shadow: 0 4px 14px rgba(23,232,143,.38); }
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--slate);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg); border-color: var(--light); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--green);
+  border: 2px solid var(--green);
+}
+.btn-outline:hover { background: var(--green); color: #fff; }
+
+.btn-lg {
+  padding: 13px 28px;
+  font-size: 15px;
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background .15s, border-color .15s, transform .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-sm:hover { background: var(--bg); border-color: var(--green); transform: translateY(-1px); }
+
+/* ══════════════════════════════════════════════════════════
+   ALERTS
+══════════════════════════════════════════════════════════ */
+.alert {
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  font-weight: 500;
+  border-left-width: 3px;
+  border-left-style: solid;
+}
+
+.alert-success {
+  background: #ebfaf2;
+  border: 1px solid #a8dfc1;
+  border-left-color: #1a9e66;
+  color: #155724;
+}
+
+.alert-error {
+  background: #fff0f0;
+  border: 1px solid #f5c6cb;
+  border-left-color: #dc2626;
+  color: #721c24;
+}
+
+.alert-info {
+  background: #eef4ff;
+  border: 1px solid #b8d0f0;
+  border-left-color: #3b82f6;
+  color: #0c5293;
+}
+
+.alert-warn {
+  background: #fffbeb;
+  border: 1px solid #f9d27e;
+  border-left-color: #f59e0b;
+  color: #7d5a00;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TAGS
+══════════════════════════════════════════════════════════ */
+.tag {
+  display: inline-block;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin: 2px 3px 2px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--slate);
+  font-family: 'Courier New', monospace;
+}
+
+.tag.schema { background: #ebfaf2; border-color: #a8dfc1; color: var(--green); }
+.tag.table  { background: #f0f3ff; border-color: #b8c5f5; color: #2c3fa0; }
+
+/* ══════════════════════════════════════════════════════════
+   SECTION TITLE
+══════════════════════════════════════════════════════════ */
+.section-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAPPING ROWS
+══════════════════════════════════════════════════════════ */
+.mapping-row {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.mapping-row:hover {
+  border-color: rgba(0,63,45,.25);
+  box-shadow: 0 3px 12px rgba(0,63,45,.1);
+}
+
+.ref-col {
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  color: var(--slate);
+}
+
+.ref-col strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teal);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mapping-row select {
+  font-size: 13px;
+  height: 36px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SQL EDITOR
+══════════════════════════════════════════════════════════ */
+.sql-editor-wrap {
+  display: none;
+  margin-top: 6px;
+  border: 1.5px solid #f9d27e;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.sql-editor-wrap.open { display: block; }
+
+.sql-editor-header {
+  background: #fffbeb;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: #7d5a00;
+  font-weight: 600;
+  border-bottom: 1px solid #f9d27e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sql-editor-wrap textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  border: none;
+  resize: vertical;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  outline: none;
+}
+
+.sql-editor-footer {
+  background: #fffbeb;
+  padding: 7px 16px;
+  font-size: 11.5px;
+  color: var(--muted);
+  border-top: 1px solid #f9d27e;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SUMMARY LIST
+══════════════════════════════════════════════════════════ */
+.summary-list { list-style: none; }
+
+.summary-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.summary-list li:last-child { border-bottom: none; }
+
+.summary-list .lbl {
+  color: var(--muted);
+  min-width: 170px;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DOWNLOAD BOX
+══════════════════════════════════════════════════════════ */
+.download-box {
+  text-align: center;
+  padding: 36px 28px;
+  border-radius: 14px;
+  margin-top: 20px;
+  background: radial-gradient(ellipse at 30% 20%, rgba(23,232,143,.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(0,63,45,.06) 0%, transparent 60%),
+              linear-gradient(135deg, #f4fff9 0%, #f8fff9 100%);
+  border: 2px solid rgba(23,232,143,.4);
+  box-shadow: 0 6px 24px rgba(23,232,143,.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.download-box::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(23,232,143,.15), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.download-check-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  box-shadow: 0 4px 16px rgba(23,232,143,.4);
+  animation: pop-in .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+@keyframes pop-in {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.download-check-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: var(--green);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.download-box h3 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 6px;
+  letter-spacing: -.3px;
+}
+
+.download-box p {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 4px;
+}
+
+#download-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+  font-style: italic;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════════
+   NAV BAR
+══════════════════════════════════════════════════════════ */
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 4px 0;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SPINNER
+══════════════════════════════════════════════════════════ */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.spinner.dark {
+  border: 2.5px solid rgba(0,0,0,.12);
+  border-top-color: var(--green);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════════════════
+   NO-WORKBOOK NOTICE (fallback inside main)
+══════════════════════════════════════════════════════════ */
+#no-workbook-notice {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+
+#no-workbook-notice .big { font-size: 40px; margin-bottom: 14px; }
+#no-workbook-notice p { font-size: 15px; }
+
+/* ══════════════════════════════════════════════════════════
+   CALCULATED FIELDS PANEL
+══════════════════════════════════════════════════════════ */
+.calc-panel {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 16px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.calc-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+  background: #f7faf8;
+  transition: background .15s;
+}
+
+.calc-panel-header:hover { background: #f0f7f2; }
+
+.calc-panel-title {
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+  color: var(--text);
+}
+
+.calc-badge-modified {
+  background: #fff3cd;
+  color: #856404;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #ffc107;
+  font-weight: 600;
+}
+
+.calc-toggle {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform .22s;
+}
+
+.calc-toggle.open { transform: rotate(180deg); }
+
+.calc-body { padding: 16px 20px; }
+
+.calc-search {
+  width: 100%;
+  padding: 9px 14px;
+  height: 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.calc-search:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(0,63,45,.08);
+}
+
+.calc-list {
+  max-height: 440px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.calc-field-card {
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color .18s;
+}
+
+.calc-field-card.modified { border-color: #ffc107; }
+
+.calc-field-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  background: #fafafa;
+}
+
+.calc-field-card.modified .calc-field-card-header { background: #fffbeb; }
+
+.calc-field-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.calc-role-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #e8f0fe;
+  color: #3c5a99;
+  border: 1px solid #c5d0e8;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.calc-mod-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  font-weight: 600;
+}
+
+.calc-formula-preview {
+  padding: 8px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 11.5px;
+  color: var(--slate);
+  background: #f8f9fa;
+  border-top: 1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.55;
+}
+
+.calc-editor-area { padding: 0; }
+
+.calc-editor-area textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: #1e1e2e;
+  color: #cdd6f4;
+  outline: none;
+  resize: vertical;
+}
+
+.calc-editor-footer {
+  display: flex;
+  gap: 7px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-top: 1px solid var(--border);
+  align-items: center;
+}
+
+.calc-no-results {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px;
+  font-size: 13px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   REPAIR REPORT
+══════════════════════════════════════════════════════════ */
+.repair-report { margin-top: 20px; }
+
+.repair-report-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--slate);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.repair-item {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-radius: 9px;
+  margin-bottom: 9px;
+  border: 1.5px solid transparent;
+}
+
+.repair-item.fixed   { background: #ebfaf2; border-color: #a8dfc1; }
+.repair-item.warning { background: #fffbeb; border-color: #f9d27e; }
+.repair-item.error   { background: #fff0f0; border-color: #f5c6cb; }
+.repair-item.extract-ok { background: #eaf4ff; border-color: #90bfe0; }
+.repair-item.extract-ok .repair-icon { font-size: 18px; }
+
+.repair-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.repair-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.repair-desc  { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+.repair-fix   { font-size: 12px; color: #166534; margin-top: 4px; font-style: italic; }
+.repair-item.warning .repair-fix { color: #7d5a00; }
+.repair-item.error   .repair-fix { color: #721c24; }
+
+/* ══════════════════════════════════════════════════════════
+   PRE-FLIGHT PANEL
+══════════════════════════════════════════════════════════ */
+.pf-panel {
+  border: 1.5px solid #fbbf24;
+  border-radius: 11px;
+  background: #fffbeb;
+  padding: 18px;
+  margin-top: 12px;
+}
+
+.pf-panel-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #92400e;
+  margin-bottom: 14px;
+}
+
+.pf-issues-list { display: flex; flex-direction: column; gap: 10px; }
+
+.pf-issue {
+  background: #fff;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.pf-issue-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.pf-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: .4px;
+}
+
+.pf-badge-tbl { background: #fee2e2; color: #991b1b; }
+.pf-badge-sql { background: #ede9fe; color: #5b21b6; }
+
+.pf-issue-label { font-size: 13px; color: #1a1a2e; font-weight: 600; }
+.pf-target { font-size: 12px; color: var(--muted); }
+.pf-cause, .pf-fix, .pf-similar { font-size: 12px; color: #374151; margin-top: 4px; }
+.pf-cause-lbl { font-weight: 600; color: #6b7280; }
+
+.pf-chip {
+  display: inline-block;
+  background: #f3f4f6;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 11px;
+  margin: 2px 2px 0 0;
+  font-family: 'Courier New', monospace;
+}
+
+.pf-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+/* ══════════════════════════════════════════════════════════
+   DATA MODEL DIAGRAM
+══════════════════════════════════════════════════════════ */
+.dm-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.dm-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+  background: #f7faf8;
+  transition: background .15s;
+}
+
+.dm-card-header:hover { background: #f0f7f2; }
+
+.dm-card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--green);
+  flex: 1;
+}
+
+.dm-card-toggle {
+  font-size: 12px;
+  color: var(--muted);
+  transition: transform .22s;
+}
+
+.dm-card-toggle.open { transform: rotate(180deg); }
+
+.dm-card-body { padding: 18px 22px; }
+
+.dm-ds-block { margin-bottom: 24px; }
+.dm-ds-block:last-child { margin-bottom: 0; }
+
+.dm-ds-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  margin-bottom: 14px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dm-canvas-wrap { overflow-x: auto; padding-bottom: 4px; }
+
+.dm-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  min-width: max-content;
+  padding: 2px 0 2px 2px;
+}
+
+.dm-table-box {
+  flex-shrink: 0;
+  width: 172px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+.dm-table-head {
+  background: var(--green);
+  color: #fff;
+  padding: 10px 13px;
+}
+
+.dm-t-schema { font-size: 10px; color: rgba(255,255,255,.55); display: block; margin-bottom: 3px; }
+.dm-t-name   { font-size: 13px; font-weight: 700; color: #fff; word-break: break-word; }
+.dm-t-sql-label { font-size: 10px; color: var(--teal); display: block; margin-bottom: 2px; }
+
+.dm-table-body { padding: 8px 10px; }
+
+.dm-key-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--green);
+  background: rgba(23,232,143,.13);
+  border: 1px solid rgba(23,232,143,.35);
+  border-radius: 4px;
+  padding: 3px 7px;
+  margin-bottom: 4px;
+}
+.dm-key-row:last-child { margin-bottom: 0; }
+
+.dm-connector {
+  flex-shrink: 0;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  position: relative;
+}
+
+/* ── Venn line row (line—circles—line) ─────────────── */
+.dm-venn-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.dm-venn-line {
+  flex: 1;
+  height: 2px;
+  background: #8fa6b8;
+}
+
+/* ── Venn label (join type text under circles) ─────── */
+.dm-venn-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+  color: var(--slate);
+  white-space: nowrap;
+}
+.dm-venn-label.rel { color: #5b21b6; }
+
+/* keep pill style for extra-join badges only */
+.dm-join-pill {
+  background: var(--green);
+  color: var(--teal);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.dm-join-pill.rel { background: #5b21b6; color: #ddd6fe; }
+
+.dm-join-keys {
+  font-size: 10px;
+  color: var(--slate);
+  text-align: center;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: monospace;
+}
+
+.dm-spacer { flex-shrink: 0; width: 28px; }
+
+.dm-extra-joins {
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px dashed var(--border);
+}
+
+.dm-extra-join {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--slate);
+  margin-bottom: 7px;
+  flex-wrap: wrap;
+}
+
+.dm-single-note {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 7px;
+}
+
+.dm-loading {
+  padding: 22px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ── Remove-table button inside dm-table-head ──────────── */
+.dm-table-head { position: relative; }
+
+.dm-remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background .15s;
+}
+.dm-remove-btn:hover { background: #dc2626; }
+
+.dm-table-box.removed { opacity: .38; }
+.dm-table-box.removed .dm-table-head { background: #6b7280; }
+.dm-table-box.removed .dm-t-name { text-decoration: line-through; }
+
+/* ── Edit-join button & inline editor ───────────────────── */
+.dm-edit-join-btn {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+.dm-edit-join-btn:hover { background: rgba(255,255,255,.28); }
+
+.dm-join-editor {
+  display: none;
+  background: #f0f7f4;
+  border: 1.5px solid #b5dec8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 6px;
+  min-width: 260px;
+}
+
+.dm-join-editor.open { display: block; }
+
+.dm-join-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dm-join-editor input,
+.dm-join-editor select {
+  height: 32px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  width: 100%;
+  padding: 0 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+}
+
+.dm-join-calc-area {
+  width: 100%;
+  min-height: 52px;
+  max-height: 100px;
+  font-family: 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  outline: none;
+  resize: vertical;
+}
+
+.dm-join-calc-area:focus { border-color: var(--teal); }
+
+.dm-join-side-block {
+  background: #f7faf8;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin-bottom: 6px;
+}
+
+.dm-join-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.dm-join-mode-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  flex: 1;
+}
+
+.dm-join-mode-radio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--slate);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.dm-join-editor-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.dm-join-editor-btns {
+  display: flex;
+  gap: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TABLEAU-STYLE JOIN DIALOG
+══════════════════════════════════════════════════════════ */
+/* ── Join dialog — fixed so it's never clipped by scroll containers ── */
+.dm-join-dialog {
+  display: none;
+  position: fixed;          /* JS sets top/left — never clipped by overflow */
+  width: 460px;
+  background: #f4f4f4;
+  border-radius: 12px;
+  box-shadow:
+    0 24px 64px rgba(0,0,0,.32),
+    0 4px 16px  rgba(0,0,0,.14),
+    0 0 0 1px   rgba(0,0,0,.06);
+  z-index: 9999;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  animation: jd-pop .15s cubic-bezier(.34,1.36,.64,1) both;
+}
+@keyframes jd-pop {
+  from { opacity:0; transform: scale(.94) translateY(-6px); }
+  to   { opacity:1; transform: scale(1)   translateY(0); }
+}
+.dm-join-dialog.open { display: block; }
+
+/* ── Backdrop to close on outside click ─────────────── */
+#jd-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+#jd-backdrop.open { display: block; }
+
+/* ── Title bar ───────────────────────────────────────── */
+.jd-title {
+  background: linear-gradient(180deg, #e8e8e8, #e0e0e0);
+  border-bottom: 1px solid #c0c0c0;
+  padding: 10px 18px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  letter-spacing: .2px;
+  user-select: none;
+}
+
+/* ── Join type tab strip ─────────────────────────────── */
+.jd-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: #ececec;
+  border-bottom: 1px solid #c4c4c4;
+}
+.jd-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 6px 10px;
+  border: none;
+  border-right: 1px solid #d4d4d4;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  color: #555;
+  transition: background .14s;
+  position: relative;
+}
+.jd-tab:last-child { border-right: none; }
+.jd-tab:hover { background: #e2e2e2; color: #222; }
+.jd-tab.active {
+  background: #d8d8d8;
+  color: #111;
+  font-weight: 700;
+}
+.jd-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 10%; right: 10%;
+  height: 3px;
+  background: #4a7fb5;
+  border-radius: 3px 3px 0 0;
+}
+
+/* ── Condition section ───────────────────────────────── */
+.jd-cond-section { background: #fff; }
+
+.jd-cond-headers {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr;
+  padding: 7px 16px;
+  border-bottom: 1px solid #e4e4e4;
+  background: #f6f6f6;
+  font-size: 12px;
+  font-weight: 700;
+  color: #444;
+  gap: 6px;
+}
+
+.jd-cond-row {
+  display: grid;
+  grid-template-columns: 1fr 28px 1fr;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: start;
+  gap: 6px;
+  background: #fff;
+}
+.jd-cond-row:hover { background: #fafafa; }
+
+.jd-cond-col input,
+.jd-cond-col select {
+  width: 100%;
+  height: 32px;
+  font-size: 12.5px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-family: 'Courier New', monospace;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.jd-cond-col input:focus,
+.jd-cond-col select:focus {
+  outline: none;
+  border-color: #4a7fb5;
+  box-shadow: 0 0 0 3px rgba(74,127,181,.15);
+}
+.jd-cond-col textarea {
+  width: 100%;
+  min-height: 48px;
+  font-family: 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  padding: 8px 10px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  resize: vertical;
+  outline: none;
+  transition: border-color .15s;
+}
+.jd-cond-col textarea:focus { border-color: #4a7fb5; }
+
+.jd-mode-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #777;
+}
+.jd-mode-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.jd-eq {
+  text-align: center;
+  font-weight: 800;
+  color: #888;
+  font-size: 16px;
+  padding-top: 7px;
+  user-select: none;
+}
+
+.jd-add-clause {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #b0b0b0;
+  font-style: italic;
+  background: #fff;
+  border-top: 1.5px dashed #e8e8e8;
+  cursor: default;
+  user-select: none;
+}
+
+.jd-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #c0c0c0;
+  background: linear-gradient(180deg, #ececec, #e4e4e4);
+}
+
+/* ══════════════════════════════════════════════════════════
+   RELATIONSHIP FAN LAYOUT (Image 2 style)
+══════════════════════════════════════════════════════════ */
+.dm-rel-layout {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 4px;
+  min-width: max-content;
+}
+.dm-rel-parent-box {
+  background: #cce3f5;
+  border: 1.5px solid #74aed4;
+  border-radius: 8px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a3a5c;
+  min-width: 170px;
+  flex-shrink: 0;
+}
+.dm-rel-children {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dm-rel-child-box {
+  background: #fff;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  color: #333;
+  min-width: 200px;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-restore-link {
+  font-size: 11px;
+  color: var(--green);
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  padding: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════ -->
+<header>
+  <!-- Left: icon + title -->
+  <div class="header-brand">
+    <div class="header-logo">
+      <!-- Dashboard / grid icon -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3h8v8H3zm0 10h8v8H3zM13 3h8v8h-8zm0 10h8v8h-8z"/>
+      </svg>
+    </div>
+    <div class="header-title">
+      <h1>Dashboard Factory</h1>
+      <p>Tableau dashboard generator</p>
+    </div>
+  </div>
+
+  <div class="header-spacer"></div>
+
+  <!-- Right: live dot + tagline + divider + CBRE logo -->
+  <div class="header-tagline">
+    <span class="header-badge-dot"></span>
+    Powered by Tableau Hyper API
+  </div>
+
+  <div class="header-divider"></div>
+
+  <div class="header-cbre-logo" title="CBRE">
+    <!-- CBRE official SVG logo (white) -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 81 20.13">
+      <path d="M33.57,15.41H26.89V12.05h6.86a1.66,1.66,0,0,1,1.49,1.64,1.73,1.73,0,0,1-1.67,1.72m-6.68-11h7A1.64,1.64,0,0,1,35.3,6a1.72,1.72,0,0,1-1.43,1.68h-7Zm9.94,5.37c2.56-.85,3-3,3-4.75,0-2.68-1.89-5-7.48-5H21.94V20.09h10.4C38,20.09,40,17.21,40,14.32a4.91,4.91,0,0,0-3.19-4.58M63.37,0V20.13H81V15.54H68.28V12H79.75V7.63H68.28V4.39H81V0ZM55.79,6.26a1.65,1.65,0,0,1-1.57,1.38H47.34V4.43h6.88a1.57,1.57,0,0,1,1.57,1.4ZM53.12,0H42.47v20.1h4.89V12h5.39a2.8,2.8,0,0,1,2.74,2.85v5.27h4.79V13.62a4.21,4.21,0,0,0-2.9-3.89,4.5,4.5,0,0,0,3-4.44C60.34.94,56.6,0,53.12,0M18.76,15.27c-.07,0-6.69.13-9-.09a5.16,5.16,0,0,1-5-5.31,5.14,5.14,0,0,1,4.82-5.2c1.39-.19,9-.1,9.09-.1h.16L18.9,0h-.16L10.11,0A12.73,12.73,0,0,0,5.93.84,10.25,10.25,0,0,0,2,4a10,10,0,0,0-2,6,12.15,12.15,0,0,0,.16,2A9.8,9.8,0,0,0,5.65,19a14.72,14.72,0,0,0,5.46,1.11l1.63,0h6.17V15.27Z"/>
+    </svg>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     WORKBOOK LOADED BAR (hidden until workbook uploaded)
+════════════════════════════════════════════════════════ -->
+<div id="workbook-loaded-bar">
+  <div class="wb-icon">
+    <!-- checkmark SVG -->
+    <svg viewBox="0 0 13 13" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 6.5L5.5 9.5L10.5 3.5" stroke="#003f2d" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <span class="wb-name" id="wb-bar-name"></span>
+  <span class="wb-info" id="wb-bar-info"></span>
+  <button class="wb-change" onclick="resetAll()">Change workbook</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STEP INDICATOR (hidden until workbook uploaded)
+════════════════════════════════════════════════════════ -->
+<div class="steps-bar locked" id="steps-bar">
+  <div class="steps">
+    <div class="step-item" id="si-1">
+      <div class="step-circle">1</div>
+      <span class="step-label">Client &amp; Database</span>
+    </div>
+    <div class="step-item" id="si-2">
+      <div class="step-circle">2</div>
+      <span class="step-label">Table Mapping</span>
+    </div>
+    <div class="step-item" id="si-3">
+      <div class="step-circle">3</div>
+      <span class="step-label">Generate</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     UPLOAD HERO (shown when no workbook loaded)
+════════════════════════════════════════════════════════ -->
+<div id="upload-hero">
+
+  <!-- Tab switcher -->
+  <div class="upload-tabs">
+    <button class="upload-tab active" id="tab-upload" onclick="switchUploadTab('upload')">Upload File</button>
+    <button class="upload-tab"        id="tab-server" onclick="switchUploadTab('server')">From Tableau Server</button>
+  </div>
+
+  <!-- Panel 1: file upload (existing) -->
+  <div id="upload-drop"
+       onclick="triggerFileUpload()"
+       ondragover="onDragOver(event)"
+       ondragleave="onDragLeave(event)"
+       ondrop="onDrop(event)">
+
+    <input type="file" id="upload-input" accept=".twbx,.twb" onchange="handleFileUpload(event)" />
+
+    <div id="upload-icon">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--teal)">
+        <circle cx="28" cy="28" r="27" fill="rgba(23,232,143,.12)" stroke="rgba(23,232,143,.35)" stroke-width="1.5"/>
+        <path d="M28 36V22M22 28l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20 38h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M35 22c3.314 0 6 2.686 6 6s-2.686 6-6 6M21 22c-3.314 0-6 2.686-6 6s2.686 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".5"/>
+      </svg>
+    </div>
+
+    <div id="upload-heading">Drop your reference workbook here</div>
+    <div id="upload-sub">.twbx or .twb file &nbsp;·&nbsp; drag &amp; drop or click to browse</div>
+
+    <div id="upload-spinner">
+      <span class="spinner" style="width:24px;height:24px;border-width:3px;border-top-color:var(--teal);border-color:rgba(23,232,143,.25)"></span>
+    </div>
+
+    <button class="upload-browse-btn" onclick="event.stopPropagation(); triggerFileUpload()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Browse File
+    </button>
+
+    <div class="upload-hint">Supports Tableau workbook files (.twbx, .twb)</div>
+
+    <div id="upload-badge" style="display:none">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Loaded
+    </div>
+  </div>
+
+  <!-- Panel 2: fetch from Tableau Server -->
+  <div id="fetch-panel">
+    <div>
+      <div class="fetch-label">Tableau Server URL</div>
+      <input id="fetch-url" class="fetch-input" type="url"
+             placeholder="https://your-server/#/site/SiteName/workbooks/12345/views"
+             oninput="validateFetchForm()" />
+    </div>
+    <div>
+      <div class="fetch-label">Email</div>
+      <input id="fetch-email" class="fetch-input" type="email"
+             value="rajkumar.ganeshan@cbre.com"
+             oninput="validateFetchForm()" />
+    </div>
+    <div id="fetch-status"></div>
+    <button class="fetch-btn" id="fetch-btn" onclick="fetchFromServer()" disabled>
+      Fetch Workbook from Server
+    </button>
+    <div class="upload-hint">Download runs entirely in the background.</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════ -->
+<main>
+
+  <!-- No workbook yet (fallback notice, hidden once hero is shown) -->
+  <div id="no-workbook-notice" style="display:none">
+    <div class="big">☝️</div>
+    <p>Upload a reference workbook above to get started.</p>
+  </div>
+
+  <!-- ══ STEP 1 — Client & Database ══════════════════════ -->
+  <div class="step-panel" id="step-1">
+
+    <div class="card">
+      <h2>Client Details</h2>
+      <p class="subtitle">Enter the client name. This will be used to label the generated workbook file.</p>
+      <div class="form-row" style="max-width:360px">
+        <label>Client Name</label>
+        <input id="client-name" type="text" placeholder="e.g. JLL, Accenture, Microsoft" oninput="autoFillConnFromClient(this.value)" />
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Postgres Connection</h2>
+      <p class="subtitle">Connect to the client's Postgres database. Used to browse schemas and tables for mapping.</p>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Host / Server</label>
+          <input id="db-host" type="text" value="gws-prod.datamart.edp.cbre.com" />
+        </div>
+        <div class="form-row">
+          <label>Port</label>
+          <input id="db-port" type="number" value="5432" />
+        </div>
+        <div class="form-row">
+          <label>Database Name</label>
+          <input id="db-name" type="text" placeholder="e.g. jll_prod" oninput="autoFillUserFromDb(this.value)" />
+        </div>
+        <div class="form-row">
+          <label>Username</label>
+          <input id="db-user" type="text" placeholder="e.g. jll_user" />
+        </div>
+        <div class="form-row">
+          <label>Password</label>
+          <input id="db-pass" type="password" placeholder="••••••••" />
+        </div>
+        <div class="form-row">
+          <label>SSL Mode</label>
+          <select id="db-ssl">
+            <option value="require">require</option>
+            <option value="prefer">prefer</option>
+            <option value="disable">disable</option>
+            <option value="verify-ca">verify-ca</option>
+            <option value="verify-full">verify-full</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+        <button class="btn btn-outline" id="btn-test" onclick="testConnection()">
+          🔌 Test Connection
+        </button>
+        <div id="conn-status"></div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <div></div>
+      <button class="btn btn-primary btn-lg" id="btn-step1-next" onclick="loadSchemasAndGoStep2()" disabled>
+        Continue &rarr;
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2 — Table Mapping ══════════════════════════ -->
+  <div class="step-panel" id="step-2">
+
+    <!-- Data Model Diagram -->
+    <div class="dm-card" id="dm-card" style="display:none">
+      <div class="dm-card-header" onclick="toggleDmCard()">
+        <span style="font-size:18px">🗂</span>
+        <span class="dm-card-title">Reference Data Model</span>
+        <span class="dm-card-toggle open" id="dm-card-toggle">▼</span>
+      </div>
+      <div class="dm-card-body" id="dm-card-body">
+        <div class="dm-loading" id="dm-loading"><span class="spinner dark"></span> Loading data model…</div>
+        <div id="dm-content"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Table Mapping</h2>
+      <p class="subtitle">Map each table from the reference workbook to the corresponding table in the client's database.</p>
+
+      <div style="display:flex; gap:10px; margin-bottom:18px; align-items:center;">
+        <button class="btn btn-teal" onclick="autoDetectMappings()">
+          🔍 Auto-Detect Matching Tables
+        </button>
+        <span id="autodetect-status" style="font-size:13px; color:var(--muted)"></span>
+      </div>
+
+      <div id="mapping-container"></div>
+    </div>
+
+    <!-- Calculated Fields panel -->
+    <div class="calc-panel" id="calc-panel" style="display:none">
+      <div class="calc-panel-header" onclick="toggleCalcPanel()">
+        <span class="calc-panel-title">⚡ Calculated Fields (<span id="calc-count">0</span>)</span>
+        <span class="calc-badge-modified" id="calc-mod-badge" style="display:none">✏️ <span id="calc-mod-count">0</span> modified</span>
+        <span class="calc-toggle" id="calc-toggle">▼</span>
+      </div>
+      <div class="calc-body" id="calc-body" style="display:none">
+        <input class="calc-search" id="calc-search" type="text" placeholder="Search by field name or formula…" oninput="filterCalcFields()" />
+        <div class="calc-list" id="calc-list"></div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="goStep(1)">&larr; Back</button>
+      <button class="btn btn-primary btn-lg" onclick="goStep(3)">
+        Review &amp; Generate &rarr;
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3 — Generate ══════════════════════════════ -->
+  <div class="step-panel" id="step-3">
+
+    <div class="card">
+      <h2>Review &amp; Generate</h2>
+      <p class="subtitle">Confirm the configuration, then generate the dashboard.</p>
+      <ul class="summary-list" id="summary-list"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Generate Dashboard</h2>
+      <p class="subtitle">Creates a new .twbx workbook with your client's Postgres connection and table mappings applied. All dashboards, filters, calculations, and formatting from the reference workbook are preserved.</p>
+
+      <div id="gen-status"></div>
+
+      <div style="margin-top:18px;">
+        <button class="btn btn-teal btn-lg" id="btn-generate" onclick="generateDashboard()">
+          🚀 Generate Dashboard
+        </button>
+      </div>
+
+      <div id="download-box" class="download-box" style="display:none">
+        <div class="download-check-icon">
+          <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 14l6 6 10-10" stroke="var(--green)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Workbook Ready!</h3>
+        <p>Ready to open in Tableau Desktop</p>
+        <a id="download-link" href="#" style="text-decoration:none">
+          <button class="btn btn-teal btn-lg" style="margin-top:20px; min-width:220px; justify-content:center; font-size:15px;">
+            📥 Download Workbook
+          </button>
+        </a>
+        <p id="download-note" style="margin-top:10px"></p>
+      </div>
+
+      <div id="repair-report" class="repair-report" style="display:none">
+        <div class="repair-report-title">🔧 Generation Report</div>
+        <div id="repair-items"></div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="goStep(2)">&larr; Back</button>
+      <button class="btn btn-secondary" onclick="resetAll()">🔄 Start Over</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- Global join dialog — direct body child, never inside any stacking context -->
+<div id="global-join-dialog" class="dm-join-dialog"></div>
+<!-- Backdrop sits behind the dialog and closes it on outside click -->
+<div id="jd-backdrop" onclick="closeAllJoinDialogs()"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const S = {
+  step:            0,        // 0 = no workbook yet, 1-3 = active step
+  sessionId:       null,
+  parsedInfo:      null,
+  workbookName:    '',       // original filename (no extension) from server
+  clientName:      '',
+  conn:            {},
+  connTested:      false,
+  schemas:         [],
+  schemaTables:    {},
+  mappings:        [],
+  calcFields:      [],   // all parsed calculated fields: [{ds_name, ds_caption, name, caption, formula, ...}]
+  calcOverrides:   {},   // keyed by "ds_name::field_name" -> new formula string
+  removedTables:   new Set(),  // table names excluded from data model
+  joinOverrides:   {},   // keyed by "leftTable::rightTable" -> {left_table, right_table, left_col, right_col}
+  dmData:          null, // cached data model API response
+  columnCache:     {},   // keyed by relation name → [col, ...] (populated lazily)
+  downloadUrl:     null,
+  downloadFilename: null,
+};
+
+// ═══════════════════════════════════════════════════════
+// UPLOAD / FETCH TAB SWITCHER
+// ═══════════════════════════════════════════════════════
+function switchUploadTab(tab) {
+  const isUpload = tab === 'upload';
+  document.getElementById('tab-upload').classList.toggle('active', isUpload);
+  document.getElementById('tab-server').classList.toggle('active', !isUpload);
+  document.getElementById('upload-drop').style.display  = isUpload ? '' : 'none';
+  document.getElementById('fetch-panel').style.display  = isUpload ? 'none' : 'flex';
+}
+
+function validateFetchForm() {
+  const url   = document.getElementById('fetch-url').value.trim();
+  const email = document.getElementById('fetch-email').value.trim();
+  document.getElementById('fetch-btn').disabled = !(url && email);
+}
+
+async function fetchFromServer() {
+  const url    = document.getElementById('fetch-url').value.trim();
+  const email  = document.getElementById('fetch-email').value.trim();
+  const btn    = document.getElementById('fetch-btn');
+  const status = document.getElementById('fetch-status');
+
+  btn.disabled = true;
+  status.className = '';
+  status.innerHTML = '<span class="spinner"></span> Starting…';
+
+  let job_id;
+  try {
+    const res = await fetch('/api/fetch-from-server', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, email }),
+    });
+    let data;
+    try { data = await res.json(); }
+    catch (_) { throw new Error(`Server error ${res.status} — restart the backend and try again`); }
+    if (!res.ok) throw new Error(data.detail || 'Failed to start download');
+    job_id = data.job_id;
+  } catch (err) {
+    status.className = 'error';
+    status.textContent = err.message;
+    btn.disabled = false;
+    return;
+  }
+
+  // Poll for progress every 1.5s
+  const poll = setInterval(async () => {
+    try {
+      const res  = await fetch(`/api/fetch-status/${job_id}`);
+      let data;
+      try { data = await res.json(); }
+      catch (_) { throw new Error(`Server error ${res.status}`); }
+      if (data.status === 'running') {
+        status.innerHTML = `<span class="spinner"></span> ${escHtml(data.stage)}`;
+      } else if (data.status === 'done') {
+        clearInterval(poll);
+        status.innerHTML = '';
+        onWorkbookReady(data.result);
+      } else if (data.status === 'error') {
+        clearInterval(poll);
+        status.className = 'error';
+        status.textContent = data.error || 'Download failed';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      clearInterval(poll);
+      status.className = 'error';
+      status.textContent = 'Lost connection to server';
+      btn.disabled = false;
+    }
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════════════════
+// UPLOAD ZONE
+// ═══════════════════════════════════════════════════════
+function triggerFileUpload() {
+  // Do nothing while an upload is already in progress
+  if (document.getElementById('upload-spinner').style.display === 'block') return;
+  const input = document.getElementById('upload-input');
+  input.value = '';   // reset so re-uploading the same file fires onchange
+  input.click();
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-drop').classList.add('dragging');
+}
+function onDragLeave() {
+  document.getElementById('upload-drop').classList.remove('dragging');
+}
+function onDrop(e) {
+  e.preventDefault();
+  onDragLeave();
+  const file = e.dataTransfer.files[0];
+  if (file) uploadFile(file);
+}
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (file) uploadFile(file);
+}
+
+async function uploadFile(file) {
+  if (!file.name.match(/\.(twbx|twb)$/i)) {
+    alert('Please upload a .twbx or .twb file.');
+    return;
+  }
+
+  setUploadState('loading', file.name);
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const res  = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    onWorkbookReady(data);
+  } catch (err) {
+    setUploadState('error', file.name, err.message);
+  }
+}
+
+function setUploadState(state, filename, errMsg) {
+  const drop    = document.getElementById('upload-drop');
+  const icon    = document.getElementById('upload-icon');
+  const heading = document.getElementById('upload-heading');
+  const sub     = document.getElementById('upload-sub');
+  const spinner = document.getElementById('upload-spinner');
+  const badge   = document.getElementById('upload-badge');
+
+  drop.classList.remove('loaded');
+  badge.style.display = 'none';
+  spinner.style.display = 'none';
+
+  if (state === 'loading') {
+    icon.textContent     = '📂';
+    heading.textContent  = filename;
+    heading.className    = 'uh';
+    sub.textContent      = 'Parsing workbook…';
+    spinner.style.display = 'block';
+  } else if (state === 'loaded') {
+    drop.classList.add('loaded');
+    icon.textContent    = '✅';
+    heading.textContent = filename;
+    heading.className   = 'uf';
+    sub.textContent     = errMsg;   // reused for info text
+    badge.textContent   = 'Loaded';
+    badge.style.display = 'block';
+  } else if (state === 'error') {
+    icon.textContent    = '❌';
+    heading.textContent = filename;
+    heading.className   = 'uh';
+    sub.textContent     = errMsg || 'Upload failed';
+    sub.style.color     = '#f38ba8';
+  }
+}
+
+function onWorkbookReady(data) {
+  S.sessionId   = data.session_id;
+  S.parsedInfo  = data.parsed_info;
+  S.workbookName = data.original_filename || 'Dashboard';
+
+  const dsList  = (data.parsed_info.datasources || []);
+  const totalTables = dsList.reduce((n, ds) => n + (ds.tables || []).length, 0);
+  const info    = `${dsList.length} datasource${dsList.length !== 1 ? 's' : ''} · ${totalTables} table${totalTables !== 1 ? 's' : ''} detected`;
+
+  setUploadState('loaded', S.workbookName, info);
+
+  // Show loaded bar, hide hero
+  const loadedBar = document.getElementById('workbook-loaded-bar');
+  const hero      = document.getElementById('upload-hero');
+  document.getElementById('wb-bar-name').textContent = S.workbookName;
+  document.getElementById('wb-bar-info').textContent = '· ' + info;
+  loadedBar.style.display = 'flex';
+  hero.style.display = 'none';
+
+  // Unlock the step wizard
+  document.getElementById('steps-bar').classList.remove('locked');
+  document.getElementById('steps-bar').classList.add('visible');
+  document.getElementById('no-workbook-notice').style.display = 'none';
+  goStep(1);
+}
+
+// ═══════════════════════════════════════════════════════
+// STEP NAVIGATION
+// ═══════════════════════════════════════════════════════
+function goStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`step-${n}`);
+  if (panel) panel.classList.add('active');
+
+  for (let i = 1; i <= 3; i++) {
+    const si = document.getElementById(`si-${i}`);
+    si.classList.remove('active', 'done');
+    if (i < n)  si.classList.add('done');
+    if (i === n) si.classList.add('active');
+  }
+  S.step = n;
+
+  if (n === 2) { buildMappingUI(); buildCalcFieldsPanel(); fetchAndRenderDataModel(); }
+  if (n === 3) buildSummary();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════════════
+// STEP 1 — CLIENT & DB
+// ═══════════════════════════════════════════════════════
+async function testConnection() {
+  const conn = getConnForm();
+  if (!conn.host || !conn.database || !conn.username) {
+    showConnStatus('<span class="alert alert-warn" style="display:inline-flex">⚠️ Fill in host, database, and username first</span>');
+    return;
+  }
+  const btn = document.getElementById('btn-test');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Testing…';
+  showConnStatus('');
+
+  try {
+    const res = await postJSON('/api/db/test', conn);
+    if (res.success) {
+      showConnStatus(`<span class="alert alert-success" style="display:inline-flex">✅ ${escHtml(res.message)}</span>`);
+      S.conn       = conn;
+      S.connTested = true;
+      document.getElementById('btn-step1-next').disabled = false;
+    } else {
+      showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(res.message)}</span>`);
+      S.connTested = false;
+      document.getElementById('btn-step1-next').disabled = true;
+    }
+  } catch (e) {
+    showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(e.message)}</span>`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔌 Test Connection';
+  }
+}
+
+function showConnStatus(html) {
+  document.getElementById('conn-status').innerHTML = html;
+}
+
+function autoFillConnFromClient(clientName) {
+  const db = clientName.trim().toLowerCase().replace(/\s+/g, '_');
+  const dbEl = document.getElementById('db-name');
+  const userEl = document.getElementById('db-user');
+  if (dbEl) { dbEl.value = db; }
+  if (userEl) { userEl.value = db ? db + '_user' : ''; }
+}
+
+function autoFillUserFromDb(dbName) {
+  const userEl = document.getElementById('db-user');
+  if (userEl) { userEl.value = dbName.trim() ? dbName.trim() + '_user' : ''; }
+}
+
+async function loadSchemasAndGoStep2() {
+  S.clientName = document.getElementById('client-name').value.trim();
+  S.conn       = getConnForm();
+
+  if (!S.clientName) { alert('Please enter a client name.'); return; }
+  if (!S.connTested)  { alert('Please test the connection first.'); return; }
+
+  try {
+    const res = await postJSON('/api/db/schemas', S.conn);
+    S.schemas = res.schemas || [];
+  } catch (e) {
+    alert('Failed to load schemas: ' + e.message);
+    return;
+  }
+
+  S.schemaTables = {};
+  goStep(2);
+}
+
+function getConnForm() {
+  return {
+    host:     document.getElementById('db-host').value.trim(),
+    port:     parseInt(document.getElementById('db-port').value) || 5432,
+    database: document.getElementById('db-name').value.trim(),
+    username: document.getElementById('db-user').value.trim(),
+    password: document.getElementById('db-pass').value,
+    sslmode:  document.getElementById('db-ssl').value,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// STEP 2 — TABLE MAPPING
+// ═══════════════════════════════════════════════════════
+function allReferenceTables() {
+  const rows = [];
+  (S.parsedInfo.datasources || []).forEach(ds => {
+    (ds.tables || []).forEach(t => {
+      if (S.removedTables.has(t.table || t.name)) return;
+      rows.push({
+        ds_name:       ds.name,
+        ds_caption:    ds.caption,
+        ref_schema:    t.schema,
+        ref_table:     t.table,
+        is_custom_sql: t.is_custom_sql  || false,
+        custom_sql:    t.custom_sql     || '',
+        old_connection: t.old_connection || (ds.postgres_connections || [])[0] || {},
+      });
+    });
+  });
+  return rows;
+}
+
+function buildMappingUI() {
+  const refs       = allReferenceTables();
+  const container  = document.getElementById('mapping-container');
+  const schemaOpts = S.schemas.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+
+  const byDs = {};
+  refs.forEach(r => {
+    if (!byDs[r.ds_name]) byDs[r.ds_name] = { caption: r.ds_caption, rows: [] };
+    byDs[r.ds_name].rows.push(r);
+  });
+
+  let html = '';
+  Object.entries(byDs).forEach(([dsName, { caption, rows }]) => {
+    html += `<div class="section-title">📊 ${escHtml(caption)}</div>`;
+    rows.forEach((r, idx) => {
+      const rowId = `${dsName}_${idx}`;
+      if (r.is_custom_sql) {
+        html += `
+          <div style="margin-bottom:10px">
+            <div class="mapping-row" style="grid-template-columns:1fr 24px 1fr auto">
+              <div class="ref-col">
+                <div style="font-size:11px;color:var(--muted)">Custom SQL</div>
+                <strong style="color:#7d5a00">⚙ ${escHtml(r.ref_table)}</strong>
+              </div>
+              <div class="arrow">→</div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:4px">New Schema (replaces <code>${escHtml(r.ref_schema)}</code> in SQL)</div>
+                <select id="schema-${escHtml(rowId)}" onchange="onCustomSqlSchemaChange('${escHtml(rowId)}', this.value)">
+                  <option value="">— select schema —</option>
+                  ${schemaOpts}
+                </select>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:6px">
+                <button class="btn btn-secondary" style="font-size:12px;padding:7px 12px"
+                  onclick="toggleSqlEditor('${escHtml(rowId)}')">✏️ Edit SQL</button>
+              </div>
+            </div>
+            <div class="sql-editor-wrap" id="sqledit-${escHtml(rowId)}">
+              <div class="sql-editor-header">
+                <span>✏️ Custom SQL Editor</span>
+                <button class="btn btn-teal" style="padding:4px 14px;font-size:12px;font-weight:700"
+                  onclick="validateSql('${escHtml(rowId)}')">▶ Validate SQL</button>
+              </div>
+              <textarea id="sqltxt-${escHtml(rowId)}" spellcheck="false">${escHtml(r.custom_sql)}</textarea>
+              <div class="sql-editor-footer">Tip: fix column names that differ in the new schema. The old schema is auto-replaced when you pick a new schema above.</div>
+              <div id="sqlresult-${escHtml(rowId)}" style="display:none"></div>
+            </div>
+          </div>`;
+      } else {
+        html += `
+          <div class="mapping-row" id="row-${escHtml(rowId)}">
+            <div class="ref-col">
+              <div style="font-size:11px;color:var(--muted)">Reference</div>
+              <strong>${escHtml(r.ref_schema)}</strong>.<span style="color:#2c3fa0">${escHtml(r.ref_table)}</span>
+            </div>
+            <div class="arrow">→</div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">New Schema</div>
+              <select id="schema-${escHtml(rowId)}" onchange="loadTablesForRow('${escHtml(rowId)}', this.value, '${escHtml(r.ref_table)}')">
+                <option value="">— select schema —</option>
+                ${schemaOpts}
+              </select>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">New Table / View</div>
+              <select id="table-${escHtml(rowId)}" disabled>
+                <option value="">— select schema first —</option>
+              </select>
+            </div>
+          </div>`;
+      }
+    });
+  });
+
+  container.innerHTML = html;
+
+  S.mappings = refs.map(r => ({
+    ...r,
+    new_schema: '',
+    new_table:  r.is_custom_sql ? r.ref_table : '',
+  }));
+}
+
+async function loadTablesForRow(rowId, schema, refTable) {
+  const tableEl = document.getElementById(`table-${rowId}`);
+  if (!schema) {
+    tableEl.innerHTML = '<option value="">— select schema first —</option>';
+    tableEl.disabled  = true;
+    updateMappingState(rowId, '', '');
+    return;
+  }
+  tableEl.innerHTML = '<option>Loading…</option>';
+  tableEl.disabled  = true;
+
+  let tables = S.schemaTables[schema];
+  if (!tables) {
+    try {
+      const res = await postJSON(`/api/db/tables/${encodeURIComponent(schema)}`, S.conn);
+      tables = res.tables || [];
+      S.schemaTables[schema] = tables;
+    } catch (e) {
+      tableEl.innerHTML = `<option>Error: ${escHtml(e.message)}</option>`;
+      return;
+    }
+  }
+
+  tableEl.innerHTML = '<option value="">— select table —</option>' +
+    tables.map(t => {
+      const lbl = t.type === 'VIEW' ? `${t.name} (view)` : t.name;
+      return `<option value="${escHtml(t.name)}">${escHtml(lbl)}</option>`;
+    }).join('');
+  tableEl.disabled = false;
+
+  const best = bestMatch(refTable, tables.map(t => t.name));
+  if (best) tableEl.value = best;
+
+  tableEl.onchange = () => updateMappingState(rowId, schema, tableEl.value);
+  updateMappingState(rowId, schema, tableEl.value);
+}
+
+function updateMappingState(rowId, schema, table) {
+  const [dsName, idx] = parseRowId(rowId);
+  const refs = allReferenceTables();
+  const i    = findMappingIndex(dsName, idx, refs);
+  if (i >= 0) { S.mappings[i].new_schema = schema; S.mappings[i].new_table = table; }
+}
+
+function toggleSqlEditor(rowId) {
+  document.getElementById(`sqledit-${rowId}`).classList.toggle('open');
+}
+
+function onCustomSqlSchemaChange(rowId, schema) {
+  const [dsName, idx] = parseRowId(rowId);
+  const refs = allReferenceTables();
+  const i    = findMappingIndex(dsName, idx, refs);
+  if (i < 0) return;
+  S.mappings[i].new_schema = schema;
+  S.mappings[i].new_table  = S.mappings[i].ref_table;
+
+  const textarea = document.getElementById(`sqltxt-${rowId}`);
+  const resultEl = document.getElementById(`sqlresult-${rowId}`);
+  if (textarea && schema) {
+    const oldSchema = refs[i].ref_schema;
+    const fullSql   = refs[i].custom_sql || '';
+    textarea.value  = fullSql.replace(new RegExp(`\\b${escapeRegex(oldSchema)}\\.`, 'g'), schema + '.');
+    if (resultEl) { resultEl.innerHTML = ''; resultEl.style.display = 'none'; }
+    document.getElementById(`sqledit-${rowId}`).classList.add('open');
+  }
+}
+
+async function validateSql(rowId) {
+  const textarea = document.getElementById(`sqltxt-${rowId}`);
+  const resultEl = document.getElementById(`sqlresult-${rowId}`);
+  if (!textarea || !resultEl) return;
+
+  const sql = textarea.value.trim();
+  if (!sql) {
+    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">⚠️ SQL is empty.</div>';
+    resultEl.style.display = 'block';
+    return;
+  }
+  if (!S.connTested) {
+    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">⚠️ No connection — test the connection in Step 1 first.</div>';
+    resultEl.style.display = 'block';
+    return;
+  }
+
+  resultEl.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--muted);background:#1e1e2e;display:flex;align-items:center;gap:8px"><span class="spinner dark"></span> Validating…</div>';
+  resultEl.style.display = 'block';
+
+  try {
+    const res = await postJSON('/api/db/validate-sql', { sql, connection: S.conn });
+    if (res.valid) {
+      const cols = res.columns.length
+        ? `<div style="margin-top:5px;font-size:12px;color:#a6e3a1">Columns (${res.column_count}): ${res.columns.map(c => `<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">${escHtml(c)}</code>`).join(' ')}</div>`
+        : '';
+      resultEl.innerHTML = `<div style="padding:10px 14px;background:#1e2e20;border-top:2px solid #a6e3a1"><span style="color:#a6e3a1;font-weight:700;font-size:13px">✅ SQL is valid</span>${cols}</div>`;
+    } else {
+      const errText = escHtml(res.error || 'Unknown error');
+      resultEl.innerHTML = `<div style="padding:10px 14px;background:#2e1e1e;border-top:2px solid #f38ba8"><span style="color:#f38ba8;font-weight:700;font-size:13px">❌ SQL Error</span><pre style="margin-top:5px;font-size:12px;color:#fab387;white-space:pre-wrap;word-break:break-all">${errText}</pre></div>`;
+      const posMatch = (res.error || '').match(/Position:\s*(\d+)/i);
+      if (posMatch) {
+        textarea.focus();
+        textarea.setSelectionRange(parseInt(posMatch[1]) - 1, parseInt(posMatch[1]));
+      }
+    }
+  } catch (e) {
+    resultEl.innerHTML = `<div class="alert alert-error" style="margin:0;border-radius:0">❌ ${escHtml(e.message)}</div>`;
+  }
+}
+
+
+function getSqlOverrideForRow(rowId) {
+  const el = document.getElementById(`sqltxt-${rowId}`);
+  return el ? el.value.trim() : null;
+}
+
+async function autoDetectMappings() {
+  const status = document.getElementById('autodetect-status');
+  status.textContent = 'Detecting…';
+  const refs = allReferenceTables();
+
+  for (const s of S.schemas) {
+    if (!S.schemaTables[s]) {
+      try {
+        const res = await postJSON(`/api/db/tables/${encodeURIComponent(s)}`, S.conn);
+        S.schemaTables[s] = res.tables || [];
+      } catch {}
+    }
+  }
+
+  let matched = 0;
+  refs.forEach((r, globalIdx) => {
+    const rowIdx = refs.slice(0, globalIdx).filter(x => x.ds_name === r.ds_name).length;
+    const rowId  = `${r.ds_name}_${rowIdx}`;
+    const schemaEl = document.getElementById(`schema-${rowId}`);
+    const tableEl  = document.getElementById(`table-${rowId}`);
+
+    let bestScore = -1, bestSchema = '', bestTable = '';
+    for (const [schema, tables] of Object.entries(S.schemaTables)) {
+      const candidate = bestMatch(r.ref_table, tables.map(t => t.name));
+      if (candidate) {
+        const score = similarity(r.ref_table, candidate);
+        if (score > bestScore) { bestScore = score; bestSchema = schema; bestTable = candidate; }
+      }
+    }
+
+    if (bestTable && schemaEl) {
+      if (r.is_custom_sql) {
+        schemaEl.value = bestSchema;
+        onCustomSqlSchemaChange(rowId, bestSchema);
+      } else {
+        schemaEl.value = bestSchema;
+        loadTablesForRow(rowId, bestSchema, r.ref_table).then(() => {
+          const t = document.getElementById(`table-${rowId}`);
+          if (t) { t.value = bestTable; updateMappingState(rowId, bestSchema, bestTable); }
+        });
+      }
+      matched++;
+    }
+  });
+
+  status.textContent = matched > 0
+    ? `✅ Auto-matched ${matched} of ${refs.length} tables`
+    : 'No matches found — map manually below';
+}
+
+function findMappingIndex(dsName, rowIdx, refs) {
+  let count = 0;
+  for (let i = 0; i < refs.length; i++) {
+    if (refs[i].ds_name === dsName) {
+      if (count === rowIdx) return i;
+      count++;
+    }
+  }
+  return -1;
+}
+
+function parseRowId(rowId) {
+  const parts = rowId.split('_');
+  const idx   = parseInt(parts[parts.length - 1]);
+  const name  = parts.slice(0, parts.length - 1).join('_');
+  return [name, idx];
+}
+
+// ═══════════════════════════════════════════════════════
+// CALCULATED FIELDS PANEL
+// ═══════════════════════════════════════════════════════
+function buildCalcFieldsPanel() {
+  const info = S.parsedInfo;
+  if (!info || !info.datasources) return;
+
+  const fields = [];
+  info.datasources.forEach(ds => {
+    (ds.calculated_fields || []).forEach(f => {
+      fields.push({ ds_name: ds.name, ds_caption: ds.caption, ...f });
+    });
+  });
+
+  S.calcFields = fields;
+  const panel = document.getElementById('calc-panel');
+  if (fields.length === 0) { panel.style.display = 'none'; return; }
+
+  document.getElementById('calc-count').textContent = fields.length;
+  panel.style.display = 'block';
+  renderCalcList(fields);
+}
+
+function renderCalcList(fields) {
+  const list = document.getElementById('calc-list');
+  if (fields.length === 0) {
+    list.innerHTML = '<div class="calc-no-results">No matching calculated fields.</div>';
+    return;
+  }
+  list.innerHTML = fields.map(f => {
+    const key       = `${f.ds_name}::${f.name}`;
+    const override  = S.calcOverrides[key];
+    const formula   = override !== undefined ? override : f.formula;
+    const isModded  = override !== undefined;
+    const preview   = formula.length > 140 ? formula.substring(0, 140) + '…' : formula;
+    const safeKey   = encodeURIComponent(key);
+    return `
+      <div class="calc-field-card ${isModded ? 'modified' : ''}" id="cfc-${safeKey}">
+        <div class="calc-field-card-header">
+          <span class="calc-field-name">${escHtml(f.caption || f.name.replace(/^\[|\]$/g,''))}</span>
+          <span class="calc-role-badge">${escHtml(f.role || f.datatype)}</span>
+          ${isModded ? '<span class="calc-mod-badge">✏️ Modified</span>' : ''}
+          <button class="btn-sm" onclick="openCalcEditor(decodeURIComponent('${safeKey}'))">Edit</button>
+        </div>
+        <div class="calc-formula-preview" id="cfp-${safeKey}">${escHtml(preview)}</div>
+        <div class="calc-editor-area" id="cfe-${safeKey}" style="display:none">
+          <textarea id="cfta-${safeKey}" spellcheck="false">${escHtml(formula)}</textarea>
+          <div class="calc-editor-footer">
+            <button class="btn btn-primary btn-sm" onclick="saveCalcEdit(decodeURIComponent('${safeKey}'))">Save</button>
+            <button class="btn-sm" onclick="closeCalcEditor(decodeURIComponent('${safeKey}'))">Cancel</button>
+            ${isModded ? `<button class="btn-sm" style="color:#c0392b" onclick="resetCalcEdit(decodeURIComponent('${safeKey}'))">Reset to original</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterCalcFields() {
+  const q = document.getElementById('calc-search').value.toLowerCase();
+  const filtered = q
+    ? S.calcFields.filter(f =>
+        (f.caption || f.name).toLowerCase().includes(q) ||
+        f.formula.toLowerCase().includes(q))
+    : S.calcFields;
+  renderCalcList(filtered);
+}
+
+function toggleCalcPanel() {
+  const body   = document.getElementById('calc-body');
+  const toggle = document.getElementById('calc-toggle');
+  const open   = body.style.display !== 'none';
+  body.style.display   = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+function openCalcEditor(key) {
+  const safeKey = encodeURIComponent(key);
+  document.getElementById(`cfe-${safeKey}`).style.display = 'block';
+  document.getElementById(`cfp-${safeKey}`).style.display = 'none';
+  const ta = document.getElementById(`cfta-${safeKey}`);
+  if (ta) ta.focus();
+}
+
+function closeCalcEditor(key) {
+  const safeKey = encodeURIComponent(key);
+  document.getElementById(`cfe-${safeKey}`).style.display = 'none';
+  document.getElementById(`cfp-${safeKey}`).style.display = 'block';
+}
+
+function saveCalcEdit(key) {
+  const safeKey = encodeURIComponent(key);
+  const ta      = document.getElementById(`cfta-${safeKey}`);
+  if (!ta) return;
+  const newFormula = ta.value;
+  // Find original formula
+  const f = S.calcFields.find(x => `${x.ds_name}::${x.name}` === key);
+  if (f && newFormula === f.formula) {
+    delete S.calcOverrides[key];
+  } else {
+    S.calcOverrides[key] = newFormula;
+  }
+  updateCalcModBadge();
+  // Re-render card
+  const q = document.getElementById('calc-search').value.toLowerCase();
+  const filtered = q
+    ? S.calcFields.filter(f2 =>
+        (f2.caption || f2.name).toLowerCase().includes(q) ||
+        f2.formula.toLowerCase().includes(q))
+    : S.calcFields;
+  renderCalcList(filtered);
+}
+
+function resetCalcEdit(key) {
+  delete S.calcOverrides[key];
+  updateCalcModBadge();
+  filterCalcFields();
+}
+
+function updateCalcModBadge() {
+  const n     = Object.keys(S.calcOverrides).length;
+  const badge = document.getElementById('calc-mod-badge');
+  const span  = document.getElementById('calc-mod-count');
+  if (n > 0) { span.textContent = n; badge.style.display = 'inline'; }
+  else        { badge.style.display = 'none'; }
+}
+
+// ═══════════════════════════════════════════════════════
+// STEP 3 — GENERATE
+// ═══════════════════════════════════════════════════════
+function buildSummary() {
+  const mapped = S.mappings.filter(m => m.new_schema && m.new_table);
+  const total  = S.mappings.length;
+
+  document.getElementById('summary-list').innerHTML = `
+    <li><span class="lbl">Client</span><strong>${escHtml(S.clientName)}</strong></li>
+    <li><span class="lbl">Reference Workbook</span>${escHtml(S.workbookName)}</li>
+    <li><span class="lbl">Output Filename</span><code>${[S.clientName, S.conn.database, S.workbookName].filter(Boolean).map(p => p.replace(/[^a-zA-Z0-9\-_]/g,'_').replace(/^_+|_+$/g,'')).join('_')}.twbx</code></li>
+    <li><span class="lbl">New DB Server</span><code>${escHtml(S.conn.host)}:${S.conn.port}</code></li>
+    <li><span class="lbl">New Database</span><code>${escHtml(S.conn.database)}</code></li>
+    <li><span class="lbl">New Username</span><code>${escHtml(S.conn.username)}</code></li>
+    <li><span class="lbl">Tables Mapped</span>${mapped.length} of ${total}
+      ${mapped.length < total ? `<span class="alert alert-warn" style="display:inline-flex;padding:2px 8px;font-size:12px;margin-top:0">⚠️ ${total - mapped.length} unmapped</span>` : '&nbsp;✅'}
+    </li>
+    ${mapped.map(m => `
+      <li style="font-size:13px">
+        <span class="lbl" style="font-family:monospace;font-size:12px">${escHtml(m.ref_schema)}.${escHtml(m.ref_table)}</span>
+        <span>→ <code>${escHtml(m.new_schema)}.${escHtml(m.new_table)}</code></span>
+      </li>`).join('')}
+  `;
+}
+
+function buildTableMappingsPayload(mapped) {
+  const refs = allReferenceTables();
+  return mapped.map(m => {
+    const dsRefs = refs.filter(r => r.ds_name === m.ds_name);
+    const rowIdx = dsRefs.findIndex(r => r.ref_schema === m.ref_schema && r.ref_table === m.ref_table);
+    const rowId  = `${m.ds_name}_${rowIdx >= 0 ? rowIdx : 0}`;
+    return {
+      old_schema:          m.ref_schema,
+      old_table:           m.ref_table,
+      new_schema:          m.new_schema,
+      new_table:           m.new_table,
+      old_connection:      m.old_connection || {},
+      is_custom_sql:       m.is_custom_sql  || false,
+      custom_sql_override: m.is_custom_sql  ? getSqlOverrideForRow(rowId) : null,
+      original_sql:        m.is_custom_sql  ? (m.custom_sql || '') : null,
+    };
+  });
+}
+
+async function generateDashboard(skipPreflight) {
+  const mapped = S.mappings.filter(m => m.new_schema && m.new_table);
+  if (mapped.length === 0) {
+    document.getElementById('gen-status').innerHTML = '<div class="alert alert-error">❌ Please map at least one table before generating.</div>';
+    return;
+  }
+
+  const btn = document.getElementById('btn-generate');
+  btn.disabled  = true;
+  document.getElementById('download-box').style.display = 'none';
+
+  const mappingsPayload = buildTableMappingsPayload(mapped);
+
+  // ── Pre-flight checks ────────────────────────────────────────
+  if (!skipPreflight) {
+    btn.innerHTML = '<span class="spinner" style="border-top-color:var(--green);border-color:rgba(0,0,0,.12)"></span> Running pre-flight checks…';
+    document.getElementById('gen-status').innerHTML = '<div class="alert alert-info">🔍 Validating tables and SQL against the new database…</div>';
+
+    try {
+      const pfRes = await postJSON('/api/preflight', {
+        connection:    S.conn,
+        table_mappings: mappingsPayload,
+      });
+
+      if (!pfRes.ok) {
+        renderPreflightIssues(pfRes.issues);
+        btn.disabled  = false;
+        btn.innerHTML = '🚀 Generate Dashboard';
+        return;
+      }
+
+      document.getElementById('gen-status').innerHTML =
+        '<div class="alert alert-success" style="color:#166534;background:#dcfce7;border-color:#bbf7d0">✅ All pre-flight checks passed. Building workbook…</div>';
+    } catch (e) {
+      document.getElementById('gen-status').innerHTML =
+        `<div class="alert alert-warn">⚠️ Pre-flight check failed (${escHtml(e.message)}). Proceeding with generation…</div>`;
+    }
+  } else {
+    document.getElementById('gen-status').innerHTML = '<div class="alert alert-info">⏳ Building your workbook…</div>';
+  }
+
+  // ── Generate ─────────────────────────────────────────────────
+  btn.innerHTML = '<span class="spinner" style="border-top-color:var(--green);border-color:rgba(0,0,0,.12)"></span> Generating…';
+
+  const calcOverridesList = Object.entries(S.calcOverrides).map(([key, formula]) => {
+    const sep        = key.indexOf('::');
+    const ds_name    = key.substring(0, sep);
+    const field_name = key.substring(sep + 2);
+    return { ds_name, field_name, formula };
+  });
+
+  const payload = {
+    session_id:      S.sessionId,
+    client_name:     S.clientName,
+    connection:      S.conn,
+    calc_overrides:  calcOverridesList,
+    table_mappings:  mappingsPayload,
+    removed_tables:  [...S.removedTables],
+    join_overrides:  Object.values(S.joinOverrides),
+  };
+
+  try {
+    const res = await postJSON('/api/generate', payload);
+    document.getElementById('gen-status').innerHTML = '';
+    document.getElementById('download-link').href     = res.download_url;
+    document.getElementById('download-link').download = res.filename;
+
+    const log = res.repair_log || [];
+    const note = res.filename + ' — open in Tableau Desktop. Use Data > Extract Data to create an extract.';
+    document.getElementById('download-note').textContent = note;
+    document.getElementById('download-box').style.display = 'block';
+    renderRepairReport(log);
+  } catch (e) {
+    document.getElementById('gen-status').innerHTML = `<div class="alert alert-error">❌ ${escHtml(e.message)}</div>`;
+  } finally {
+    btn.disabled  = false;
+    btn.innerHTML = '🚀 Generate Dashboard';
+  }
+}
+
+function renderPreflightIssues(issues) {
+  const typeLabel = { table_not_found: 'TABLE NOT FOUND', sql_error: 'SQL ERROR' };
+  const rows = issues.map((iss, idx) => `
+    <div class="pf-issue">
+      <div class="pf-issue-header">
+        <span class="pf-badge ${iss.type === 'sql_error' ? 'pf-badge-sql' : 'pf-badge-tbl'}">
+          ${typeLabel[iss.type] || iss.type.toUpperCase()}
+        </span>
+        <strong class="pf-issue-label">${escHtml(iss.label)}</strong>
+        ${iss.target && iss.target !== iss.label ? `<span class="pf-target">→ <code>${escHtml(iss.target)}</code></span>` : ''}
+      </div>
+      <div class="pf-cause"><span class="pf-cause-lbl">Root cause:</span> ${escHtml(iss.root_cause)}</div>
+      <div class="pf-fix"><span class="pf-cause-lbl">Fix:</span> ${escHtml(iss.fix)}</div>
+      ${iss.similar_tables && iss.similar_tables.length ? `
+        <div class="pf-similar">
+          <span class="pf-cause-lbl">Similar tables:</span>
+          ${iss.similar_tables.map(t => `<code class="pf-chip">${escHtml(t)}</code>`).join(' ')}
+        </div>` : ''}
+    </div>
+  `).join('');
+
+  document.getElementById('gen-status').innerHTML = `
+    <div class="pf-panel">
+      <div class="pf-panel-title">⚠️ Pre-flight found ${issues.length} issue${issues.length > 1 ? 's' : ''} — extract will fail without fixing these</div>
+      <div class="pf-issues-list">${rows}</div>
+      <div class="pf-actions">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Fix Issues</button>
+        <button class="btn" style="background:#dc2626" onclick="generateDashboard(true)">Generate Anyway</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderRepairReport(log) {
+  const report = document.getElementById('repair-report');
+  const items  = document.getElementById('repair-items');
+  if (!log || log.length === 0) {
+    report.style.display = 'none';
+    return;
+  }
+
+  const iconMap = { fixed: '✅', warning: '⚠️', error: '❌' };
+
+  const otherItems = log;
+
+  function renderItem(item) {
+    const sev  = item.severity || 'warning';
+    const icon = iconMap[sev] || '⚠️';
+    // Extract success items get a distinct blue style
+    const cls = (item.type === 'extract' && sev === 'fixed') ? 'extract-ok' : escHtml(sev);
+    const extractIcon = (item.type === 'extract' && sev === 'fixed') ? '📦' : icon;
+    return `
+      <div class="repair-item ${cls}">
+        <div class="repair-icon">${extractIcon}</div>
+        <div class="repair-body">
+          <div class="repair-title">${escHtml(item.title || item.type)}</div>
+          ${item.description ? `<div class="repair-desc">${escHtml(item.description)}</div>` : ''}
+          ${item.fix ? `<div class="repair-fix">↳ ${escHtml(item.fix)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  items.innerHTML = otherItems.map(renderItem).join('');
+
+  report.style.display = 'block';
+}
+
+function resetAll() {
+  S.dmData       = null;
+  S.columnCache  = {};
+  S.removedTables.clear();
+  S.joinOverrides = {};
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+async function postJSON(url, body) {
+  const res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+  return data;
+}
+function similarity(a, b) {
+  a = a.toLowerCase(); b = b.toLowerCase();
+  if (a === b) return 1;
+  const ta = trigrams(a), tb = trigrams(b);
+  const inter = [...ta].filter(t => tb.has(t)).length;
+  const union = new Set([...ta, ...tb]).size;
+  return union === 0 ? 0 : inter / union;
+}
+function trigrams(s) {
+  const set = new Set();
+  for (let i = 0; i < s.length - 2; i++) set.add(s.slice(i, i + 3));
+  return set;
+}
+function bestMatch(ref, candidates) {
+  if (!candidates || !candidates.length) return null;
+  let best = null, bestScore = 0.1;
+  for (const c of candidates) {
+    const s = similarity(ref, c);
+    if (s > bestScore) { bestScore = s; best = c; }
+  }
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+// DATA MODEL DIAGRAM
+// ═══════════════════════════════════════════════════════
+async function fetchAndRenderDataModel() {
+  if (!S.sessionId) return;
+  const card    = document.getElementById('dm-card');
+  const loading = document.getElementById('dm-loading');
+  const content = document.getElementById('dm-content');
+  if (!card) return;
+
+  // If we already have data, just re-render (remove/join edits don't change the model)
+  if (S.dmData) {
+    renderDataModel(S.dmData.datasources || [], content);
+    return;
+  }
+
+  card.style.display   = 'block';
+  loading.style.display = 'block';
+  content.innerHTML    = '';
+
+  try {
+    const res = await fetch(`/api/data-model/${S.sessionId}`);
+    if (!res.ok) { card.style.display = 'none'; return; }
+    const data = await res.json();
+    S.dmData = data;
+    loading.style.display = 'none';
+    renderDataModel(S.dmData.datasources || [], content);
+    if (!content.innerHTML.trim()) card.style.display = 'none';
+  } catch (e) {
+    card.style.display = 'none';
+  }
+}
+
+function toggleDmCard() {
+  const body   = document.getElementById('dm-card-body');
+  const toggle = document.getElementById('dm-card-toggle');
+  const open   = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+
+// ═══════════════════════════════════════════════════════
+// TABLE REMOVAL
+// ═══════════════════════════════════════════════════════
+function toggleRemoveTable(tableName) {
+  if (S.removedTables.has(tableName)) {
+    S.removedTables.delete(tableName);
+  } else {
+    S.removedTables.add(tableName);
+  }
+  // Re-render in-place (no API call needed)
+  if (S.dmData) renderDataModel(S.dmData.datasources || [], document.getElementById('dm-content'));
+  buildMappingUI();
+}
+
+// ═══════════════════════════════════════════════════════
+// JOIN CONDITION EDITING
+// ═══════════════════════════════════════════════════════
+
+async function getTableColumns(relationName) {
+  if (S.columnCache[relationName]) return S.columnCache[relationName];
+
+  // Find the actual DB table name from the data model (relation name ≠ DB table in newer workbooks)
+  let dbTableName = relationName;
+  if (S.dmData) {
+    for (const ds of (S.dmData.datasources || [])) {
+      const t = (ds.tables || []).find(t => t.name === relationName);
+      if (t && t.table) { dbTableName = t.table; break; }
+    }
+  }
+
+  // Try fetching from the new DB using the current mapping
+  const mapping = S.mappings.find(m => m.ref_table === dbTableName || m.ref_table === relationName);
+  if (mapping && mapping.new_schema && mapping.new_table && S.connTested) {
+    try {
+      const res = await postJSON(
+        `/api/db/columns/${encodeURIComponent(mapping.new_schema)}/${encodeURIComponent(mapping.new_table)}`,
+        S.conn,
+      );
+      const cols = (res.columns || []).map(c => c.name || c);
+      if (cols.length) { S.columnCache[relationName] = cols; return cols; }
+    } catch (_) { /* fall through */ }
+  }
+
+  // Fall back: columns from the reference workbook's metadata-records
+  try {
+    const res = await fetch(`/api/table-columns/${S.sessionId}`);
+    if (res.ok) {
+      const data = await res.json();
+      Object.assign(S.columnCache, data.columns || {});
+      const cols = S.columnCache[dbTableName] || S.columnCache[relationName] || [];
+      if (cols.length) { S.columnCache[relationName] = cols; return cols; }
+    }
+  } catch (_) { /* fall through */ }
+
+  return [];
+}
+
+// ─── join-side HTML template ────────────────────────────
+function _joinSideHtml(edId, side, tableLabel, initColVal, initCalcVal, isCalcMode) {
+  const colHidden  = isCalcMode ? 'display:none' : '';
+  const calcHidden = isCalcMode ? '' : 'display:none';
+  return `
+    <div class="dm-join-side-block">
+      <div class="dm-join-mode-row">
+        <span class="dm-join-mode-label">${tableLabel}</span>
+        <label class="dm-join-mode-radio">
+          <input type="radio" name="${side}mode-${edId}" value="col"
+            ${!isCalcMode ? 'checked' : ''} onchange="onJoinModeChange('${edId}','${side}')"> Column
+        </label>
+        <label class="dm-join-mode-radio">
+          <input type="radio" name="${side}mode-${edId}" value="calc"
+            ${isCalcMode ? 'checked' : ''} onchange="onJoinModeChange('${edId}','${side}')"> Calculation
+        </label>
+      </div>
+      <div id="j${side}-col-wrap-${edId}" style="${colHidden}">
+        <input id="j${side}-${edId}" type="text" value="${escHtml(initColVal)}"
+          placeholder="Loading columns…" />
+      </div>
+      <div id="j${side}-calc-wrap-${edId}" style="${calcHidden}">
+        <textarea id="j${side}c-${edId}" class="dm-join-calc-area"
+          placeholder="Tableau expression — e.g.  [Client Skey]  or  INT([project_id])"
+          spellcheck="false">${escHtml(initCalcVal)}</textarea>
+      </div>
+    </div>`;
+}
+
+function onJoinModeChange(edId, side) {
+  const mode = document.querySelector(`input[name="${side}mode-${edId}"]:checked`)?.value || 'col';
+  const colWrap  = document.getElementById(`j${side}-col-wrap-${edId}`);
+  const calcWrap = document.getElementById(`j${side}-calc-wrap-${edId}`);
+  if (colWrap)  colWrap.style.display  = mode === 'col'  ? '' : 'none';
+  if (calcWrap) calcWrap.style.display = mode === 'calc' ? '' : 'none';
+  // Auto-focus the visible field
+  if (mode === 'col') {
+    document.getElementById(`j${side}-${edId}`)?.focus();
+  } else {
+    document.getElementById(`j${side}c-${edId}`)?.focus();
+  }
+}
+
+function _makeSelect(id, cols, currentVal) {
+  const sel = document.createElement('select');
+  sel.id = id;
+  sel.innerHTML =
+    `<option value="">— pick column —</option>` +
+    cols.map(c => `<option value="${escHtml(c)}"${c === currentVal ? ' selected' : ''}>${escHtml(c)}</option>`).join('');
+  return sel;
+}
+
+function closeAllJoinDialogs() {
+  const gd = document.getElementById('global-join-dialog');
+  if (gd) gd.classList.remove('open');
+  document.getElementById('jd-backdrop')?.classList.remove('open');
+}
+
+// Find a join definition from S.dmData for a given table pair
+function _findJoinForPair(leftTable, rightTable) {
+  for (const ds of (S.dmData?.datasources || [])) {
+    for (const j of (ds.joins || [])) {
+      if ((j.left_table === leftTable && j.right_table === rightTable) ||
+          (j.left_table === rightTable && j.right_table === leftTable)) {
+        return j;
+      }
+    }
+  }
+  return null;
+}
+
+// Build the inner HTML of the global join dialog for a specific join
+function _buildJoinDialogHtml(edId, ct, ltEsc, rtEsc, initLC, initRC, calcInitL, calcInitR, leftIsCalc, rightIsCalc, hasOverride) {
+  const TYPES = [
+    {key:'inner',      label:'Inner'},
+    {key:'left',       label:'Left'},
+    {key:'right',      label:'Right'},
+    {key:'full outer', label:'Full Outer'},
+  ];
+  const tabsHtml = TYPES.map(({key, label}) =>
+    `<button class="jd-tab${ct===key||(ct==='full'&&key==='full outer')?' active':''}"
+      data-type="${key}" onclick="selectJoinType('${edId}','${key}')">
+      ${_miniVennSvg(key, 'g-'+key.replace(' ','-'))}
+      <span>${label}</span>
+    </button>`
+  ).join('');
+
+  const sideHtml = (side, tblEsc, initCol, initCalc, isCalc) => `
+    <div id="j${side}-col-wrap-${edId}" style="${isCalc?'display:none':''}">
+      <input id="j${side}-${edId}" type="text" value="${escHtml(initCol)}" placeholder="Loading columns…"/>
+    </div>
+    <div id="j${side}-calc-wrap-${edId}" style="${!isCalc?'display:none':''}">
+      <textarea id="j${side}c-${edId}" placeholder="Tableau expression…" spellcheck="false">${escHtml(initCalc)}</textarea>
+    </div>
+    <div class="jd-mode-row">
+      <label><input type="radio" name="${side}mode-${edId}" value="col" ${!isCalc?'checked':''} onchange="onJoinModeChange('${edId}','${side}')"> Column</label>
+      <label><input type="radio" name="${side}mode-${edId}" value="calc" ${isCalc?'checked':''} onchange="onJoinModeChange('${edId}','${side}')"> Calculation</label>
+    </div>`;
+
+  const ltShort = ltEsc.length > 18 ? ltEsc.slice(0,18)+'…' : ltEsc;
+  const rtShort = rtEsc.length > 18 ? rtEsc.slice(0,18)+'…' : rtEsc;
+
+  return `
+    <div class="jd-title">Join</div>
+    <div class="jd-type-tabs">${tabsHtml}</div>
+    <div class="jd-cond-section">
+      <div class="jd-cond-headers">
+        <span title="${ltEsc}">${ltShort}</span><span></span><span title="${rtEsc}">${rtShort}</span>
+      </div>
+      <div class="jd-cond-row">
+        <div class="jd-cond-col">${sideHtml('l', ltEsc, initLC, calcInitL, leftIsCalc)}</div>
+        <div class="jd-eq">=</div>
+        <div class="jd-cond-col">${sideHtml('r', rtEsc, initRC, calcInitR, rightIsCalc)}</div>
+      </div>
+      <div class="jd-add-clause">Add new join clause</div>
+    </div>
+    <div class="jd-footer">
+      <button class="btn-sm" onclick="closeAllJoinDialogs()">Cancel</button>
+      ${hasOverride ? `<button class="btn-sm" style="color:#c0392b;border-color:#f5c6cb"
+        onclick="resetJoinEdit(document.getElementById('global-join-dialog').dataset.edId,
+          document.getElementById('global-join-dialog').dataset.lt,
+          document.getElementById('global-join-dialog').dataset.rt)">Reset</button>` : ''}
+      <button class="btn btn-primary btn-sm"
+        onclick="saveJoinEdit(document.getElementById('global-join-dialog').dataset.edId,
+          document.getElementById('global-join-dialog').dataset.lt,
+          document.getElementById('global-join-dialog').dataset.rt)">Save</button>
+    </div>`;
+}
+
+async function openJoinEditor(editorId, leftTable, rightTable) {
+  const gd = document.getElementById('global-join-dialog');
+  if (!gd) return;
+
+  // Toggle: clicking the same venn again closes the dialog
+  if (gd.classList.contains('open') && gd.dataset.edId === editorId) {
+    closeAllJoinDialogs();
+    return;
+  }
+
+  // Find the join definition
+  const j = _findJoinForPair(leftTable, rightTable);
+  if (!j) { closeAllJoinDialogs(); return; }
+
+  const overKey    = [leftTable, rightTable].sort().join('::');
+  const ov         = S.joinOverrides[overKey];
+  const hasOverride = !!ov;
+  const effJoinType = (ov && ov.join_type) ? ov.join_type : j.join_type;
+  const ct          = (effJoinType || 'left').toLowerCase().replace(' join', '').trim();
+
+  const origLC = j.conditions && j.conditions[0] ? j.conditions[0].left_col : '';
+  const origRC = j.conditions && j.conditions[0] ? j.conditions[0].right_col : '';
+
+  const leftIsCalc  = ov && ov.left_expr  && !_isColRef(ov.left_expr,  leftTable);
+  const rightIsCalc = ov && ov.right_expr && !_isColRef(ov.right_expr, rightTable);
+
+  const initLC    = leftIsCalc  ? '' : (ov ? _extractCol(ov.left_expr,  leftTable)  : origLC);
+  const initRC    = rightIsCalc ? '' : (ov ? _extractCol(ov.right_expr, rightTable) : origRC);
+  const calcInitL = leftIsCalc  ? (ov?.left_expr  || '') : '';
+  const calcInitR = rightIsCalc ? (ov?.right_expr || '') : '';
+
+  const ltEsc = escHtml(leftTable);
+  const rtEsc = escHtml(rightTable);
+
+  // Build and inject dialog content
+  gd.innerHTML = _buildJoinDialogHtml(
+    editorId, ct, ltEsc, rtEsc,
+    initLC, initRC, calcInitL, calcInitR,
+    leftIsCalc, rightIsCalc, hasOverride
+  );
+
+  // Store context on the dialog element
+  gd.dataset.edId    = editorId;
+  gd.dataset.lt      = leftTable;
+  gd.dataset.rt      = rightTable;
+  gd.dataset.joinType = ct;
+
+  // Position anchored to the Venn SVG
+  const anchor = document.getElementById('jvenn-' + editorId);
+  if (anchor) {
+    const rect = anchor.getBoundingClientRect();
+    const dW = 460, vW = window.innerWidth, vH = window.innerHeight;
+    let left = rect.left + rect.width / 2 - dW / 2;
+    left = Math.max(12, Math.min(left, vW - dW - 12));
+    let top = rect.bottom + 10;
+    if (top + 520 > vH && rect.top > 530) top = rect.top - 520;
+    gd.style.top  = `${Math.max(12, top)}px`;
+    gd.style.left = `${left}px`;
+  }
+
+  gd.classList.add('open');
+  document.getElementById('jd-backdrop')?.classList.add('open');
+
+  // Fetch columns for both sides (used by column-mode selects)
+  const [leftCols, rightCols] = await Promise.all([
+    getTableColumns(leftTable),
+    getTableColumns(rightTable),
+  ]);
+
+  // Populate column-mode inputs/selects (inside the col-wrap divs)
+  const replaceWithSelect = (inputId, cols) => {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    if (cols.length) {
+      const curVal = el.value;
+      el.replaceWith(_makeSelect(inputId, cols, curVal));
+    } else if (el.tagName === 'INPUT') {
+      el.placeholder = 'column name';
+    }
+  };
+  replaceWithSelect('jl-' + editorId, leftCols);
+  replaceWithSelect('jr-' + editorId, rightCols);
+}
+
+function saveJoinEdit(editorId, leftTable, rightTable) {
+  const lMode = document.querySelector(`input[name="lmode-${editorId}"]:checked`)?.value || 'col';
+  const rMode = document.querySelector(`input[name="rmode-${editorId}"]:checked`)?.value || 'col';
+
+  let leftExpr = '';
+  if (lMode === 'calc') {
+    leftExpr = (document.getElementById(`jlc-${editorId}`)?.value || '').trim();
+  } else {
+    const col = (document.getElementById(`jl-${editorId}`)?.value || '').trim();
+    leftExpr = col ? `[${leftTable}].[${col}]` : '';
+  }
+
+  let rightExpr = '';
+  if (rMode === 'calc') {
+    rightExpr = (document.getElementById(`jrc-${editorId}`)?.value || '').trim();
+  } else {
+    const col = (document.getElementById(`jr-${editorId}`)?.value || '').trim();
+    rightExpr = col ? `[${rightTable}].[${col}]` : '';
+  }
+
+  if (!leftExpr || !rightExpr) {
+    alert('Please provide a column or calculation for both sides of the join.');
+    return;
+  }
+
+  // Read join type from the global dialog
+  const joinType = document.getElementById('global-join-dialog')?.dataset.joinType || null;
+
+  const key = [leftTable, rightTable].sort().join('::');
+  S.joinOverrides[key] = {
+    left_table: leftTable, right_table: rightTable,
+    left_expr: leftExpr, right_expr: rightExpr,
+    ...(joinType ? { join_type: joinType } : {}),
+  };
+
+  closeAllJoinDialogs();
+  if (S.dmData) renderDataModel(S.dmData.datasources || [], document.getElementById('dm-content'));
+}
+
+function resetJoinEdit(editorId, leftTable, rightTable) {
+  const key = [leftTable, rightTable].sort().join('::');
+  delete S.joinOverrides[key];
+  closeAllJoinDialogs();
+  if (S.dmData) renderDataModel(S.dmData.datasources || [], document.getElementById('dm-content'));
+}
+
+// ═══════════════════════════════════════════════════════
+// VENN DIAGRAM SVG FOR JOIN TYPE
+// ═══════════════════════════════════════════════════════
+function _vennSvg(joinType, uid) {
+  const t = (joinType || 'left').toLowerCase().replace(' join', '').trim();
+  const isRel = t === 'relationship';
+  const color = isRel ? '#5b21b6' : '#4a7fb5';
+  const cx1 = 17, cx2 = 31, cy = 16, r = 13;
+
+  // lFill / rFill determine each circle's background.
+  // showIntersect = true forces the overlap to be re-painted with color
+  // after the right circle's white fill would have erased it.
+  let lFill = 'white', rFill = 'white', showIntersect = false;
+  if (t === 'inner') {
+    showIntersect = true;                       // both outlines, overlap filled
+  } else if (t === 'right') {
+    rFill = color;                              // right full, left outline only
+  } else if (t === 'full outer' || t === 'full') {
+    lFill = color; rFill = color;
+  } else if (isRel) {
+    lFill = color; rFill = color;
+  } else {
+    // left (default)
+    lFill = color; rFill = 'white'; showIntersect = true;
+  }
+
+  const bg = 'var(--surface, #fff)';
+  return `<svg width="48" height="32" viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;display:block">
+    <defs>
+      <clipPath id="jvc-${uid}">
+        <circle cx="${cx1}" cy="${cy}" r="${r}"/>
+      </clipPath>
+    </defs>
+    <circle cx="${cx1}" cy="${cy}" r="${r}" fill="${lFill === 'white' ? bg : lFill}" stroke="none"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r}" fill="${rFill === 'white' ? bg : rFill}" stroke="none"/>
+    ${showIntersect
+      ? `<circle cx="${cx2}" cy="${cy}" r="${r}" fill="${color}" stroke="none" clip-path="url(#jvc-${uid})"/>`
+      : ''}
+    <circle cx="${cx1}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="1.8"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="1.8"/>
+  </svg>`;
+}
+
+// Mini Venn for join-type tab icons
+function _miniVennSvg(joinType, uid) {
+  const t = (joinType || 'left').toLowerCase().replace(' join', '').trim();
+  const c = '#4a7fb5';
+  // Larger circles for the tab icons (36×24 viewport)
+  const cx1 = 12, cx2 = 22, cy = 12, r = 10;
+  let lFill = 'white', rFill = 'white', showInter = false;
+  if (t === 'inner')                       { showInter = true; }
+  else if (t === 'right')                  { rFill = c; }
+  else if (t === 'full outer'||t==='full') { lFill = c; rFill = c; }
+  else                                     { lFill = c; rFill = 'white'; showInter = true; }
+  const bg = 'transparent';
+  return `<svg width="34" height="24" viewBox="0 0 34 24" xmlns="http://www.w3.org/2000/svg" style="display:block">
+    <defs><clipPath id="mvc-${uid}"><circle cx="${cx1}" cy="${cy}" r="${r}"/></clipPath></defs>
+    <circle cx="${cx1}" cy="${cy}" r="${r}" fill="${lFill==='white'?bg:lFill}" stroke="none"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r}" fill="${rFill==='white'?bg:rFill}" stroke="none"/>
+    ${showInter?`<circle cx="${cx2}" cy="${cy}" r="${r}" fill="${c}" opacity=".85" stroke="none" clip-path="url(#mvc-${uid})"/>`:''}
+    <circle cx="${cx1}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="1.8"/>
+    <circle cx="${cx2}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="1.8"/>
+  </svg>`;
+}
+
+// Update join-type tab selection and live Venn
+function selectJoinType(edId, type) {
+  const gd = document.getElementById('global-join-dialog');
+  if (gd) {
+    gd.dataset.joinType = type;
+    gd.querySelectorAll('.jd-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === type);
+    });
+  }
+  // Update the live Venn SVG in the data model diagram
+  const vw = document.getElementById('jvenn-' + edId);
+  if (vw) vw.innerHTML = _vennSvg(type, edId + '-live');
+  const lbl = document.getElementById('jvlabel-' + edId);
+  if (lbl) {
+    const isRel = type === 'relationship';
+    lbl.textContent = isRel ? 'Related' : (type.charAt(0).toUpperCase() + type.slice(1).toLowerCase());
+    lbl.className = `dm-venn-label${isRel ? ' rel' : ''}`;
+  }
+}
+
+// Relationship fan layout (Image 2 style)
+function _renderRelationshipDsHtml(ds) {
+  const joins       = ds.joins || [];
+  const tables      = ds.tables || [];
+  const parentName  = joins.length ? joins[0].left_table : (tables[0] ? tables[0].name : ds.caption);
+  const childNames  = [...new Set(joins.map(j => j.right_table))];
+  if (!childNames.length) childNames.push(...tables.slice(1).map(t => t.name));
+
+  const CHILD_H = 42, GAP = 10;
+  const totalH  = Math.max(childNames.length * (CHILD_H + GAP) - GAP, CHILD_H);
+  const midY    = totalH / 2;
+  const svgW    = 56;
+
+  const paths = childNames.map((_, i) => {
+    const cy  = i * (CHILD_H + GAP) + CHILD_H / 2;
+    const cpx = svgW * 0.45;
+    return `<path d="M 0 ${midY} C ${cpx} ${midY}, ${cpx} ${cy}, ${svgW} ${cy}"
+      stroke="#9aabb8" fill="none" stroke-width="1.8" stroke-linecap="round"/>`;
+  }).join('');
+
+  const vennIcon = `<svg width="22" height="16" viewBox="0 0 22 16" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="7" cy="8" r="6" fill="none" stroke="#4a7fb5" stroke-width="1.5"/>
+    <circle cx="15" cy="8" r="6" fill="none" stroke="#4a7fb5" stroke-width="1.5"/>
+  </svg>`;
+
+  const displayName = ds.caption || parentName;
+
+  return `
+    <div class="dm-ds-block">
+      <div class="dm-ds-name">📊 ${escHtml(ds.caption)}</div>
+      <div class="dm-rel-layout">
+        <div class="dm-rel-parent-box">
+          ${vennIcon}
+          <span title="${escHtml(displayName)}">${escHtml(displayName.length>22 ? displayName.slice(0,22)+'…' : displayName)}</span>
+        </div>
+        <svg width="${svgW}" height="${totalH}" style="flex-shrink:0">${paths}</svg>
+        <div class="dm-rel-children">
+          ${childNames.map(n => `
+            <div class="dm-rel-child-box" title="${escHtml(n)}">${escHtml(n.length>30?n.slice(0,30)+'…':n)}</div>
+          `).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── helpers for join expression display ───────────────
+function _isColRef(expr, tableName) {
+  return !!(expr && expr.startsWith(`[${tableName}].[`) && expr.endsWith(']'));
+}
+function _extractCol(expr, tableName) {
+  return expr.slice(`[${tableName}].[`.length, -1);
+}
+function _exprShort(expr) {
+  const m = expr.match(/^\[.+\]\.\[(.+)\]$/);
+  if (m) return m[1];
+  return expr.length > 28 ? expr.slice(0, 28) + '…' : expr;
+}
+
+function _joinConnectorHtml(j, joinIdx, isExtra) {
+  const overKey    = [j.left_table, j.right_table].sort().join('::');
+  const ov         = S.joinOverrides[overKey];
+  const hasOverride = !!ov;
+
+  // Effective join type (override takes precedence)
+  const effJoinType = (ov && ov.join_type) ? ov.join_type : j.join_type;
+  const isRel       = effJoinType === 'relationship';
+  const ct          = (effJoinType || 'left').toLowerCase().replace(' join', '').trim();
+  const joinLabel   = isRel ? 'Related' : (ct.charAt(0).toUpperCase() + ct.slice(1));
+  const vennLabelCls = `dm-venn-label${isRel ? ' rel' : ''}`;
+
+  // Display label for join keys
+  let displayLabel = '';
+  if (ov && ov.left_expr) {
+    displayLabel = `${escHtml(_exprShort(ov.left_expr))} = ${escHtml(_exprShort(ov.right_expr))}`;
+  } else {
+    displayLabel = (j.conditions || []).map(c => `${escHtml(c.left_col)} = ${escHtml(c.right_col)}`).join(', ');
+  }
+
+  const edId  = `j${joinIdx}`;
+  const ltEsc = escHtml(j.left_table);
+  const rtEsc = escHtml(j.right_table);
+
+  const origLC = j.conditions && j.conditions[0] ? j.conditions[0].left_col  : '';
+  const origRC = j.conditions && j.conditions[0] ? j.conditions[0].right_col : '';
+
+  const leftIsCalc  = ov && ov.left_expr  && !_isColRef(ov.left_expr,  j.left_table);
+  const rightIsCalc = ov && ov.right_expr && !_isColRef(ov.right_expr, j.right_table);
+
+  const initLC    = leftIsCalc  ? '' : (ov ? _extractCol(ov.left_expr,  j.left_table)  : origLC);
+  const initRC    = rightIsCalc ? '' : (ov ? _extractCol(ov.right_expr, j.right_table) : origRC);
+  const calcInitL = leftIsCalc  ? (ov.left_expr  || '') : '';
+  const calcInitR = rightIsCalc ? (ov.right_expr || '') : '';
+
+  // Venn SVG wrapped in a clickable div — dialog is the global body-level element
+  const vennClickable = `
+    <div id="jvenn-${edId}" style="cursor:pointer" title="Click to edit join"
+      onclick="openJoinEditor('${edId}','${ltEsc}','${rtEsc}')">
+      ${_vennSvg(effJoinType, edId)}
+    </div>`;
+
+  if (isExtra) {
+    return `
+      <div class="dm-extra-join" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer"
+            onclick="openJoinEditor('${edId}','${ltEsc}','${rtEsc}')">
+            <div id="jvenn-${edId}">${_vennSvg(effJoinType, edId)}</div>
+            <span class="${vennLabelCls}" id="jvlabel-${edId}">${joinLabel}</span>
+          </div>
+          <span>
+            <strong>${ltEsc}</strong>
+            ${displayLabel ? ` <span style="color:var(--muted)">on</span> <code style="font-size:11px;${hasOverride?'color:var(--green);font-weight:700':''}">${displayLabel}${hasOverride?' ✎':''}</code>` : ''}
+            ↔ <strong>${rtEsc}</strong>
+          </span>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="dm-connector">
+      <div class="dm-venn-row">
+        <div class="dm-venn-line"></div>
+        ${vennClickable}
+        <div class="dm-venn-line"></div>
+      </div>
+      <span class="${vennLabelCls}" id="jvlabel-${edId}">${joinLabel}</span>
+      ${displayLabel
+        ? `<div class="dm-join-keys"${hasOverride?' style="color:var(--green);font-weight:700"':''}>${displayLabel}${hasOverride?' ✎':''}</div>`
+        : ''}
+    </div>`;
+}
+
+function renderDataModel(datasources, container) {
+  if (!datasources.length) { container.innerHTML = ''; return; }
+
+  let html    = '';
+  let joinIdx = 0;
+
+  datasources.forEach(ds => {
+    if (!ds.tables || !ds.tables.length) return;
+
+    // ── Relationship datasources → fan layout (Image 2) ──────────────
+    const allRel = (ds.joins || []).length > 0 &&
+                   (ds.joins || []).every(j => j.join_type === 'relationship');
+    if (allRel) { html += _renderRelationshipDsHtml(ds); return; }
+
+    // Collect join key columns per table for the key-row display
+    const tableKeys = {};
+    ds.tables.forEach(t => { tableKeys[t.name] = []; });
+    (ds.joins || []).forEach(j => {
+      const overKey = [j.left_table, j.right_table].sort().join('::');
+      const ov = S.joinOverrides[overKey];
+      // Derive column names from override expressions or original conditions
+      const getCol = (expr, tbl) => _isColRef(expr, tbl) ? _extractCol(expr, tbl) : _exprShort(expr);
+      const lcol = ov ? getCol(ov.left_expr,  j.left_table)  : (j.conditions && j.conditions[0] ? j.conditions[0].left_col  : '');
+      const rcol = ov ? getCol(ov.right_expr, j.right_table) : (j.conditions && j.conditions[0] ? j.conditions[0].right_col : '');
+      if (lcol && tableKeys[j.left_table]  !== undefined && !tableKeys[j.left_table].includes(lcol))  tableKeys[j.left_table].push(lcol);
+      if (rcol && tableKeys[j.right_table] !== undefined && !tableKeys[j.right_table].includes(rcol)) tableKeys[j.right_table].push(rcol);
+    });
+
+    // Build join lookup: sorted pair → join object
+    const joinMap = {};
+    (ds.joins || []).forEach(j => {
+      const key = [j.left_table, j.right_table].sort().join('::');
+      joinMap[key] = j;
+    });
+
+    // Determine connectors between consecutive table pairs
+    const sequentialKeys = new Set();
+    const connectors = [];
+    for (let i = 0; i < ds.tables.length - 1; i++) {
+      const a = ds.tables[i].name, b = ds.tables[i + 1].name;
+      const key = [a, b].sort().join('::');
+      const j = joinMap[key] || null;
+      connectors.push(j);
+      if (j) sequentialKeys.add(key);
+    }
+
+    // Extra (non-sequential) joins
+    const extraJoins = (ds.joins || []).filter(j => {
+      return !sequentialKeys.has([j.left_table, j.right_table].sort().join('::'));
+    });
+
+    // Render table boxes and connectors
+    let rowHtml = '';
+    ds.tables.forEach((t, i) => {
+      const tblName  = t.table || t.name;
+      const isRemoved = S.removedTables.has(tblName);
+      const removeLbl = isRemoved ? '↩ Restore' : '×';
+      const removeTip = isRemoved ? 'Restore table to data model' : 'Remove from data model';
+
+      const keys = tableKeys[t.name] || [];
+      const keysHtml = keys.map(k => `<div class="dm-key-row">🔑 ${escHtml(k)}</div>`).join('');
+      let headHtml;
+      if (t.is_custom_sql) {
+        headHtml = `<div class="dm-table-head">
+          <span class="dm-t-sql-label">Custom SQL</span>
+          <span class="dm-t-name">⚙ ${escHtml(t.name)}</span>
+          <button class="dm-remove-btn" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tblName)}')">${removeLbl}</button>
+        </div>`;
+      } else {
+        headHtml = `<div class="dm-table-head">
+          <span class="dm-t-schema">${escHtml(t.schema)}</span>
+          <span class="dm-t-name">${escHtml(t.table)}</span>
+          <button class="dm-remove-btn" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tblName)}')">${removeLbl}</button>
+        </div>`;
+      }
+      rowHtml += `<div class="dm-table-box${isRemoved ? ' removed' : ''}">
+        ${headHtml}
+        ${keysHtml ? `<div class="dm-table-body">${keysHtml}</div>` : ''}
+      </div>`;
+
+      if (i < ds.tables.length - 1) {
+        const j = connectors[i];
+        if (j) {
+          rowHtml += _joinConnectorHtml(j, joinIdx++, false);
+        } else {
+          rowHtml += `<div class="dm-spacer"></div>`;
+        }
+      }
+    });
+
+    // Extra joins block
+    let extraHtml = '';
+    if (extraJoins.length) {
+      extraHtml = `<div class="dm-extra-joins">`;
+      extraJoins.forEach(j => { extraHtml += _joinConnectorHtml(j, joinIdx++, true); });
+      extraHtml += `</div>`;
+    }
+
+    const singleNote = (!ds.joins || ds.joins.length === 0)
+      ? `<div class="dm-single-note">Single table — no joins defined.</div>` : '';
+
+    html += `
+      <div class="dm-ds-block">
+        <div class="dm-ds-name">📊 ${escHtml(ds.caption)}</div>
+        <div class="dm-canvas-wrap"><div class="dm-row">${rowHtml}</div></div>
+        ${singleNote}${extraHtml}
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+</script>
+</body>
+</html>

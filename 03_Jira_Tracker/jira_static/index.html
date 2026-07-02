@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Jira Tickets · CBRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --green:      #003f2d;
+  --green-dark: #002a1e;
+  --green-mid:  #005240;
+  --teal:       #17e88f;
+  --teal-dim:   rgba(23,232,143,.12);
+  --bg:         #f0f2f1;
+  --surface:    #ffffff;
+  --border:     #e2e8e5;
+  --text:       #0d1b16;
+  --muted:      #5a6b66;
+  --slate:      #3d5250;
+  --light:      #c4d0cc;
+  --radius:     12px;
+  --shadow:     0 2px 8px rgba(0,63,45,.08);
+  --shadow-md:  0 4px 20px rgba(0,63,45,.12);
+  --shadow-lg:  0 8px 32px rgba(0,63,45,.16);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--green); padding: 0 28px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+}
+.header-brand { display: flex; align-items: center; gap: 12px; }
+.header-logo {
+  width: 36px; height: 36px; background: var(--teal); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px; color: var(--green);
+}
+.header-title { color: white; font-weight: 700; font-size: 16px; }
+.header-sub   { color: var(--teal); font-size: 12px; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.conn-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px; cursor: pointer;
+  background: rgba(255,255,255,.1); color: white; font-size: 12px;
+  border: 1px solid rgba(255,255,255,.15); transition: background .2s;
+}
+.conn-badge:hover { background: rgba(255,255,255,.18); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+.dot.on  { background: var(--teal); }
+.dot.err { background: #ef4444; }
+
+/* ── Layout ── */
+.main { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+.content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── Card ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+}
+
+/* ── Connection panel ── */
+.conn-toggle {
+  padding: 13px 20px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.conn-toggle:hover { background: var(--bg); }
+.conn-toggle-left { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 13px; color: var(--green); }
+.icon-box {
+  width: 28px; height: 28px; background: var(--teal-dim);
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+}
+.chevron { transition: transform .2s; color: var(--muted); }
+.chevron.open { transform: rotate(180deg); }
+.conn-fields {
+  padding: 0 20px 18px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: end;
+}
+.conn-fields.hidden { display: none; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+input, select {
+  height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px;
+  font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+input:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-dim); background: white; }
+.conn-error {
+  margin: 0 20px 16px; padding: 12px 14px;
+  background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px;
+  font-size: 12px; color: #7f1d1d; line-height: 1.7;
+}
+.conn-error strong { font-size: 13px; color: #dc2626; }
+.conn-error ol { margin: 6px 0 0 16px; display: flex; flex-direction: column; gap: 2px; }
+.conn-error a  { color: #2563eb; }
+
+/* ── Stat cards ── */
+.stats-row { display: flex; gap: 12px; }
+.stat-card {
+  flex: 1; background: var(--surface); border: 2px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: all .2s; user-select: none;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.stat-card.active { border-color: var(--teal); background: var(--teal-dim); }
+.stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.si-active { background: #eff6ff; }
+.si-done   { background: #f0fdf4; }
+.si-all    { background: var(--teal-dim); }
+.si-over   { background: #fff1f2; }
+.stat-num   { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
+
+/* ── My Tickets filter bar ── */
+.mybar {
+  padding: 14px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.mybar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); white-space: nowrap; }
+
+/* Segmented control */
+.seg { display: flex; background: var(--bg); border-radius: 8px; padding: 3px; gap: 2px; border: 1px solid var(--border); }
+.seg-btn {
+  padding: 5px 14px; border-radius: 6px; border: none; background: transparent;
+  font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer;
+  transition: all .15s; font-family: inherit; white-space: nowrap;
+}
+.seg-btn.active { background: var(--green); color: white; }
+
+/* Toggle switch */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.toggle-wrap input { display: none; }
+.toggle-slider {
+  width: 34px; height: 18px; background: var(--light); border-radius: 9px;
+  position: relative; transition: background .2s; flex-shrink: 0;
+}
+.toggle-slider::after {
+  content: ''; position: absolute; left: 2px; top: 2px;
+  width: 14px; height: 14px; background: white; border-radius: 50%;
+  transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-wrap input:checked + .toggle-slider { background: var(--green); }
+.toggle-wrap input:checked + .toggle-slider::after { transform: translateX(16px); }
+.toggle-lbl { font-size: 12px; font-weight: 500; color: var(--slate); }
+
+/* Advanced JQL row */
+.adv-toggle {
+  padding: 8px 20px 12px; display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); cursor: pointer; user-select: none;
+}
+.adv-toggle:hover { color: var(--slate); }
+.adv-row { padding: 0 20px 14px; display: flex; gap: 10px; }
+.adv-row.hidden { display: none; }
+.jql-input { flex: 1; font-family: 'Courier New', monospace; font-size: 12px; }
+
+/* ── Buttons ── */
+.btn {
+  height: 36px; padding: 0 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+  display: inline-flex; align-items: center; gap: 7px; transition: all .2s; white-space: nowrap;
+}
+.btn-primary { background: var(--green); color: white; }
+.btn-primary:hover { background: var(--green-mid); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-outline { background: transparent; border: 1px solid rgba(255,255,255,.25); color: white; }
+.btn-outline:hover { background: rgba(255,255,255,.1); }
+.btn-ghost { background: transparent; color: var(--muted); padding: 0 8px; border: none; }
+.btn-ghost:hover { color: var(--text); background: var(--bg); border-radius: 6px; }
+
+/* ── Table ── */
+.table-topbar {
+  padding: 13px 20px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.table-title { font-weight: 600; font-size: 14px; }
+.badge { background: var(--teal-dim); color: var(--green); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: var(--bg); padding: 9px 14px; text-align: left;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--muted);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+thead th.sortable { cursor: pointer; }
+thead th.sortable:hover { color: var(--green); }
+tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+tbody tr:hover { background: var(--bg); }
+tbody tr.selected { background: var(--teal-dim); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 9px 14px; font-size: 13px; vertical-align: middle; }
+
+.key { font-family: monospace; font-size: 12px; font-weight: 700; color: var(--green); white-space: nowrap; }
+.summary-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Status badge */
+.sbadge {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap;
+}
+.s-todo  { background: #f1f5f9; color: #64748b; }
+.s-inprog{ background: #eff6ff; color: #3b82f6; }
+.s-done  { background: #f0fdf4; color: #16a34a; }
+.s-new   { background: #fefce8; color: #ca8a04; }
+
+/* Priority dot */
+.prio { display: flex; align-items: center; gap: 5px; font-size: 12px; white-space: nowrap; }
+.pdot { width: 8px; height: 8px; border-radius: 50%; }
+.p-highest,.p-blocker { background: #ef4444; }
+.p-high   { background: #f97316; }
+.p-medium { background: #eab308; }
+.p-low    { background: #3b82f6; }
+.p-lowest { background: #94a3b8; }
+
+/* Due date */
+.due-cell { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; }
+.due-pill {
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+}
+.due-overdue { background: #fff1f2; color: #dc2626; }
+.due-soon    { background: #fefce8; color: #ca8a04; }
+.due-ok      { background: #f1f5f9; color: #64748b; }
+.due-none    { color: var(--muted); }
+
+/* Empty / loading */
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 56px 20px;
+  gap: 10px; color: var(--muted); text-align: center;
+}
+.empty-icon  { font-size: 38px; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--slate); }
+.empty-sub   { font-size: 13px; }
+.spinner {
+  width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--teal);
+  border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Activity Drawer ── */
+.drawer {
+  width: 0; min-width: 0; overflow: hidden;
+  background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  transition: width .3s ease, min-width .3s ease;
+}
+.drawer.open { width: 400px; min-width: 400px; }
+.drawer-head {
+  padding: 16px 18px 13px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.drawer-key     { font-family: monospace; font-size: 12px; font-weight: 700; color: var(--green); }
+.drawer-summary { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-top: 2px; }
+.close-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 6px; flex-shrink: 0; }
+.close-btn:hover { background: var(--bg); }
+.drawer-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 18px; }
+.tab {
+  padding: 10px 12px; background: none; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .2s; font-family: inherit;
+}
+.tab.active { color: var(--green); border-bottom-color: var(--teal); font-weight: 600; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; }
+.tl-item { display: flex; gap: 11px; position: relative; padding-bottom: 16px; }
+.tl-item::before { content: ''; position: absolute; left: 15px; top: 30px; bottom: 0; width: 2px; background: var(--border); }
+.tl-item:last-child::before { display: none; }
+.tl-icon {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 12px; position: relative; z-index: 1;
+  border: 2px solid var(--surface);
+}
+.ic-status   { background: var(--teal-dim); }
+.ic-comment  { background: #eff6ff; }
+.ic-assignee { background: #fefce8; }
+.ic-priority { background: #fff1f2; }
+.ic-other    { background: var(--bg); }
+.tl-content  { flex: 1; min-width: 0; }
+.tl-meta     { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.tl-author   { font-size: 12px; font-weight: 600; color: var(--text); }
+.tl-time     { font-size: 11px; color: var(--muted); }
+.tl-desc     { font-size: 12px; color: var(--slate); line-height: 1.5; }
+.from-to     { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.from-tag    { background: #fff1f2; color: #dc2626; padding: 1px 6px; border-radius: 4px; font-size: 11px; text-decoration: line-through; }
+.to-tag      { background: #f0fdf4; color: #16a34a; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.arrow       { color: var(--muted); font-size: 11px; }
+.comment-box {
+  background: var(--bg); border-left: 3px solid #3b82f6;
+  padding: 6px 10px; border-radius: 0 6px 6px 0;
+  font-size: 12px; color: var(--slate); line-height: 1.5;
+  margin-top: 4px; max-height: 110px; overflow-y: auto;
+}
+.details-table { width: 100%; border-collapse: collapse; }
+.details-table tr { border-bottom: 1px solid var(--border); }
+.details-table tr:last-child { border-bottom: none; }
+.det-key { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); width: 90px; padding: 9px 12px 9px 0; vertical-align: top; }
+.det-val { font-size: 13px; color: var(--text); padding: 9px 0; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 22px; right: 22px; padding: 11px 16px;
+  border-radius: 10px; font-size: 13px; font-weight: 500; color: white; z-index: 1000;
+  opacity: 0; transform: translateY(6px); transition: all .25s;
+  max-width: 320px; box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error   { background: #dc2626; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">JT</div>
+    <div>
+      <div class="header-title">My Jira Tickets</div>
+      <div class="header-sub">CBRE · Personal Ticket Tracker</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="conn-badge" onclick="focusConn()">
+      <div class="dot" id="conn-dot"></div>
+      <span id="conn-label">Not connected</span>
+    </div>
+    <button class="btn btn-outline" onclick="refreshAll()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="content">
+
+    <!-- Connection panel -->
+    <div class="card">
+      <div class="conn-toggle" onclick="toggleConn()">
+        <div class="conn-toggle-left">
+          <div class="icon-box">
+            <svg width="13" height="13" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          Jira Connection
+        </div>
+        <svg class="chevron" id="chev" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="conn-fields" id="conn-fields">
+        <div class="field">
+          <label>Jira Type</label>
+          <select id="jira-type" onchange="onTypeChange()">
+            <option value="cloud">Cloud (atlassian.net)</option>
+            <option value="server">Server / Data Center</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Jira Base URL</label>
+          <input id="jira-url" type="text" placeholder="https://company.atlassian.net" />
+        </div>
+        <div class="field">
+          <label id="lbl-email">Email</label>
+          <input id="jira-email" type="text" placeholder="you@company.com" />
+        </div>
+        <div class="field">
+          <label id="lbl-token">API Token</label>
+          <input id="jira-token" type="password" placeholder="Your Jira API token" />
+        </div>
+        <button class="btn btn-primary" id="conn-btn" onclick="connect()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          Connect
+        </button>
+      </div>
+      <div id="conn-error" style="display:none" class="conn-error">
+        <strong>Authentication failed (401)</strong><br>
+        For Jira Cloud, use an API token — <strong>not your password</strong>.<br>
+        <ol>
+          <li>Go to <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank">id.atlassian.com → Security → API tokens</a></li>
+          <li>Click <strong>Create API token</strong>, copy the token</li>
+          <li>Paste it in the <strong>API Token</strong> field above</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Status summary cards -->
+    <div class="stats-row" id="stats-row" style="display:none">
+      <div class="stat-card" id="sc-active" onclick="setView('active')">
+        <div class="stat-icon si-active">⚙️</div>
+        <div>
+          <div class="stat-num" id="cnt-active">—</div>
+          <div class="stat-label">Active (To Do + In Progress)</div>
+        </div>
+      </div>
+      <div class="stat-card" id="sc-done" onclick="setView('done')">
+        <div class="stat-icon si-done">✅</div>
+        <div>
+          <div class="stat-num" id="cnt-done">—</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+      <div class="stat-card" id="sc-overdue" onclick="setView('overdue')">
+        <div class="stat-icon si-over">🔥</div>
+        <div>
+          <div class="stat-num" id="cnt-overdue">—</div>
+          <div class="stat-label">Overdue</div>
+        </div>
+      </div>
+      <div class="stat-card" id="sc-all" onclick="setView('all')">
+        <div class="stat-icon si-all">🎫</div>
+        <div>
+          <div class="stat-num" id="cnt-all">—</div>
+          <div class="stat-label">All My Tickets</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="card">
+      <div class="mybar">
+        <span class="mybar-label">View:</span>
+        <div class="seg" id="view-seg">
+          <button class="seg-btn active" data-v="active"  onclick="setView('active')">Active</button>
+          <button class="seg-btn"        data-v="done"    onclick="setView('done')">Completed</button>
+          <button class="seg-btn"        data-v="overdue" onclick="setView('overdue')">Overdue</button>
+          <button class="seg-btn"        data-v="all"     onclick="setView('all')">All Mine</button>
+        </div>
+
+        <span class="mybar-label">Project:</span>
+        <select id="proj-sel" onchange="autoSearch()" style="min-width:160px">
+          <option value="">All Projects</option>
+        </select>
+
+        <span class="mybar-label">Sort:</span>
+        <select id="sort-sel" onchange="autoSearch()" style="min-width:130px">
+          <option value="duedate ASC">Due Date ↑</option>
+          <option value="updated DESC">Last Updated ↓</option>
+          <option value="priority ASC">Priority ↓</option>
+          <option value="created DESC">Created ↓</option>
+        </select>
+
+        <label class="toggle-wrap" title="Include tickets that were previously assigned to you">
+          <input type="checkbox" id="past-toggle" onchange="autoSearch()" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-lbl">Past assignments</span>
+        </label>
+
+        <label class="toggle-wrap" title="Also include tickets you created/reported">
+          <input type="checkbox" id="reporter-toggle" onchange="autoSearch()" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-lbl">Include reported by me</span>
+        </label>
+
+        <label class="toggle-wrap" id="apac-toggle-wrap" style="display:none" title="Include tickets where APAC Assigned Resource matches your account">
+          <input type="checkbox" id="apac-toggle" onchange="autoSearch()" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-lbl">APAC Assigned Resource</span>
+        </label>
+
+        <button class="btn btn-ghost" onclick="refreshAll()" style="margin-left:auto">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        </button>
+      </div>
+
+      <!-- Live JQL preview -->
+      <div id="jql-preview" style="display:none;padding:0 20px 10px;font-family:'Courier New',monospace;font-size:11px;color:var(--muted);word-break:break-all"></div>
+
+      <div class="adv-toggle" onclick="toggleAdv()">
+        <svg class="chevron" id="adv-chev" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        Advanced JQL override
+      </div>
+      <div class="adv-row hidden" id="adv-row">
+        <input class="jql-input" id="jql" type="text" placeholder="Custom JQL — overrides all filters above" onkeydown="if(event.key==='Enter')runSearch()" />
+        <button class="btn btn-primary" onclick="runSearch()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+
+    <!-- Ticket table -->
+    <div class="card" style="flex:1;display:flex;flex-direction:column">
+      <div class="table-topbar">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span class="table-title" id="view-title">My Active Tickets</span>
+          <span class="badge" id="count">0</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="page-info" style="font-size:12px;color:var(--muted)"></span>
+          <button class="btn btn-ghost" id="prev-btn" onclick="prevPage()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="btn btn-ghost" id="next-btn" onclick="nextPage()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <div style="width:1px;height:20px;background:var(--border)"></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Summary</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Due Date</th>
+              <th>Updated</th>
+              <th>Comments</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="empty" id="empty-state">
+          <div class="empty-icon">🎫</div>
+          <div class="empty-title">No tickets loaded</div>
+          <div class="empty-sub">Connect to Jira to see your tickets.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Activity drawer -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div style="flex:1;min-width:0">
+        <div class="drawer-key" id="d-key"></div>
+        <div class="drawer-summary" id="d-summary"></div>
+      </div>
+      <button class="close-btn" onclick="closeDrawer()">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="drawer-tabs">
+      <button class="tab active" id="tab-act" onclick="switchTab('activity')">Activity</button>
+      <button class="tab" id="tab-det" onclick="switchTab('details')">Details</button>
+    </div>
+    <div class="drawer-body" id="d-body">
+      <div class="empty"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const S = {
+  creds: null,
+  view: 'active',
+  issues: [], total: 0,
+  startAt: 0, maxResults: 50,
+  selKey: null, selIssue: null,
+  tab: 'activity',
+  apacFieldId: null,   // discovered custom field ID for "APAC Assigned Resource"
+  apacFieldName: null, // display name as found in Jira
+  apacFieldType: null, // schema type — 'user', 'string', etc.
+  userEmail: null,     // logged-in user's email
+};
+
+const VIEW_TITLES = {
+  active:  'My Active Tickets',
+  done:    'My Completed Tickets',
+  overdue: 'My Overdue Tickets',
+  all:     'All My Tickets',
+};
+
+// ── Init ───────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const c = JSON.parse(localStorage.getItem('jt_creds') || 'null');
+    if (c) {
+      document.getElementById('jira-url').value   = c.base_url   || '';
+      document.getElementById('jira-email').value = c.email      || '';
+      document.getElementById('jira-token').value = c.api_token  || '';
+      if (c.server_type) { document.getElementById('jira-type').value = c.server_type; onTypeChange(); }
+    }
+  } catch(_) {}
+});
+
+// ── Connection ─────────────────────────────────────────────────
+function getCreds() {
+  return {
+    base_url:    document.getElementById('jira-url').value.trim().replace(/\/$/, ''),
+    email:       document.getElementById('jira-email').value.trim(),
+    api_token:   document.getElementById('jira-token').value.trim(),
+    server_type: document.getElementById('jira-type').value,
+  };
+}
+
+function onTypeChange() {
+  const srv = document.getElementById('jira-type').value === 'server';
+  document.getElementById('lbl-email').textContent   = srv ? 'Username' : 'Email';
+  document.getElementById('lbl-token').textContent   = srv ? 'Personal Access Token' : 'API Token';
+  document.getElementById('jira-email').placeholder  = srv ? 'your-username' : 'you@company.com';
+  document.getElementById('jira-token').placeholder  = srv ? 'PAT from profile → Personal Access Tokens' : 'Your Jira API token';
+}
+
+async function connect() {
+  const c = getCreds();
+  if (!c.base_url || !c.email || !c.api_token) { toast('Fill in all connection fields.', 'error'); return; }
+  setDot('');
+  document.getElementById('conn-error').style.display = 'none';
+  const btn = document.getElementById('conn-btn');
+  btn.disabled = true; btn.textContent = 'Connecting…';
+  try {
+    const res = await post('/api/connect', c);
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Connect';
+    if (res.ok) {
+      S.creds     = c;
+      S.userEmail = res.email || c.email;
+      localStorage.setItem('jt_creds', JSON.stringify(c));
+      setDot('on');
+      document.getElementById('conn-label').textContent = res.display_name || c.email;
+      toast('Connected as ' + (res.display_name || c.email));
+      collapseConn();
+      document.getElementById('stats-row').style.display = 'flex';
+      await Promise.all([loadProjects(), discoverApacField()]);
+      loadCounts();
+      autoSearch();
+    } else {
+      setDot('err');
+      if ((res.error || '').includes('401')) {
+        document.getElementById('conn-error').style.display = 'block';
+      } else {
+        toast(res.error || 'Connection failed.', 'error');
+      }
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Connect';
+    setDot('err'); toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function discoverApacField() {
+  try {
+    const res = await post('/api/fields/search', S.creds);
+    const match = (res.fields || []).find(f =>
+      f.name.toLowerCase().includes('apac') &&
+      f.name.toLowerCase().includes('resource')
+    );
+    if (match) {
+      S.apacFieldId   = match.id;
+      S.apacFieldName = match.name;
+      S.apacFieldType = match.type;  // 'user', 'string', 'array', etc.
+      document.getElementById('apac-toggle-wrap').style.display = 'flex';
+      document.getElementById('apac-toggle-wrap').title =
+        `Field: "${match.name}" (${match.id}) — type: ${match.type}`;
+      // Auto-enable it since user asked for it
+      document.getElementById('apac-toggle').checked = true;
+      toast(`Found custom field: "${match.name}"`, 'success');
+    }
+  } catch(_) {}
+}
+
+async function loadProjects() {
+  try {
+    const res = await post('/api/projects', S.creds);
+    const sel = document.getElementById('proj-sel');
+    sel.innerHTML = '<option value="">All Projects</option>';
+    (res.projects || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.key; opt.textContent = `${p.key} — ${p.name}`;
+      sel.appendChild(opt);
+    });
+  } catch(_) {}
+}
+
+async function loadCounts() {
+  if (!S.creds) return;
+  const past     = document.getElementById('past-toggle').checked;
+  const reporter = document.getElementById('reporter-toggle').checked;
+  const proj     = document.getElementById('proj-sel').value;
+  try {
+    const res = await post('/api/counts', { ...S.creds, past_assignments: past, include_reporter: reporter, project: proj });
+    document.getElementById('cnt-active').textContent  = (res.todo + res.in_progress) || 0;
+    document.getElementById('cnt-done').textContent    = res.done    || 0;
+    document.getElementById('cnt-overdue').textContent = res.overdue || 0;
+    document.getElementById('cnt-all').textContent     = (res.todo + res.in_progress + res.done) || 0;
+  } catch(_) {}
+}
+
+// ── View / Filter ──────────────────────────────────────────────
+function setView(v) {
+  S.view = v;
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+  const scMap = { active:'sc-active', done:'sc-done', overdue:'sc-overdue', all:'sc-all' };
+  document.getElementById(scMap[v])?.classList.add('active');
+  document.getElementById('view-title').textContent = VIEW_TITLES[v] || 'My Tickets';
+  // clear manual JQL when switching views
+  document.getElementById('jql').value = '';
+  autoSearch();
+}
+
+function buildJql() {
+  const manualJql = document.getElementById('jql').value.trim();
+  if (manualJql) {
+    updateJqlPreview(manualJql);
+    return manualJql;
+  }
+
+  const past     = document.getElementById('past-toggle').checked;
+  const reporter = document.getElementById('reporter-toggle').checked;
+  const proj     = document.getElementById('proj-sel').value;
+  const sort     = document.getElementById('sort-sel').value;
+  const projPart = proj ? `AND project = "${proj}"` : '';
+
+  // Build the "who" clause
+  const apac = document.getElementById('apac-toggle').checked;
+  const parts = [];
+  if (past) parts.push('assignee was currentUser()');
+  else      parts.push('assignee = currentUser()');
+  if (reporter) parts.push('reporter = currentUser()');
+  if (apac && S.apacFieldId) {
+    const cfNum = S.apacFieldId.replace('customfield_', '');
+    // User-picker fields support currentUser(); text/string fields need the email value
+    const isUserPicker = S.apacFieldType === 'user' || S.apacFieldType === 'array';
+    const apacJql = isUserPicker
+      ? `cf[${cfNum}] = currentUser()`
+      : `cf[${cfNum}] = "${S.userEmail}"`;
+    parts.push(apacJql);
+  }
+  const whoPart = parts.length > 1 ? `(${parts.join(' OR ')})` : parts[0];
+
+  let statusPart = '';
+  if (S.view === 'active')  statusPart = 'AND statusCategory in ("To Do", "In Progress")';
+  if (S.view === 'done')    statusPart = 'AND statusCategory = "Done"';
+  if (S.view === 'overdue') statusPart = 'AND statusCategory != "Done" AND duedate < now()';
+
+  const jql = `${whoPart} ${statusPart} ${projPart} ORDER BY ${sort}`.replace(/\s+/g, ' ').trim();
+  updateJqlPreview(jql);
+  return jql;
+}
+
+function updateJqlPreview(jql) {
+  const el = document.getElementById('jql-preview');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = '🔍 ' + jql;
+}
+
+function autoSearch() {
+  if (!S.creds) return;
+  loadCounts();
+  runSearch(0);
+}
+
+// ── Search ─────────────────────────────────────────────────────
+async function runSearch(startAt) {
+  if (startAt === undefined) startAt = S.startAt;
+  if (!S.creds) { toast('Connect to Jira first.', 'error'); return; }
+  S.startAt = startAt;
+  showLoading();
+  try {
+    const res = await post('/api/search', {
+      credentials: S.creds,
+      jql: buildJql(),
+      max_results: S.maxResults,
+      start_at: startAt,
+    });
+    S.issues = res.issues || [];
+    S.total  = res.total  || 0;
+    renderTable();
+    updatePager();
+  } catch(e) {
+    toast('Search failed: ' + e.message, 'error');
+    showEmpty('Search failed. ' + e.message);
+  }
+}
+
+function refreshAll() { loadCounts(); runSearch(S.startAt); }
+function prevPage()   { if (S.startAt > 0) runSearch(Math.max(0, S.startAt - S.maxResults)); }
+function nextPage()   { if (S.startAt + S.maxResults < S.total) runSearch(S.startAt + S.maxResults); }
+
+function updatePager() {
+  const end = Math.min(S.startAt + S.maxResults, S.total);
+  const start = S.total === 0 ? 0 : S.startAt + 1;
+  document.getElementById('page-info').textContent = S.total ? `${start}–${end} of ${S.total}` : '';
+  document.getElementById('prev-btn').disabled = S.startAt === 0;
+  document.getElementById('next-btn').disabled = end >= S.total;
+}
+
+// ── Render table ───────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const es    = document.getElementById('empty-state');
+  document.getElementById('count').textContent = S.total;
+
+  if (!S.issues.length) {
+    tbody.innerHTML = '';
+    es.style.display = 'flex';
+    es.querySelector('.empty-title').textContent = 'No tickets found';
+    es.querySelector('.empty-sub').textContent   = S.view === 'overdue'
+      ? "You have no overdue tickets — great work! 🎉"
+      : 'No tickets match the current filter.';
+    return;
+  }
+  es.style.display = 'none';
+
+  tbody.innerHTML = S.issues.map(i => `
+    <tr onclick="openDrawer('${i.key}',event)" class="${S.selKey===i.key?'selected':''}">
+      <td><span class="key">${i.key}</span></td>
+      <td><span class="summary-cell" title="${esc(i.summary)}">${esc(i.summary)}</span></td>
+      <td><span style="font-size:12px;color:var(--muted)">${esc(i.issue_type)}</span></td>
+      <td>${sBadge(i.status, i.status_category)}</td>
+      <td>${prioCell(i.priority)}</td>
+      <td>${dueCell(i.due_date, i.status_category)}</td>
+      <td><span style="font-size:12px;color:var(--muted)">${relTime(i.updated)}</span></td>
+      <td><span class="comments" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)">
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        ${i.comment_count}
+      </span></td>
+    </tr>
+  `).join('');
+}
+
+function sBadge(status, cat) {
+  const cls = cat==='done'?'s-done':cat==='indeterminate'?'s-inprog':cat==='new'?'s-new':'s-todo';
+  return `<span class="sbadge ${cls}">${esc(status)}</span>`;
+}
+
+function prioCell(p) {
+  const lp = (p||'').toLowerCase();
+  const cls = lp==='highest'||lp==='blocker'?'p-highest':lp==='high'?'p-high':lp==='medium'?'p-medium':lp==='low'?'p-low':'p-lowest';
+  return `<div class="prio"><div class="pdot ${cls}"></div>${esc(p||'—')}</div>`;
+}
+
+function dueCell(d, statusCat) {
+  if (!d) return `<span class="due-cell due-none">—</span>`;
+  const dt  = new Date(d), now = new Date();
+  const diffDays = Math.ceil((dt - now) / 86400000);
+  const isDone = statusCat === 'done';
+  const fmt = dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+  if (!isDone && diffDays < 0)   return `<div class="due-cell"><span class="due-pill due-overdue">OVERDUE</span>${fmt}</div>`;
+  if (!isDone && diffDays <= 3)  return `<div class="due-cell"><span class="due-pill due-soon">Due soon</span>${fmt}</div>`;
+  return `<div class="due-cell"><span class="due-pill due-ok">${fmt}</span></div>`;
+}
+
+// ── Drawer ─────────────────────────────────────────────────────
+async function openDrawer(key, evt) {
+  S.selKey   = key;
+  S.selIssue = S.issues.find(i => i.key === key);
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+  if (evt) evt.currentTarget.classList.add('selected');
+  document.getElementById('d-key').textContent     = key;
+  document.getElementById('d-summary').textContent = S.selIssue?.summary || '';
+  document.getElementById('drawer').classList.add('open');
+  S.tab = 'activity';
+  document.getElementById('tab-act').classList.add('active');
+  document.getElementById('tab-det').classList.remove('active');
+  loadActivity(key);
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  S.selKey = null;
+  document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+}
+
+function switchTab(tab) {
+  S.tab = tab;
+  document.getElementById('tab-act').classList.toggle('active', tab==='activity');
+  document.getElementById('tab-det').classList.toggle('active', tab==='details');
+  tab === 'activity' ? loadActivity(S.selKey) : renderDetails();
+}
+
+async function loadActivity(key) {
+  const body = document.getElementById('d-body');
+  body.innerHTML = `<div class="empty"><div class="spinner"></div><div class="empty-sub">Loading activity…</div></div>`;
+  try {
+    const res = await post(`/api/activity/${key}`, S.creds);
+    renderTimeline(res.events || []);
+  } catch(e) {
+    body.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Failed to load</div><div class="empty-sub">${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderTimeline(events) {
+  const body = document.getElementById('d-body');
+  if (!events.length) {
+    body.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No activity yet</div><div class="empty-sub">No recorded changes or comments.</div></div>`;
+    return;
+  }
+  const ICONS = { status:'↕', comment:'💬', assignee:'👤', priority:'⚡', duedate:'📅', summary:'✏️', labels:'🏷' };
+  const ICLS  = { status:'ic-status', comment:'ic-comment', assignee:'ic-assignee', priority:'ic-priority' };
+  body.innerHTML = `<div class="timeline">${events.map(ev => {
+    const k    = ev.type==='comment' ? 'comment' : (ev.field||'other');
+    const icls = ICLS[k] || 'ic-other';
+    const time = relTime(ev.timestamp);
+    let content;
+    if (ev.type === 'comment') {
+      content = `
+        <div class="tl-meta"><span class="tl-author">${esc(ev.author)}</span><span class="tl-time">${time}</span></div>
+        <div class="comment-box">${esc(ev.text||'(empty)')}</div>`;
+    } else {
+      const fl = ev.field==='duedate'?'Due Date':cap(ev.field);
+      content = `
+        <div class="tl-meta"><span class="tl-author">${esc(ev.author)}</span><span class="tl-time">${time}</span></div>
+        <div class="tl-desc">Changed <strong>${fl}</strong></div>
+        <div class="from-to">
+          ${ev.from?`<span class="from-tag">${esc(ev.from)}</span><span class="arrow">→</span>`:''}
+          <span class="to-tag">${esc(ev.to||'—')}</span>
+        </div>`;
+    }
+    return `<div class="tl-item"><div class="tl-icon ${icls}">${ICONS[k]||'✏️'}</div><div class="tl-content">${content}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function renderDetails() {
+  const i = S.selIssue; if (!i) return;
+  const rows = [
+    ['Type',     esc(i.issue_type)],
+    ['Status',   sBadge(i.status, i.status_category)],
+    ['Priority', prioCell(i.priority)],
+    ['Reporter', esc(i.reporter||'—')],
+    ['Created',  i.created ? new Date(i.created).toLocaleString() : '—'],
+    ['Updated',  i.updated ? new Date(i.updated).toLocaleString() : '—'],
+    ['Due Date', i.due_date ? dueCell(i.due_date, i.status_category) : '—'],
+    ['Labels',   esc(i.labels?.join(', ')||'—')],
+    ['Comments', i.comment_count],
+  ];
+  document.getElementById('d-body').innerHTML = `
+    <table class="details-table">${rows.map(([k,v])=>`
+      <tr><td class="det-key">${k}</td><td class="det-val">${v}</td></tr>`).join('')}
+    </table>`;
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function toggleConn() {
+  document.getElementById('conn-fields').classList.toggle('hidden');
+  document.getElementById('chev').classList.toggle('open');
+}
+function collapseConn() {
+  document.getElementById('conn-fields').classList.add('hidden');
+  document.getElementById('chev').classList.add('open');
+}
+function focusConn() {
+  document.getElementById('conn-fields').classList.remove('hidden');
+  document.getElementById('chev').classList.remove('open');
+  document.getElementById('jira-url').focus();
+}
+function toggleAdv() {
+  document.getElementById('adv-row').classList.toggle('hidden');
+  document.getElementById('adv-chev').classList.toggle('open');
+}
+function setDot(s) {
+  const d = document.getElementById('conn-dot');
+  d.className = 'dot' + (s==='on'?' on':s==='err'?' err':'');
+}
+function showLoading() {
+  document.getElementById('tbody').innerHTML = `<tr><td colspan="8"><div class="empty"><div class="spinner"></div><div class="empty-sub">Loading…</div></div></td></tr>`;
+  document.getElementById('empty-state').style.display = 'none';
+}
+function showEmpty(msg) {
+  document.getElementById('tbody').innerHTML = '';
+  const e = document.getElementById('empty-state');
+  e.style.display = 'flex'; e.querySelector('.empty-sub').textContent = msg;
+}
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+// ── API ────────────────────────────────────────────────────────
+async function post(path, body) {
+  const res = await fetch(path, {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body),
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail||`HTTP ${res.status}`); }
+  return res.json();
+}
+
+// ── Utils ──────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function cap(s) { return s ? s[0].toUpperCase()+s.slice(1) : ''; }
+function relTime(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now()-new Date(iso))/1000);
+  if (diff<60) return 'just now';
+  if (diff<3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff<86400) return `${Math.floor(diff/3600)}h ago`;
+  if (diff<604800) return `${Math.floor(diff/86400)}d ago`;
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+</script>
+</body>
+</html>

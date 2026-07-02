@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automation Ambassador Program – Tool Monitor</title>
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --surface2: #1f2937;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --green:    #3fb950;
+      --yellow:   #d29922;
+      --red:      #f85149;
+      --blue:     #4F9CF9;
+      --radius:   12px;
+      --mono:     'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, #4F9CF9, #A78BFA);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .header-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .refresh-badge {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    #last-updated { color: var(--text); }
+
+    /* ── Summary bar ────────────────────────────────────────── */
+    .summary-bar {
+      display: flex;
+      gap: 16px;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+    }
+    .summary-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .dot-green { background: var(--green); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-red { background: var(--red); }
+
+    /* ── Main grid ──────────────────────────────────────────── */
+    .main {
+      padding: 28px 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── Tool Card ──────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: #484f58; }
+
+    .card-accent {
+      height: 3px;
+      width: 100%;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 20px 20px 14px;
+    }
+    .card-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .card-title-area { flex: 1; margin-left: 14px; }
+    .card-name { font-size: 15px; font-weight: 600; }
+    .card-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+    }
+    .status-running  { background: rgba(63,185,80,.15); border-color: rgba(63,185,80,.4); color: var(--green); }
+    .status-starting { background: rgba(210,153,34,.15); border-color: rgba(210,153,34,.4); color: var(--yellow); }
+    .status-stopped  { background: rgba(248,81,73,.1);  border-color: rgba(248,81,73,.35); color: var(--red); }
+
+    .pulse { animation: pulse 1.8s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+
+    /* ── Stats row ──────────────────────────────────────────── */
+    .card-stats {
+      display: flex;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat {
+      flex: 1;
+      padding: 12px 16px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .stat-value { font-size: 14px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+    /* ── Controls ───────────────────────────────────────────── */
+    .card-controls {
+      display: flex;
+      gap: 8px;
+      padding: 14px 20px;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s, border-color .15s, opacity .15s;
+    }
+    .btn:hover:not(:disabled) { background: #2d333b; border-color: #484f58; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-start { border-color: rgba(63,185,80,.5); color: var(--green); }
+    .btn-start:hover:not(:disabled) { background: rgba(63,185,80,.12); border-color: var(--green); }
+
+    .btn-stop { border-color: rgba(248,81,73,.5); color: var(--red); }
+    .btn-stop:hover:not(:disabled) { background: rgba(248,81,73,.12); border-color: var(--red); }
+
+    .btn-open { border-color: rgba(79,156,249,.45); color: var(--blue); }
+    .btn-open:hover:not(:disabled) { background: rgba(79,156,249,.1); border-color: var(--blue); }
+
+    .btn-logs {
+      margin-left: auto;
+      font-size: 12px;
+      padding: 7px 12px;
+    }
+
+    /* ── Log panel ──────────────────────────────────────────── */
+    .log-panel {
+      display: none;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+    }
+    .log-panel.open { display: flex; }
+
+    .log-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .log-toolbar-title { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+    .btn-clear-log {
+      font-size: 11px; color: var(--muted);
+      background: none; border: none; cursor: pointer;
+      padding: 2px 8px; border-radius: 5px;
+    }
+    .btn-clear-log:hover { background: var(--border); color: var(--text); }
+
+    .log-output {
+      height: 220px;
+      overflow-y: auto;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.6;
+      background: #0d1117;
+      color: #c9d1d9;
+      scroll-behavior: smooth;
+    }
+    .log-output::-webkit-scrollbar { width: 6px; }
+    .log-output::-webkit-scrollbar-track { background: transparent; }
+    .log-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .log-line { white-space: pre-wrap; word-break: break-all; }
+    .log-line.err { color: #ff7b72; }
+    .log-line.warn { color: var(--yellow); }
+    .log-line.info { color: #79c0ff; }
+    .log-empty { color: var(--muted); font-style: italic; }
+
+    /* ── Loading spinner ────────────────────────────────────── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ──────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 999;
+    }
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      max-width: 320px;
+      animation: slideIn .25s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error   { border-left: 3px solid var(--red); }
+    .toast.info    { border-left: 3px solid var(--blue); }
+
+    /* ── Empty state ────────────────────────────────────────── */
+    .loading-state {
+      grid-column: 1 / -1;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 80px 0; color: var(--muted); gap: 16px; font-size: 14px;
+    }
+
+    /* ── Utility tools section ──────────────────────────────── */
+    .utilities-section {
+      padding: 0 32px 32px;
+    }
+    .utilities-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .utilities-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .utility-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── Calc Fields card ───────────────────────────────────── */
+    .cf-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .cf-card:hover { border-color: #484f58; }
+
+    .cf-drop-zone {
+      margin: 16px;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 28px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .cf-drop-zone:hover, .cf-drop-zone.drag-over {
+      border-color: #F59E0B;
+      background: rgba(245,158,11,.06);
+    }
+    .cf-drop-icon { font-size: 28px; margin-bottom: 8px; }
+    .cf-drop-label { font-size: 13px; color: var(--muted); }
+    .cf-drop-label strong { color: var(--text); }
+    .cf-file-name {
+      font-size: 12px;
+      color: #F59E0B;
+      margin-top: 6px;
+      font-family: var(--mono);
+      word-break: break-all;
+    }
+
+    .cf-result {
+      display: none;
+      margin: 0 16px 16px;
+      background: rgba(245,158,11,.08);
+      border: 1px solid rgba(245,158,11,.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .cf-result.visible { display: flex; }
+    .cf-result-info { font-size: 13px; }
+    .cf-result-count { font-size: 20px; font-weight: 700; color: #F59E0B; }
+    .cf-result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .btn-download {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1px solid rgba(245,158,11,.5);
+      background: rgba(245,158,11,.1);
+      color: #F59E0B;
+      cursor: pointer;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn-download:hover { background: rgba(245,158,11,.2); border-color: #F59E0B; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">🛡️</div>
+    <div>
+      <h1>Automation Ambassador Program</h1>
+      <div class="header-subtitle">Centralized Tool Monitor</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="refresh-badge">
+      Auto-refresh every 5s &nbsp;·&nbsp; Last: <span id="last-updated">—</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Summary ─────────────────────────────────────────────── -->
+<div class="summary-bar">
+  <div class="summary-chip">
+    <span class="summary-dot dot-green"></span>
+    <span><strong id="count-running">0</strong> running</span>
+  </div>
+  <div class="summary-chip">
+    <span class="summary-dot dot-yellow"></span>
+    <span><strong id="count-starting">0</strong> starting</span>
+  </div>
+  <div class="summary-chip">
+    <span class="summary-dot dot-red"></span>
+    <span><strong id="count-stopped">0</strong> stopped</span>
+  </div>
+</div>
+
+<!-- ── Cards ───────────────────────────────────────────────── -->
+<main class="main" id="cards">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    Connecting to monitor…
+  </div>
+</main>
+
+<!-- ── Utility Tools ───────────────────────────────────────── -->
+<section class="utilities-section">
+  <div class="utilities-label">Utility Tools</div>
+  <div class="utility-grid">
+
+    <!-- Calculated Fields Extractor -->
+    <div class="cf-card">
+      <div class="card-accent" style="background:#F59E0B"></div>
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3)">🔢</div>
+        <div class="card-title-area">
+          <div class="card-name">Calculated Fields Extractor</div>
+          <div class="card-desc">Export all calculated fields from a .twbx workbook to Excel</div>
+        </div>
+        <span class="status-badge" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#F59E0B">
+          ⚡ Utility
+        </span>
+      </div>
+
+      <!-- Drop zone -->
+      <div class="cf-drop-zone" id="cf-drop-zone" onclick="document.getElementById('cf-file-input').click()">
+        <div class="cf-drop-icon">📂</div>
+        <div class="cf-drop-label">Drop a <strong>.twbx</strong> file here, or click to browse</div>
+        <div class="cf-file-name" id="cf-file-name"></div>
+      </div>
+      <input type="file" id="cf-file-input" accept=".twbx" style="display:none" />
+
+      <!-- Controls -->
+      <div class="card-controls">
+        <button class="btn btn-start" id="cf-btn-extract" disabled
+                style="border-color:rgba(245,158,11,.5);color:#F59E0B"
+                onmouseover="if(!this.disabled)this.style.background='rgba(245,158,11,.12)'"
+                onmouseout="this.style.background=''">
+          ▶ Extract
+        </button>
+        <span id="cf-status" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
+      </div>
+
+      <!-- Result -->
+      <div class="cf-result" id="cf-result">
+        <div class="cf-result-info">
+          <div class="cf-result-count" id="cf-count">0</div>
+          <div class="cf-result-sub">calculated fields extracted</div>
+        </div>
+        <a class="btn-download" id="cf-download-btn" href="#" download>⬇ Download Excel</a>
+      </div>
+    </div>
+
+    <!-- Timesheet Report -->
+    <div class="cf-card">
+      <div class="card-accent" style="background:#34D399"></div>
+      <div class="card-header">
+        <div class="card-icon" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3)">🗓️</div>
+        <div class="card-title-area">
+          <div class="card-name">Timesheet Report</div>
+          <div class="card-desc">Generate monthly or full-year timesheet from Jira comment activity</div>
+        </div>
+        <span class="status-badge" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.35);color:#34D399">
+          ⚡ Utility
+        </span>
+      </div>
+
+      <!-- Saved-credentials status bar -->
+      <div id="ts-creds-bar" style="margin:0 16px 10px;padding:8px 12px;border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border)">
+        <span id="ts-creds-label" style="color:var(--muted)">Loading credentials…</span>
+        <button onclick="toggleTsCreds()" id="ts-creds-toggle"
+          style="font-size:11px;background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);cursor:pointer">
+          ✏️ Edit
+        </button>
+      </div>
+
+      <!-- Collapsible credentials form (hidden once saved) -->
+      <div id="ts-creds-form" style="padding:0 16px 4px;display:none;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Jira URL</div>
+            <input id="ts-base-url" type="text" placeholder="https://yoursite.atlassian.net"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);outline:none"/>
+          </div>
+          <div style="width:90px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Type</div>
+            <select id="ts-server-type"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);outline:none">
+              <option value="cloud">Cloud</option>
+              <option value="server">Server</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Email</div>
+            <input id="ts-email" type="email" placeholder="you@company.com"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);outline:none"/>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">API Token</div>
+            <input id="ts-token" type="password" placeholder="Enter token to update"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);outline:none"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding-bottom:4px">
+          <button id="ts-btn-save" onclick="saveTsCreds()"
+            style="padding:6px 16px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.1);color:#34D399;cursor:pointer">
+            💾 Save Credentials
+          </button>
+          <button onclick="toggleTsCreds()"
+            style="padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Scope + date row (always visible) -->
+      <div style="padding:0 16px 4px;display:flex;gap:8px;align-items:flex-end">
+        <div style="flex:1">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Scope</div>
+          <div style="display:flex;background:var(--bg);border-radius:6px;padding:2px;gap:2px;border:1px solid var(--border)">
+            <button id="ts-seg-month" onclick="setTsScope('month')"
+              style="flex:1;padding:5px 0;font-size:11px;border:none;border-radius:5px;cursor:pointer;background:var(--surface2);color:var(--text)">
+              Single Month
+            </button>
+            <button id="ts-seg-year" onclick="setTsScope('year')"
+              style="flex:1;padding:5px 0;font-size:11px;border:none;border-radius:5px;cursor:pointer;background:transparent;color:var(--muted)">
+              Full Year
+            </button>
+          </div>
+        </div>
+        <div id="ts-month-wrap" style="width:105px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Month</div>
+          <select id="ts-month-sel"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);outline:none">
+            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div style="width:80px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Year</div>
+          <select id="ts-year-sel"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12px;color:var(--text);outline:none"></select>
+        </div>
+      </div>
+
+      <div class="card-controls" style="padding-top:10px">
+        <button class="btn" id="ts-btn-gen"
+          style="border-color:rgba(52,211,153,.5);color:#34D399"
+          onmouseover="this.style.background='rgba(52,211,153,.12)'"
+          onmouseout="this.style.background=''">
+          ⬇ Generate &amp; Download
+        </button>
+        <span id="ts-status" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Toast container ─────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────────────────
+const state = {
+  tools: [],
+  logPanels: {},   // tool_id -> { open: bool, lines: [], es: EventSource|null }
+  loading: {},     // tool_id -> bool  (action in-flight)
+};
+
+// ────────────────────────────────────────────────────────────
+// API helpers
+// ────────────────────────────────────────────────────────────
+async function apiFetch(path, method = 'GET') {
+  const r = await fetch(path, { method });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// ────────────────────────────────────────────────────────────
+// Toast
+// ────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ────────────────────────────────────────────────────────────
+// Uptime formatter
+// ────────────────────────────────────────────────────────────
+function fmtUptime(secs) {
+  if (secs == null) return '—';
+  if (secs < 60)   return `${secs}s`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ${secs%60}s`;
+  const h = Math.floor(secs/3600);
+  const m = Math.floor((secs%3600)/60);
+  return `${h}h ${m}m`;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ────────────────────────────────────────────────────────────
+// Log streaming
+// ────────────────────────────────────────────────────────────
+function openLogs(toolId) {
+  const panel = state.logPanels[toolId];
+  if (panel.es) return; // already streaming
+
+  const es = new EventSource(`/api/tools/${toolId}/logs`);
+  panel.es = es;
+
+  es.onmessage = (e) => {
+    const line = JSON.parse(e.data);
+    panel.lines.push(line);
+    if (panel.lines.length > 500) panel.lines.shift();
+    appendLogLine(toolId, line);
+  };
+  es.onerror = () => {
+    appendLogLine(toolId, '--- connection lost, retrying ---', 'warn');
+  };
+}
+
+function closeLogs(toolId) {
+  const panel = state.logPanels[toolId];
+  if (panel?.es) {
+    panel.es.close();
+    panel.es = null;
+  }
+}
+
+function appendLogLine(toolId, text, forceClass = null) {
+  const el = document.getElementById(`log-output-${toolId}`);
+  if (!el) return;
+  const div = document.createElement('div');
+  div.className = 'log-line ' + (forceClass || classifyLog(text));
+  div.textContent = text;
+  el.appendChild(div);
+  // auto-scroll if near bottom
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
+function classifyLog(line) {
+  const l = line.toLowerCase();
+  if (l.includes('error') || l.includes('traceback') || l.includes('exception')) return 'err';
+  if (l.includes('warn') || l.includes('warning')) return 'warn';
+  if (l.includes('info') || l.includes('started') || l.includes('uvicorn') || l.includes('application')) return 'info';
+  return '';
+}
+
+// ────────────────────────────────────────────────────────────
+// Render
+// ────────────────────────────────────────────────────────────
+function renderCards(tools) {
+  const container = document.getElementById('cards');
+
+  // Initialise log panel state for new tools
+  tools.forEach(t => {
+    if (!state.logPanels[t.id]) {
+      state.logPanels[t.id] = { open: false, lines: [], es: null };
+    }
+  });
+
+  // Update summary bar
+  document.getElementById('count-running').textContent  = tools.filter(t => t.status === 'running').length;
+  document.getElementById('count-starting').textContent = tools.filter(t => t.status === 'starting').length;
+  document.getElementById('count-stopped').textContent  = tools.filter(t => t.status === 'stopped').length;
+  document.getElementById('last-updated').textContent   = new Date().toLocaleTimeString();
+
+  tools.forEach(tool => {
+    const existing = document.getElementById(`card-${tool.id}`);
+    if (existing) {
+      updateCard(existing, tool);
+    } else {
+      container.appendChild(buildCard(tool));
+    }
+  });
+
+  // Remove loading state if present
+  const loading = container.querySelector('.loading-state');
+  if (loading) loading.remove();
+}
+
+function statusBadgeHTML(status) {
+  const map = {
+    running:  { cls: 'status-running',  label: 'Running',  pulse: true  },
+    starting: { cls: 'status-starting', label: 'Starting', pulse: true  },
+    stopped:  { cls: 'status-stopped',  label: 'Stopped',  pulse: false },
+  };
+  const s = map[status] || map.stopped;
+  return `<span class="status-badge ${s.cls}">
+    <span class="status-dot ${s.pulse ? 'pulse' : ''}"
+          style="background: currentColor"></span>
+    ${s.label}
+  </span>`;
+}
+
+function buildCard(tool) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = `card-${tool.id}`;
+  card.innerHTML = cardHTML(tool);
+  bindCardEvents(card, tool.id);
+  return card;
+}
+
+function cardHTML(tool) {
+  const alpha22 = tool.color + '22';
+  const alpha44 = tool.color + '44';
+  const isRunning = tool.status === 'running';
+  const isManaged = tool.managed;
+  const logPanel  = state.logPanels[tool.id];
+  const logOpen   = logPanel?.open;
+  const loading   = state.loading[tool.id];
+
+  return `
+  <div class="card-accent" style="background: ${tool.color}"></div>
+  <div class="card-header">
+    <div class="card-icon" style="background:${alpha22}; border:1px solid ${alpha44}">
+      ${tool.icon}
+    </div>
+    <div class="card-title-area">
+      <div class="card-name">${tool.name}</div>
+      <div class="card-desc">${tool.description}</div>
+    </div>
+    ${statusBadgeHTML(tool.status)}
+  </div>
+
+  <div class="card-stats">
+    <div class="stat">
+      <div class="stat-label">Port</div>
+      <div class="stat-value" style="color:${tool.color}">:${tool.port}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Uptime</div>
+      <div class="stat-value" id="uptime-${tool.id}">${fmtUptime(tool.uptime)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">PID</div>
+      <div class="stat-value" id="pid-${tool.id}">${tool.pid ?? '—'}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Started</div>
+      <div class="stat-value" id="started-${tool.id}" style="font-size:12px">${fmtTime(tool.started_at)}</div>
+    </div>
+  </div>
+
+  <div class="card-controls">
+    ${!isRunning
+      ? `<button class="btn btn-start" id="btn-start-${tool.id}" ${loading ? 'disabled' : ''}>
+           ${loading ? '<span class="spinner"></span>' : '▶'} Start
+         </button>`
+      : `<button class="btn btn-stop" id="btn-stop-${tool.id}" ${loading ? 'disabled' : ''}>
+           ${loading ? '<span class="spinner"></span>' : '■'} Stop
+         </button>`
+    }
+    <button class="btn btn-open" onclick="window.open('${tool.url}','_blank')" ${!isRunning ? 'disabled' : ''}>
+      ↗ Open
+    </button>
+    <button class="btn btn-logs" id="btn-logs-${tool.id}" ${!isManaged ? 'disabled' : ''}>
+      ${logOpen ? '▾ Hide logs' : '▸ Logs'}
+    </button>
+  </div>
+
+  <div class="log-panel ${logOpen ? 'open' : ''}" id="log-panel-${tool.id}">
+    <div class="log-toolbar">
+      <span class="log-toolbar-title">stdout · stderr</span>
+      <button class="btn-clear-log" id="btn-clear-${tool.id}">clear</button>
+    </div>
+    <div class="log-output" id="log-output-${tool.id}">
+      <div class="log-empty">Waiting for output…</div>
+    </div>
+  </div>`;
+}
+
+function updateCard(card, tool) {
+  // Only update dynamic parts (avoid full re-render which loses log output)
+  const statusEl = card.querySelector('.status-badge');
+  if (statusEl) statusEl.outerHTML = statusBadgeHTML(tool.status);
+
+  const uptimeEl = document.getElementById(`uptime-${tool.id}`);
+  if (uptimeEl) uptimeEl.textContent = fmtUptime(tool.uptime);
+
+  const pidEl = document.getElementById(`pid-${tool.id}`);
+  if (pidEl) pidEl.textContent = tool.pid ?? '—';
+
+  const startedEl = document.getElementById(`started-${tool.id}`);
+  if (startedEl) startedEl.textContent = fmtTime(tool.started_at);
+
+  // Rebuild controls area to reflect running state changes
+  const ctrlArea = card.querySelector('.card-controls');
+  if (ctrlArea) {
+    const isRunning = tool.status === 'running';
+    const isManaged = tool.managed;
+    const loading   = state.loading[tool.id];
+    const logOpen   = state.logPanels[tool.id]?.open;
+
+    ctrlArea.innerHTML = `
+      ${!isRunning
+        ? `<button class="btn btn-start" id="btn-start-${tool.id}" ${loading ? 'disabled' : ''}>
+             ${loading ? '<span class="spinner"></span>' : '▶'} Start
+           </button>`
+        : `<button class="btn btn-stop" id="btn-stop-${tool.id}" ${loading ? 'disabled' : ''}>
+             ${loading ? '<span class="spinner"></span>' : '■'} Stop
+           </button>`
+      }
+      <button class="btn btn-open" onclick="window.open('${tool.url}','_blank')" ${!isRunning ? 'disabled' : ''}>
+        ↗ Open
+      </button>
+      <button class="btn btn-logs" id="btn-logs-${tool.id}" ${!isManaged ? 'disabled' : ''}>
+        ${logOpen ? '▾ Hide logs' : '▸ Logs'}
+      </button>`;
+
+    bindCardEvents(card, tool.id);
+  }
+}
+
+function bindCardEvents(card, toolId) {
+  card.querySelector(`#btn-start-${toolId}`)?.addEventListener('click', () => startTool(toolId));
+  card.querySelector(`#btn-stop-${toolId}`)?.addEventListener('click', () => stopTool(toolId));
+  card.querySelector(`#btn-logs-${toolId}`)?.addEventListener('click', () => toggleLogs(toolId));
+  card.querySelector(`#btn-clear-${toolId}`)?.addEventListener('click', () => clearLogs(toolId));
+}
+
+// ────────────────────────────────────────────────────────────
+// Actions
+// ────────────────────────────────────────────────────────────
+async function startTool(toolId) {
+  state.loading[toolId] = true;
+  refreshCards();
+  try {
+    await apiFetch(`/api/tools/${toolId}/start`, 'POST');
+    toast(`Starting ${toolNameFor(toolId)}…`, 'info');
+  } catch(e) {
+    toast(`Failed to start: ${e.message}`, 'error');
+  } finally {
+    state.loading[toolId] = false;
+    await loadTools();
+  }
+}
+
+async function stopTool(toolId) {
+  if (!confirm(`Stop ${toolNameFor(toolId)}?`)) return;
+  state.loading[toolId] = true;
+  closeLogs(toolId);
+  refreshCards();
+  try {
+    await apiFetch(`/api/tools/${toolId}/stop`, 'POST');
+    toast(`${toolNameFor(toolId)} stopped.`, 'info');
+  } catch(e) {
+    toast(`Failed to stop: ${e.message}`, 'error');
+  } finally {
+    state.loading[toolId] = false;
+    await loadTools();
+  }
+}
+
+function toggleLogs(toolId) {
+  const panel = state.logPanels[toolId];
+  panel.open = !panel.open;
+  const panelEl = document.getElementById(`log-panel-${toolId}`);
+  const btnEl   = document.getElementById(`btn-logs-${toolId}`);
+  if (panelEl) panelEl.classList.toggle('open', panel.open);
+  if (btnEl)   btnEl.textContent = panel.open ? '▾ Hide logs' : '▸ Logs';
+
+  if (panel.open) {
+    openLogs(toolId);
+  } else {
+    closeLogs(toolId);
+  }
+}
+
+function clearLogs(toolId) {
+  const panel = state.logPanels[toolId];
+  if (panel) panel.lines = [];
+  const el = document.getElementById(`log-output-${toolId}`);
+  if (el) el.innerHTML = '<div class="log-empty">Cleared.</div>';
+}
+
+function toolNameFor(toolId) {
+  return state.tools.find(t => t.id === toolId)?.name ?? toolId;
+}
+
+// ────────────────────────────────────────────────────────────
+// Polling
+// ────────────────────────────────────────────────────────────
+async function loadTools() {
+  try {
+    const tools = await apiFetch('/api/tools');
+    state.tools = tools;
+    renderCards(tools);
+  } catch(e) {
+    console.error('Failed to load tools:', e);
+    document.getElementById('last-updated').textContent = 'error';
+  }
+}
+
+function refreshCards() {
+  // Re-render existing cards with current state (e.g. to show spinner)
+  state.tools.forEach(tool => {
+    const card = document.getElementById(`card-${tool.id}`);
+    if (card) updateCard(card, tool);
+  });
+}
+
+// Initial load + poll
+loadTools();
+setInterval(loadTools, 5000);
+
+// ────────────────────────────────────────────────────────────
+// Calculated Fields Extractor
+// ────────────────────────────────────────────────────────────
+(function () {
+  const dropZone  = document.getElementById('cf-drop-zone');
+  const fileInput = document.getElementById('cf-file-input');
+  const fileName  = document.getElementById('cf-file-name');
+  const btnExtract = document.getElementById('cf-btn-extract');
+  const cfStatus  = document.getElementById('cf-status');
+  const cfResult  = document.getElementById('cf-result');
+  const cfCount   = document.getElementById('cf-count');
+  const cfDownBtn = document.getElementById('cf-download-btn');
+
+  let selectedFile = null;
+
+  function setFile(f) {
+    if (!f || !f.name.toLowerCase().endsWith('.twbx')) {
+      toast('Please select a .twbx file.', 'error');
+      return;
+    }
+    selectedFile = f;
+    fileName.textContent = f.name;
+    btnExtract.disabled = false;
+    cfResult.classList.remove('visible');
+    cfStatus.textContent = '';
+  }
+
+  fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    setFile(e.dataTransfer.files[0]);
+  });
+
+  btnExtract.addEventListener('click', async () => {
+    if (!selectedFile) return;
+    btnExtract.disabled = true;
+    cfStatus.innerHTML = '<span class="spinner"></span> Extracting…';
+    cfResult.classList.remove('visible');
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch('/api/calc-fields/extract', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Extraction failed');
+
+      cfCount.textContent = data.count;
+      cfDownBtn.href = `/api/calc-fields/download/${data.job_id}`;
+      cfDownBtn.download = data.filename;
+      cfResult.classList.add('visible');
+      cfStatus.textContent = '';
+      toast(`Extracted ${data.count} fields from ${selectedFile.name}`, 'success');
+    } catch(e) {
+      cfStatus.textContent = '';
+      toast(`Error: ${e.message}`, 'error');
+    } finally {
+      btnExtract.disabled = false;
+    }
+  });
+})();
+
+// ────────────────────────────────────────────────────────────
+// Timesheet Report
+// ────────────────────────────────────────────────────────────
+(function () {
+  let tsScope = 'month';
+  let credsFormOpen = false;
+
+  // Populate year selector
+  const yrSel = document.getElementById('ts-year-sel');
+  const now = new Date();
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
+    const o = document.createElement('option'); o.value = y; o.textContent = y; yrSel.appendChild(o);
+  }
+  document.getElementById('ts-month-sel').value = now.getMonth() + 1;
+
+  // Load saved credentials from server config on startup
+  async function loadTsCreds() {
+    try {
+      const cfg = await apiFetch('/api/config');
+      const label = document.getElementById('ts-creds-label');
+      if (cfg.jira_base_url && cfg.jira_email && cfg.jira_token_saved) {
+        document.getElementById('ts-base-url').value   = cfg.jira_base_url;
+        document.getElementById('ts-email').value      = cfg.jira_email;
+        document.getElementById('ts-server-type').value = cfg.jira_server_type || 'cloud';
+        // token stays blank in UI — server uses saved value
+        label.innerHTML = `<span style="color:#34D399">✓ Connected as</span> ${cfg.jira_email}`;
+      } else {
+        label.textContent = 'No credentials saved — click Edit to configure';
+        // Auto-open form if nothing saved
+        document.getElementById('ts-creds-form').style.display = 'flex';
+        credsFormOpen = true;
+        document.getElementById('ts-creds-toggle').textContent = '✕ Close';
+      }
+    } catch(e) { /* monitor not ready yet */ }
+  }
+  loadTsCreds();
+
+  window.toggleTsCreds = function() {
+    credsFormOpen = !credsFormOpen;
+    document.getElementById('ts-creds-form').style.display = credsFormOpen ? 'flex' : 'none';
+    document.getElementById('ts-creds-toggle').textContent = credsFormOpen ? '✕ Close' : '✏️ Edit';
+  };
+
+  window.saveTsCreds = async function() {
+    const baseUrl    = document.getElementById('ts-base-url').value.trim();
+    const email      = document.getElementById('ts-email').value.trim();
+    const apiToken   = document.getElementById('ts-token').value.trim();
+    const serverType = document.getElementById('ts-server-type').value;
+    if (!baseUrl || !email) { toast('Jira URL and email are required.', 'error'); return; }
+    const btn = document.getElementById('ts-btn-save');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try {
+      const body = { jira_base_url: baseUrl, jira_email: email, jira_server_type: serverType };
+      if (apiToken) body.jira_api_token = apiToken;
+      await fetch('/api/config', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      document.getElementById('ts-creds-label').innerHTML = `<span style="color:#34D399">✓ Connected as</span> ${email}`;
+      document.getElementById('ts-token').value = '';
+      toggleTsCreds();
+      toast('Credentials saved.', 'success');
+    } catch(e) {
+      toast('Failed to save: ' + e.message, 'error');
+    } finally {
+      btn.textContent = '💾 Save Credentials'; btn.disabled = false;
+    }
+  };
+
+  window.setTsScope = function(scope) {
+    tsScope = scope;
+    const monthBtn = document.getElementById('ts-seg-month');
+    const yearBtn  = document.getElementById('ts-seg-year');
+    const wrap     = document.getElementById('ts-month-wrap');
+    monthBtn.style.background = scope === 'month' ? 'var(--surface2)' : 'transparent';
+    monthBtn.style.color      = scope === 'month' ? 'var(--text)'     : 'var(--muted)';
+    yearBtn.style.background  = scope === 'year'  ? 'var(--surface2)' : 'transparent';
+    yearBtn.style.color       = scope === 'year'  ? 'var(--text)'     : 'var(--muted)';
+    wrap.style.opacity        = scope === 'year'  ? '0.4' : '1';
+    wrap.style.pointerEvents  = scope === 'year'  ? 'none' : '';
+  };
+
+  document.getElementById('ts-btn-gen').addEventListener('click', async () => {
+    const month  = parseInt(document.getElementById('ts-month-sel').value);
+    const year   = parseInt(document.getElementById('ts-year-sel').value);
+    const status = document.getElementById('ts-status');
+    const btn    = document.getElementById('ts-btn-gen');
+
+    btn.disabled = true;
+    const isYear = tsScope === 'year';
+    status.innerHTML = '<span class="spinner"></span> ' + (isYear ? `Fetching ${year}…` : 'Fetching…');
+
+    // Send empty creds — server fills them from saved config
+    const creds    = { base_url: '', email: '', api_token: '', server_type: 'cloud' };
+    const endpoint = isYear ? '/api/timesheet/consolidated' : '/api/timesheet';
+    const body     = isYear ? { credentials: creds, year } : { credentials: creds, year, month };
+
+    try {
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${resp.status}`);
+      }
+      status.innerHTML = '<span class="spinner"></span> Building Excel…';
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a'); a.href = url;
+      const mthName = document.getElementById('ts-month-sel').options[month-1].text;
+      a.download = isYear ? `Timesheet_Consolidated_${year}.xlsx` : `Timesheet_${mthName}_${year}.xlsx`;
+      a.click(); URL.revokeObjectURL(url);
+      status.textContent = '';
+      toast(isYear ? `Consolidated timesheet for ${year} downloaded!` : 'Timesheet downloaded!', 'success');
+    } catch(e) {
+      status.textContent = '';
+      toast('Failed: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

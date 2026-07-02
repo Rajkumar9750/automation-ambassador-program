@@ -1,0 +1,2611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Factory Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00897B;
+            --primary-dark: #003f2d;
+            --primary-light: #26A69A;
+            --secondary: #37474F;
+            --light-bg: #F5F5F5;
+            --card-bg: #FFFFFF;
+            --text-dark: #000000;
+            --text-light: #666666;
+            --text-muted: #999999;
+            --border: #DDD;
+            --header-bg: #010131;
+            --success: #2E7D32;
+            --danger: #C62828;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        /* Navigation */
+        .navbar {
+            background: #010131;
+            color: white;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-image {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-image svg {
+            height: 35px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Sticky Banner */
+        .sticky-banner {
+            background: #00897B;
+            color: white;
+            padding: 12px 40px;
+            text-align: center;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+            font-weight: 500;
+        }
+        
+        .sticky-banner i {
+            font-size: 16px;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1a1a1a;
+            color: white;
+            padding: 50px 40px 30px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            color: #dbd99a;
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-section p,
+        .footer-section ul {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+            padding-left: 18px;
+            position: relative;
+        }
+
+        .footer-section ul li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #dbd99a;
+            font-weight: normal;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 25px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+        }
+
+        .footer-bottom p {
+            margin: 6px 0;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(180deg, rgb(1, 42, 45) 0%, rgb(13, 59, 62) 50%, rgb(26, 79, 82) 100%);
+            color: white;
+            padding: 120px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: 52px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            color: #ffffff;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: rgba(255,255,255,0.9);
+            max-width: 100%;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+        
+        .hero-subtitle {
+            font-size: 13px !important;
+            font-weight: 700;
+            color: #dbd99a !important;
+            margin-bottom: 24px !important;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 40px;
+            position: relative;
+        }
+
+        /* Progress Wizard */
+        .wizard-steps {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 60px;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .wizard-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            background: #f5f5f5;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .wizard-step::after {
+            content: '→';
+            position: absolute;
+            right: -32px;
+            font-size: 20px;
+            color: #ccc;
+            z-index: 1;
+        }
+
+        .wizard-step:last-child::after {
+            display: none;
+        }
+
+        .wizard-step.active {
+            background: rgba(0, 137, 123, 0.1);
+            border: 2px solid #00897B;
+        }
+
+        .wizard-step.completed {
+            background: rgba(46, 125, 50, 0.1);
+            border: 2px solid #2E7D32;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .step-info h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 2px;
+        }
+
+        .step-info p {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        /* Upload Section */
+        .upload-zone {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            background: #f0f0f0;
+            border-color: #00897B;
+        }
+
+        .upload-icon-large {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        .upload-zone h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 12px;
+        }
+
+        .upload-zone p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-preview {
+            display: none;
+            margin-top: 20px;
+            padding: 18px;
+            background: #f0f7f5;
+            border-radius: 6px;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .file-preview.active {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-icon {
+            font-size: 36px;
+        }
+
+        .file-details h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2E7D32;
+            margin-bottom: 4px;
+        }
+
+        .file-details p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin: 20px 0 40px 0;
+        }
+
+        .option-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+        }
+
+        .option-card:hover {
+            border-color: #00897B;
+            box-shadow: 0 4px 12px rgba(0,137,123,0.15);
+            transform: translateY(-2px);
+        }
+
+        .option-card.selected {
+            border-color: #00897B;
+            background: rgba(0,137,123,0.05);
+        }
+
+        .option-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .option-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,137,123,0.1);
+            border-radius: 6px;
+            color: #00897B;
+        }
+
+        .option-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .option-content {
+            flex: 1;
+        }
+
+        .option-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .option-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #00897B;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .option-config-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            margin: 0 8px;
+            flex-shrink: 0;
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+
+        .option-config-btn:hover {
+            opacity: 1;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: var(--text-muted);
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            cursor: help;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            padding: 14px 18px;
+            background: #FFFFFF;
+            color: #1B1B1B;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 137, 123, 0.3);
+            border: 2px solid var(--primary);
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: calc(120% - 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            border: 8px solid transparent;
+            border-top-color: var(--primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-8px);
+        }
+
+        .tooltip:hover::before {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0px);
+        }
+
+        /* Select All Toggle */
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            margin: 40px 0 16px 0;
+            padding: 0;
+        }
+
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            background-color: transparent;
+        }
+
+        .select-all-label:hover {
+            background-color: var(--light-bg);
+        }
+
+        .select-all-label input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-reset {
+            background: white;
+            color: #000;
+            border: 1px solid #ddd;
+        }
+
+        .btn-reset:hover {
+            background: #f5f5f5;
+            border-color: #00897B;
+        }
+
+        .btn-apply {
+            background: #00897B;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,137,123,0.2);
+        }
+
+        .btn-apply:hover:not(:disabled) {
+            background: #007966;
+            box-shadow: 0 4px 12px rgba(0,137,123,0.3);
+        }
+
+        .btn-apply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0,137,123,0.05);
+            border-radius: 8px;
+            border-left: 4px solid #00897B;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid rgba(0,137,123,0.2);
+            border-radius: 50%;
+            border-top-color: #00897B;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .progress-bar-container {
+            height: 10px;
+            background: rgba(0,137,123,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #00897B;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-steps {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.7;
+        }
+
+        .progress-steps strong {
+            color: #00897B;
+        }
+
+        /* Result Toast */
+        .result-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            max-width: 450px;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            transform: translateX(500px);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .result-toast.active {
+            transform: translateX(0);
+        }
+
+        .result-toast.success {
+            background: linear-gradient(135deg, var(--success) 0%, #66BB6A 100%);
+            color: white;
+        }
+
+        .result-toast.error {
+            background: linear-gradient(135deg, var(--danger) 0%, #EF5350 100%);
+            color: white;
+        }
+
+        .toast-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .toast-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-close {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .toast-close:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        .toast-message {
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.65);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 680px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 90px rgba(0,0,0,0.25), 0 0 1px rgba(0,137,123,0.15);
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(0,137,123,0.12);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .modal-header h2 {
+            font-size: 28px;
+            color: var(--text-dark);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        /* Preview Section */
+        .worksheet-title-preview {
+            background: linear-gradient(135deg, #f0f9f8 0%, #e6f5f3 100%);
+            border: 2px solid var(--primary-light);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: none;
+        }
+
+        .worksheet-title-preview.visible {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .preview-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #435254;
+            padding: 16px 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .close-modal {
+            background: var(--light-bg);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-light);
+        }
+
+        /* Form styling for config modal */
+        .config-section {
+            padding: 24px 0;
+        }
+
+        .config-section h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group label::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin-right: 4px;
+        }
+
+        .form-group input[type="color"],
+        .form-group input[type="number"],
+        .form-group input[type="text"],
+        .form-group select {
+            padding: 14px 18px;
+            border: 2px solid #e0e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+            box-shadow: 0 2px 8px rgba(0,137,123,0.05);
+        }
+
+        .form-group input[type="color"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group input[type="text"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 5px rgba(0,137,123,0.15), 0 4px 16px rgba(0,137,123,0.2);
+            transform: translateY(-2px);
+            background: white;
+        }
+
+        .form-group input[type="color"]:hover,
+        .form-group input[type="number"]:hover,
+        .form-group input[type="text"]:hover,
+        .form-group select:hover {
+            border-color: var(--primary-light);
+            box-shadow: 0 4px 16px rgba(0,137,123,0.2);
+        }
+
+        .form-group input[type="color"] {
+            cursor: pointer;
+            height: 50px;
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .form-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            transform: scale(1.2);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            padding-top: 32px;
+            border-top: 2px solid #e8f0f0;
+            margin-top: 32px;
+        }
+
+        .modal-footer .btn {
+            padding: 16px 40px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .modal-footer .btn-secondary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f4 100%);
+            color: var(--text-dark);
+            border: 2px solid #d8dfe2;
+        }
+
+        .modal-footer .btn-secondary:hover {
+            border-color: var(--primary-light);
+            box-shadow: 0 6px 20px rgba(0,137,123,0.1);
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #ffffff 0%, #f5f8fa 100%);
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 16px rgba(0,137,123,0.3);
+        }
+
+        .modal-footer .btn-primary:hover {
+            box-shadow: 0 8px 28px rgba(0,137,123,0.4);
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #006b5f 0%, #00897b 100%);
+        }
+
+        .modal-footer .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0,137,123,0.2);
+        }
+
+        .modal-footer .btn-secondary:hover {
+            background: linear-gradient(135deg, #eeeeee 0%, #e0e0e0 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 8px 24px rgba(0,137,123,0.3);
+        }
+
+        .modal-footer .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,137,123,0.4);
+        }
+
+        .modal-footer .btn-primary.saved {
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            animation: pulse 0.6s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 8px 24px rgba(46,125,50,0.3);
+            }
+            50% {
+                box-shadow: 0 8px 40px rgba(46,125,50,0.5);
+            }
+        }
+
+        .close-btn {
+            background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 28px;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%);
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--text-muted);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--text-light);
+        }
+
+        .close-modal {
+            background: var(--light-bg);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: var(--border);
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            color: var(--text-light);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .config-card {
+            background: linear-gradient(135deg, rgba(0,137,123,0.06), rgba(38,166,154,0.08));
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .config-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .config-detail {
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 16px 24px;
+            }
+            
+            .sticky-banner {
+                padding: 10px 24px;
+                font-size: 13px;
+                top: 65px;
+            }
+
+            .wizard-steps {
+                flex-direction: column;
+                gap: 12px;
+                padding: 24px;
+            }
+
+            .wizard-step::after {
+                display: none;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .result-toast {
+                right: 20px;
+                left: 20px;
+                max-width: none;
+            }
+            
+            .hero {
+                padding: 60px 24px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .container {
+                margin: -30px auto 60px;
+                padding: 0 24px;
+            }
+            
+            .main-card {
+                padding: 32px 24px;
+            }
+            
+            .modal-content {
+                padding: 36px 24px;
+                border-radius: 20px;
+                width: 95%;
+            }
+            
+            .upload-zone {
+                padding: 60px 20px;
+            }
+            
+            .upload-icon-large {
+                font-size: 56px;
+            }
+            
+            .footer-content {
+                gap: 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 28px;
+                margin-bottom: 12px;
+            }
+            
+            .hero p {
+                font-size: 14px;
+            }
+            
+            .wizard-steps {
+                padding: 16px;
+            }
+            
+            .main-card {
+                padding: 24px;
+            }
+            
+            .btn {
+                padding: 14px 24px;
+                font-size: 13px;
+            }
+            
+            .modal-header h2 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-section">
+            <div class="logo-image">
+                <svg viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg">
+                    <text x="0" y="23" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" letter-spacing="2">CBRE</text>
+                </svg>
+            </div>
+            <div class="brand-text">Dashboard Factory Tool</div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <p class="hero-subtitle">📊 Professional Tableau Dashboard Formatting Tool</p>
+        <h1>Dashboard Factory</h1>
+        <p>Ensure Compliance And Maintain QA Standards Across All Your Tableau Dashboards</p>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 20px;">Streamline your dashboard management with automated formatting, validation, and quality assurance tools</p>
+    </div>
+    
+    <!-- Sticky Banner -->
+    <div class="sticky-banner">
+        <span style="font-size: 18px;">⚡</span>
+        <span>Automate compliance across all your dashboards in seconds</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Progress Wizard -->
+        <div class="wizard-steps">
+            <div class="wizard-step active" id="step1">
+                <div class="step-icon">📤</div>
+                <div class="step-info">
+                    <h3>Upload</h3>
+                    <p>Select workbook</p>
+                </div>
+            </div>
+            <div class="wizard-step" id="step2">
+                <div class="step-icon">⚙️</div>
+                <div class="step-info">
+                    <h3>Configure</h3>
+                    <p>Choose options</p>
+                </div>
+            </div>
+            <div class="wizard-step" id="step3">
+                <div class="step-icon">✨</div>
+                <div class="step-info">
+                    <h3>Process</h3>
+                    <p>Apply formatting</p>
+                </div>
+            </div>
+            <div class="wizard-step" id="step4">
+                <div class="step-icon">✓</div>
+                <div class="step-info">
+                    <h3>Complete</h3>
+                    <p>Download result</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="main-card">
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon-large">📁</div>
+                <h3>Drop your Tableau workbook here</h3>
+                <p>or click to browse • Supports .twb and .twbx files</p>
+            </div>
+            <input type="file" id="fileInput" accept=".twb,.twbx" style="display:none;" multiple="false">
+            <input type="hidden" id="configOptionId" value="">
+
+            <!-- File Preview -->
+            <div class="file-preview" id="filePreview">
+                <div class="file-icon">✓</div>
+                <div class="file-details">
+                    <h4 id="fileName">File ready</h4>
+                    <p id="fileSize">Size: -</p>
+                </div>
+            </div>
+
+            <!-- Select All Toggle -->
+            <div class="select-all-container">
+                <label class="select-all-label">
+                    <input type="checkbox" id="selectAllCheckbox">
+                    <span>Select All</span>
+                </label>
+            </div>
+
+            <!-- Options Grid -->
+            <div class="options-grid" id="optionsGrid"></div>
+
+            <!-- Format Configuration Modal -->
+            <div class="modal" id="formatConfigModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="configTitle">Configure Formatting</h2>
+                        <button class="close-btn" id="closeConfigBtn">&times;</button>
+                    </div>
+                    <div class="modal-body" id="configBody">
+                        <!-- Dynamic content will be added here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancelConfigBtn">Cancel</button>
+                        <button class="btn btn-primary" id="saveConfigBtn">Save Configuration</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-reset" id="resetBtn">
+                    <span>↻ Reset</span>
+                </button>
+                <button class="btn btn-apply" id="applyBtn" disabled>
+                    <span>→ Apply Formatting</span>
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-header">
+                    <div class="spinner"></div>
+                    <h3>Processing your workbook...</h3>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="progress-steps" id="progressSteps">
+                    Initializing...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Find Calculated Fields Tool -->
+    <div class="container">
+        <div class="main-card">
+            <h2 style="margin-top: 0; color: #00897B; display: flex; align-items: center;">
+                <span style="font-size: 28px; margin-right: 12px;">🔍</span>
+                Find Calculated Fields
+            </h2>
+            <p style="color: #666; margin-bottom: 20px;">Search your workbook for calculated fields and examine their calculations to ensure compliance and understand dependencies.</p>
+            
+            <div style="background: linear-gradient(135deg, rgba(0,137,123,0.05), rgba(38,166,154,0.08)); border: 2px solid var(--primary-light); border-radius: 12px; padding: 30px; text-align: center;">
+                <p style="margin: 0 0 20px 0; color: #333; font-size: 16px; line-height: 1.6;">
+                    Use the dedicated Calculated Fields tool to search for specific terms in your calculated fields, view their formulas, and export comprehensive reports.
+                </p>
+                <a href="/calculated-fields" style="display: inline-block; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 6px 20px rgba(0,137,123,0.3); transition: all 0.3s ease;">
+                    📊 Open Calculated Fields Tool
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Toast -->
+    <div class="result-toast" id="resultToast">
+        <div class="toast-header">
+            <div class="toast-title" id="toastTitle"></div>
+            <button class="toast-close" id="toastClose">×</button>
+        </div>
+        <div class="toast-message" id="toastMessage"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let cbreConfig = {};
+
+        const API = {
+            upload: '/api/upload',
+            process: '/api/process',
+            jobStatus: (id) => `/api/job-status/${id}`,
+            config: '/api/config'
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfig();
+            initUpload();
+            initOptions();
+            initButtons();
+        });
+
+        async function loadConfig() {
+            try {
+                const response = await fetch(API.config);
+                cbreConfig = await response.json();
+                console.log('✓ Config loaded');
+            } catch (error) {
+                console.error('Config load error:', error);
+                cbreConfig = {
+                    'quick-filter-title': { 'color': '#11e033', 'font-family': 'Calibre', 'font-size': '12' },
+                    'quick-filter': { 'color': '#D60404', 'font-family': 'Calibre', 'font-size': '10' },
+                    'parameter-ctrl-title': { 'color': '#ed09d6', 'font-family': 'Calibre', 'font-size': '12' },
+                    'parameter-ctrl': { 'color': '#280BE4', 'font-family': 'Calibre', 'font-size': '10' }
+                };
+            }
+        }
+
+        function initUpload() {
+            const zone = document.getElementById('uploadZone');
+            const input = document.getElementById('fileInput');
+
+            // Click to open file picker
+            zone.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                console.log('🖱️ Upload zone clicked');
+                input.click();
+            });
+            
+            // Drag and drop
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.style.borderColor = 'var(--primary)';
+                zone.style.transform = 'scale(1.02)';
+            });
+            
+            zone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.style.borderColor = 'var(--primary)';
+                zone.style.transform = 'scale(1)';
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.style.transform = 'scale(1)';
+                console.log('📥 Files dropped:', e.dataTransfer.files.length);
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // File input change
+            input.addEventListener('change', (e) => {
+                console.log('📁 File input changed:', e.target.files.length);
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+            
+            // Prevent default drag behavior on document
+            document.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            document.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+
+        async function handleFile(file) {
+            console.log('📁 Starting upload:', file.name);
+            
+            // Validate file
+            const validExtensions = ['.twb', '.twbx'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!validExtensions.includes(fileExt)) {
+                console.error('❌ Invalid extension:', fileExt);
+                showToast(`Invalid file type. Only .twb and .twbx files are allowed.`, 'error');
+                return;
+            }
+            
+            if (file.size > 500 * 1024 * 1024) {
+                console.error('❌ File too large:', file.size);
+                showToast(`File too large. Maximum size is 500MB.`, 'error');
+                return;
+            }
+
+            showToast(`⏳ Uploading ${file.name}...`, 'info');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                console.log('📤 Sending POST to /api/upload');
+                
+                // Use simple fetch without extra configuration
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('📨 Response received:', response.status, response.statusText);
+                
+                // Try to parse as JSON
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('📨 JSON data:', data);
+                } catch (e) {
+                    console.error('❌ Could not parse JSON:', e);
+                    const text = await response.text();
+                    console.error('📝 Raw response:', text);
+                    throw new Error(`Server returned invalid JSON: ${text.substring(0, 100)}`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `Server error: ${response.status}`);
+                }
+                
+                // Save file info
+                selectedFile = file;
+                window.uploadedFilePath = data.filepath;
+                window.originalFileName = data.original_filename || data.filename;
+
+                // Update UI
+                document.getElementById('fileName').textContent = data.filename;
+                document.getElementById('fileSize').textContent = `Size: ${data.file_size}`;
+                document.getElementById('filePreview').classList.add('active');
+                document.getElementById('applyBtn').disabled = false;
+
+                updateWizardStep(2);
+                console.log('✅ Upload successful');
+                showToast('✅ File uploaded successfully!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Upload failed:', error.message, error);
+                showToast(`❌ Upload failed: ${error.message}`, 'error');
+                // Reset file input
+                document.getElementById('fileInput').value = '';
+            }
+        }
+        
+        function initOptions() {
+            const grid = document.getElementById('optionsGrid');
+            
+            const options = [
+                {
+                    id: 'filters',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>',
+                    title: 'Filters & Parameters Styling',
+                    description: 'Title: Grey (#435254, Calibre, 11pt) | Values: Black (#000000, Calibre, 11pt)<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Filter Titles Will Be Reset</small>',
+                    tooltip: '💡 Apply consistent colors & fonts to all filter controls for brand compliance'
+                },
+                {
+                    id: 'filter-values',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+                    title: 'Filter Values → Relevant',
+                    description: 'Change all filters "All" to "Only Relevant Values"',
+                    tooltip: '⚡ Boost performance - shows only relevant data instead of entire database'
+                },
+                {
+                    id: 'filter-type',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>',
+                    title: 'Filter Type → Dropdown + Apply',
+                    description: 'Convert all filters to Multiple Values dropdown with Apply button',
+                    tooltip: '🔧 Standardize user experience - consistent dropdown filters with Apply button'
+                },
+                {
+                    id: 'dashboard-titles',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+                    title: 'Dashboard Titles',
+                    description: 'Font: Calibre Medium | Size: 30pt | Color: Dark Teal (#012A2D)<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Only Dashboard Titles Will Be Modified, Not Titles Created Using Sheets</small>',
+                    tooltip: '🎯 Professional look - uniform title formatting across all dashboards'
+                },
+                {
+                    id: 'worksheet-titles',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>',
+                    title: 'Worksheet Titles',
+                    description: 'Font: Calibre | Size: 15pt | Color: Grey (#435254)<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Only Worksheet Titles Will Be Modified, Not Titles Created Using Text</small>',
+                    tooltip: '✨ Standardize worksheet title appearance across all sheets and dashboards'
+                },
+                {
+                    id: 'dashboard-sizes',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M9 3v18M15 3v18M3 9h18M3 15h18"></path></svg>',
+                    title: 'Dashboard Sizes',
+                    description: 'Width: 1366px | Height: 1000px | Mode: Fixed<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Applies standardized sizing to all dashboards</small>',
+                    tooltip: '📐 Standardize dashboard dimensions across all dashboards for consistent layout'
+                },
+                {
+                    id: 'hide-used-worksheets',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle><line x1="1" y1="1" x2="23" y2="23"></line></svg>',
+                    title: 'Hide Used Worksheets',
+                    description: 'Automatically hides all worksheets used in dashboards<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Support worksheets remain visible for reference</small>',
+                    tooltip: '🙈 Clean sheet tabs by hiding worksheets referenced by dashboards'
+                },
+                {
+                    id: 'delete-phone-layouts',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18.01"></line></svg>',
+                    title: 'Delete Phone Layouts',
+                    description: 'Removes all phone/mobile device layouts from dashboards<br><small style="color: #999; margin-top: 4px; display: block;">📌 Note: Phone layouts are deleted, not the dashboards themselves</small>',
+                    tooltip: '📱 Clean up device-specific layouts - remove phone layouts from all dashboards'
+                }
+            ];
+            ;
+
+            options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                const configBtn = (opt.id === 'filters' || opt.id === 'dashboard-titles' || opt.id === 'worksheet-titles' || opt.id === 'dashboard-sizes') 
+                    ? `<button class="option-config-btn" data-config-id="${opt.id}">⚙️</button>`
+                    : '';
+                card.innerHTML = `
+                    <div class="option-header">
+                        <div class="option-icon">${opt.icon}</div>
+                        <div class="option-content">
+                            <div class="option-title">
+                                ${opt.title}
+                                <span class="tooltip" data-tooltip="${opt.tooltip}">?</span>
+                            </div>
+                            <div class="option-description">${opt.description}</div>
+                        </div>
+                        ${configBtn}
+                        <input type="checkbox" class="option-checkbox" data-option="${opt.id}">
+                    </div>
+                `;
+
+                const checkbox = card.querySelector('.option-checkbox');
+                const configBtnElement = card.querySelector('.option-config-btn');
+                
+                checkbox.addEventListener('change', (e) => {
+                    card.classList.toggle('selected', e.target.checked);
+                });
+
+                if (configBtnElement) {
+                    configBtnElement.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openConfigModal(configBtnElement.dataset.configId);
+                    });
+                }
+
+                card.addEventListener('click', (e) => {
+                    if (e.target !== checkbox && !e.target.classList.contains('option-config-btn')) {
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                grid.appendChild(card);
+            });
+
+            // Setup Select All functionality AFTER all cards are created
+            setupSelectAll();
+        }
+
+        function setupSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const optionCheckboxes = document.querySelectorAll('.option-checkbox');
+
+            if (!selectAllCheckbox || optionCheckboxes.length === 0) return;
+
+            // When Select All is clicked
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                optionCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    checkbox.closest('.option-card').classList.toggle('selected', isChecked);
+                });
+                updateSelectAllState();
+            });
+
+            // When individual checkboxes change
+            optionCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateSelectAllState);
+            });
+
+            // Initial state
+            updateSelectAllState();
+        }
+
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const optionCheckboxes = document.querySelectorAll('.option-checkbox');
+            
+            if (!selectAllCheckbox) return;
+
+            const checkedCount = Array.from(optionCheckboxes).filter(cb => cb.checked).length;
+            const totalCount = optionCheckboxes.length;
+
+            selectAllCheckbox.checked = checkedCount === totalCount && totalCount > 0;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < totalCount;
+        }
+
+        function initButtons() {
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                document.querySelectorAll('.option-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    cb.closest('.option-card').classList.remove('selected');
+                });
+                updateSelectAllState();
+                showToast('Settings reset', 'success');
+            });
+
+            document.getElementById('applyBtn').addEventListener('click', processWorkbook);
+        }
+
+        async function processWorkbook() {
+            if (!selectedFile) {
+                showToast('Please upload a file first', 'error');
+                return;
+            }
+
+            const options = {
+                filters: document.querySelector('[data-option="filters"]').checked,
+                filterValues: document.querySelector('[data-option="filter-values"]').checked,
+                filterType: document.querySelector('[data-option="filter-type"]').checked,
+                dashboardTitles: document.querySelector('[data-option="dashboard-titles"]').checked,
+                worksheetTitles: document.querySelector('[data-option="worksheet-titles"]').checked,
+                dashboardSizes: document.querySelector('[data-option="dashboard-sizes"]').checked,
+                hideUsedWorksheets: document.querySelector('[data-option="hide-used-worksheets"]').checked,
+                deletePhoneLayouts: document.querySelector('[data-option="delete-phone-layouts"]').checked
+            };
+
+            if (!Object.values(options).some(v => v)) {
+                showToast('Please select at least one option', 'error');
+                return;
+            }
+
+            updateWizardStep(3);
+            showProgress();
+            document.getElementById('applyBtn').disabled = true;
+
+            try {
+                const response = await fetch(API.process, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filepath: window.uploadedFilePath,
+                        original_filename: window.originalFileName,
+                        apply_filters: options.filters,
+                        apply_filter_values_relevant: options.filterValues,
+                        apply_filter_type_dropdown: options.filterType,
+                        apply_dashboard_titles: options.dashboardTitles,
+                        apply_worksheet_titles: options.worksheetTitles,
+                        apply_dashboard_sizes: options.dashboardSizes,
+                        apply_hide_used_worksheets: options.hideUsedWorksheets,
+                        apply_delete_phone_layouts: options.deletePhoneLayouts,
+                        filters_config: cbreConfig,
+                        format_configs: formatConfigs,
+                        worksheet_titles_config: {
+                            font_size: formatConfigs['worksheet-titles'].fontSize,
+                            font_family: formatConfigs['worksheet-titles'].fontFamily,
+                            color: formatConfigs['worksheet-titles'].color,
+                            font_style: formatConfigs['worksheet-titles'].fontStyle
+                        },
+                        dashboard_config: {
+                            font_name: 'Calibre Medium',
+                            font_size: '30',
+                            font_color: '#012a2d',
+                            bold: true
+                        },
+                        dashboard_sizes_config: {
+                            width: formatConfigs['dashboard-sizes'].width,
+                            height: formatConfigs['dashboard-sizes'].height,
+                            sizing_mode: formatConfigs['dashboard-sizes'].sizingMode
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                pollJobStatus(data.job_id);
+            } catch (error) {
+                showToast(`Error: ${error.message}`, 'error');
+                hideProgress();
+                document.getElementById('applyBtn').disabled = false;
+            }
+        }
+
+        async function pollJobStatus(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(API.jobStatus(jobId));
+                    const status = await response.json();
+
+                    document.getElementById('progressBar').style.width = status.progress + '%';
+                    
+                    if (status.steps && status.steps.length > 0) {
+                        const stepsHtml = status.steps.map(s => {
+                            if (s.status === 'completed') return `✓ <strong>${s.name}</strong>`;
+                            if (s.status === 'in-progress') return `⏳ <strong>${s.name}</strong>`;
+                            return s.name;
+                        }).join(' → ');
+                        document.getElementById('progressSteps').innerHTML = stepsHtml;
+                    }
+
+                    if (status.status === 'success') {
+                        clearInterval(interval);
+                        updateWizardStep(4);
+                        hideProgress();
+                        
+                        // Show standard success message
+                        showToast(`Success! File saved to:<br>${status.output_dir}`, 'success');
+                        document.getElementById('applyBtn').disabled = false;
+                    } else if (status.status === 'error') {
+                        clearInterval(interval);
+                        hideProgress();
+                        showToast(`Error: ${status.message}`, 'error');
+                        document.getElementById('applyBtn').disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Poll error:', error);
+                }
+            }, 1000);
+        }
+
+        function updateWizardStep(step) {
+            document.querySelectorAll('.wizard-step').forEach((el, i) => {
+                el.classList.remove('active', 'completed');
+                if (i < step - 1) el.classList.add('completed');
+                else if (i === step - 1) el.classList.add('active');
+            });
+        }
+
+        function showProgress() {
+            document.getElementById('progressSection').classList.add('active');
+        }
+
+        function hideProgress() {
+            document.getElementById('progressSection').classList.remove('active');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('resultToast');
+            const title = document.getElementById('toastTitle');
+            const msg = document.getElementById('toastMessage');
+
+            toast.className = `result-toast ${type}`;
+            title.innerHTML = type === 'success' ? '✓ Success' : '✕ Error';
+            msg.innerHTML = message;
+            
+            toast.classList.add('active');
+        }
+
+        document.getElementById('toastClose').addEventListener('click', () => {
+            document.getElementById('resultToast').classList.remove('active');
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About This Tool</h3>
+                <p>The Dashboard Factory Tool helps maintain consistency and professionalism across your Tableau dashboards. Ensure your workbooks adhere to organizational standards and deliver a unified visual experience to stakeholders.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Why Quality Assurance Matters</h3>
+                <ul>
+                    <li>Maintain brand consistency across all reports</li>
+                    <li>Improve user experience with standardized design</li>
+                    <li>Save time with automated formatting checks</li>
+                    <li>Ensure compliance with organizational guidelines</li>
+                    <li>Deliver professional, polished dashboards</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Best Practices</h3>
+                <p>Quality dashboards require attention to detail:</p>
+                <ul>
+                    <li>Consistent typography and font usage</li>
+                    <li>Standardized color schemes and branding</li>
+                    <li>Uniform component styling</li>
+                    <li>Professional presentation standards</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 CBRE. All rights reserved.</p>
+            <p>Dashboard Factory Tool - Ensuring consistency and quality across all Tableau dashboards</p>
+        </div>
+    </footer>
+
+    <script>
+        // Utility function to escape HTML characters and prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Format configuration storage
+        let formatConfigs = {
+            'filters': {
+                titleColor: '#435254',
+                titleFont: 'Calibre',
+                titleSize: '11',
+                valueColor: '#000000',
+                valueFont: 'Calibre',
+                valueSize: '10'
+            },
+            'parameters': {
+                titleColor: '#435254',
+                titleFont: 'Calibre',
+                titleSize: '11',
+                valueColor: '#000000',
+                valueFont: 'Calibre',
+                valueSize: '10'
+            },
+            'dashboard-titles': {
+                font: 'Calibre Medium',
+                size: '30',
+                color: '#012a2d',
+                bold: true
+            },
+            'worksheet-titles': {
+                fontSize: '15',
+                fontFamily: 'Calibre',
+                color: '#435254',
+                fontStyle: 'normal'
+            },
+            'dashboard-sizes': {
+                width: '1366',
+                height: '1000',
+                sizingMode: 'fixed'
+            },
+            'hide-used-worksheets': {
+                enabled: true
+            },
+            'delete-phone-layouts': {
+                enabled: true
+            }
+        };
+        
+        let currentConfigOptionId = null;
+
+        function openConfigModal(optionId) {
+            currentConfigOptionId = optionId;
+            const modal = document.getElementById('formatConfigModal');
+            const configTitle = document.getElementById('configTitle');
+            const configBody = document.getElementById('configBody');
+            
+            if (optionId === 'filters') {
+                configTitle.textContent = 'Configure Filter & Parameter Formatting';
+                configBody.innerHTML = `
+                    <div class="config-section">
+                        <h4>Filter Title Formatting</h4>
+                        <div class="form-group">
+                            <label>Title Color:</label>
+                            <input type="color" id="titleColor" value="${formatConfigs.filters.titleColor}">
+                        </div>
+                        <div class="form-group">
+                            <label>Title Font:</label>
+                            <select id="titleFont">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs.filters.titleFont === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs.filters.titleFont === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs.filters.titleFont === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs.filters.titleFont === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs.filters.titleFont === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs.filters.titleFont === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs.filters.titleFont === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs.filters.titleFont === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs.filters.titleFont === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs.filters.titleFont === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs.filters.titleFont === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs.filters.titleFont === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs.filters.titleFont === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs.filters.titleFont === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs.filters.titleFont === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs.filters.titleFont === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs.filters.titleFont === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs.filters.titleFont === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs.filters.titleFont === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs.filters.titleFont === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs.filters.titleFont === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs.filters.titleFont === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs.filters.titleFont === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs.filters.titleFont === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs.filters.titleFont === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs.filters.titleFont === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs.filters.titleFont === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs.filters.titleFont === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs.filters.titleFont === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs.filters.titleFont === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs.filters.titleFont === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs.filters.titleFont === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs.filters.titleFont === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Size (pt):</label>
+                            <input type="number" id="titleSize" value="${formatConfigs.filters.titleSize}" min="8" max="48">
+                        </div>
+                        <h4 style="margin-top: 20px;">Filter Value Formatting</h4>
+                        <div class="form-group">
+                            <label>Value Color:</label>
+                            <input type="color" id="valueColor" value="${formatConfigs.filters.valueColor}">
+                        </div>
+                        <div class="form-group">
+                            <label>Value Font:</label>
+                            <select id="valueFont">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs.filters.valueFont === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs.filters.valueFont === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs.filters.valueFont === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs.filters.valueFont === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs.filters.valueFont === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs.filters.valueFont === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs.filters.valueFont === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs.filters.valueFont === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs.filters.valueFont === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs.filters.valueFont === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs.filters.valueFont === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs.filters.valueFont === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs.filters.valueFont === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs.filters.valueFont === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs.filters.valueFont === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs.filters.valueFont === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs.filters.valueFont === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs.filters.valueFont === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs.filters.valueFont === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs.filters.valueFont === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs.filters.valueFont === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs.filters.valueFont === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs.filters.valueFont === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs.filters.valueFont === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs.filters.valueFont === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs.filters.valueFont === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs.filters.valueFont === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs.filters.valueFont === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs.filters.valueFont === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs.filters.valueFont === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs.filters.valueFont === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs.filters.valueFont === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs.filters.valueFont === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Value Size (pt):</label>
+                            <input type="number" id="valueSize" value="${formatConfigs.filters.valueSize}" min="8" max="48">
+                        </div>
+                        <h4 style="margin-top: 30px; border-top: 2px solid #E0E0E0; padding-top: 20px;">Parameter Title Formatting</h4>
+                        <div class="form-group">
+                            <label>Title Color:</label>
+                            <input type="color" id="paramTitleColor" value="${formatConfigs.parameters.titleColor}">
+                        </div>
+                        <div class="form-group">
+                            <label>Title Font:</label>
+                            <select id="paramTitleFont">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs.parameters.titleFont === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs.parameters.titleFont === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs.parameters.titleFont === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs.parameters.titleFont === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs.parameters.titleFont === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs.parameters.titleFont === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs.parameters.titleFont === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs.parameters.titleFont === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs.parameters.titleFont === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs.parameters.titleFont === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs.parameters.titleFont === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs.parameters.titleFont === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs.parameters.titleFont === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs.parameters.titleFont === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs.parameters.titleFont === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs.parameters.titleFont === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs.parameters.titleFont === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs.parameters.titleFont === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs.parameters.titleFont === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs.parameters.titleFont === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs.parameters.titleFont === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs.parameters.titleFont === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs.parameters.titleFont === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs.parameters.titleFont === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs.parameters.titleFont === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs.parameters.titleFont === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs.parameters.titleFont === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs.parameters.titleFont === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs.parameters.titleFont === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs.parameters.titleFont === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs.parameters.titleFont === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs.parameters.titleFont === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs.parameters.titleFont === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Title Size (pt):</label>
+                            <input type="number" id="paramTitleSize" value="${formatConfigs.parameters.titleSize}" min="8" max="48">
+                        </div>
+                        <h4 style="margin-top: 20px;">Parameter Value Formatting</h4>
+                        <div class="form-group">
+                            <label>Value Color:</label>
+                            <input type="color" id="paramValueColor" value="${formatConfigs.parameters.valueColor}">
+                        </div>
+                        <div class="form-group">
+                            <label>Value Font:</label>
+                            <select id="paramValueFont">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs.parameters.valueFont === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs.parameters.valueFont === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs.parameters.valueFont === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs.parameters.valueFont === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs.parameters.valueFont === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs.parameters.valueFont === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs.parameters.valueFont === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs.parameters.valueFont === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs.parameters.valueFont === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs.parameters.valueFont === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs.parameters.valueFont === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs.parameters.valueFont === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs.parameters.valueFont === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs.parameters.valueFont === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs.parameters.valueFont === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs.parameters.valueFont === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs.parameters.valueFont === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs.parameters.valueFont === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs.parameters.valueFont === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs.parameters.valueFont === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs.parameters.valueFont === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs.parameters.valueFont === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs.parameters.valueFont === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs.parameters.valueFont === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs.parameters.valueFont === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs.parameters.valueFont === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs.parameters.valueFont === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs.parameters.valueFont === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs.parameters.valueFont === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs.parameters.valueFont === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs.parameters.valueFont === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs.parameters.valueFont === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs.parameters.valueFont === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Value Size (pt):</label>
+                            <input type="number" id="paramValueSize" value="${formatConfigs.parameters.valueSize}" min="8" max="48">
+                        </div>
+                    </div>
+                `;
+            } else if (optionId === 'dashboard-titles') {
+                configTitle.textContent = 'Configure Dashboard Title Formatting';
+                configBody.innerHTML = `
+                    <div class="dashboard-title-preview visible">
+                        <div class="preview-label">📊 Live Preview</div>
+                        <div class="preview-text" id="dashboardPreview" style="font-family: ${formatConfigs['dashboard-titles'].font}; font-size: ${formatConfigs['dashboard-titles'].size}px; color: ${formatConfigs['dashboard-titles'].color}; font-weight: ${formatConfigs['dashboard-titles'].bold ? '700' : '400'};">
+                            My Dashboard Title
+                        </div>
+                    </div>
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label>Font:</label>
+                            <select id="dashFont">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs['dashboard-titles'].font === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs['dashboard-titles'].font === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs['dashboard-titles'].font === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs['dashboard-titles'].font === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs['dashboard-titles'].font === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs['dashboard-titles'].font === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs['dashboard-titles'].font === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs['dashboard-titles'].font === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs['dashboard-titles'].font === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs['dashboard-titles'].font === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs['dashboard-titles'].font === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs['dashboard-titles'].font === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs['dashboard-titles'].font === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs['dashboard-titles'].font === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs['dashboard-titles'].font === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs['dashboard-titles'].font === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs['dashboard-titles'].font === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs['dashboard-titles'].font === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs['dashboard-titles'].font === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs['dashboard-titles'].font === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs['dashboard-titles'].font === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs['dashboard-titles'].font === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs['dashboard-titles'].font === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs['dashboard-titles'].font === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs['dashboard-titles'].font === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs['dashboard-titles'].font === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs['dashboard-titles'].font === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs['dashboard-titles'].font === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs['dashboard-titles'].font === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs['dashboard-titles'].font === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs['dashboard-titles'].font === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs['dashboard-titles'].font === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs['dashboard-titles'].font === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Size (pt):</label>
+                            <input type="number" id="dashSize" value="${formatConfigs['dashboard-titles'].size}" min="8" max="72">
+                        </div>
+                        <div class="form-group">
+                            <label>Color:</label>
+                            <input type="color" id="dashColor" value="${formatConfigs['dashboard-titles'].color}">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="dashBold" ${formatConfigs['dashboard-titles'].bold ? 'checked' : ''}>
+                                Bold
+                            </label>
+                        </div>
+                    </div>
+                `;
+                
+                // Add live preview update
+                setTimeout(() => {
+                    const preview = document.getElementById('dashboardPreview');
+                    const fontInput = document.getElementById('dashFont');
+                    const sizeInput = document.getElementById('dashSize');
+                    const colorInput = document.getElementById('dashColor');
+                    const boldInput = document.getElementById('dashBold');
+                    
+                    const updatePreview = () => {
+                        if (preview) {
+                            preview.style.fontFamily = fontInput.value;
+                            preview.style.fontSize = sizeInput.value + 'px';
+                            preview.style.color = colorInput.value;
+                            preview.style.fontWeight = boldInput.checked ? '700' : '400';
+                        }
+                    };
+                    
+                    fontInput?.addEventListener('input', updatePreview);
+                    sizeInput?.addEventListener('input', updatePreview);
+                    colorInput?.addEventListener('input', updatePreview);
+                    boldInput?.addEventListener('change', updatePreview);
+                }, 0);
+            } else if (optionId === 'worksheet-titles') {
+                configTitle.textContent = 'Configure Worksheet Title Formatting';
+                configBody.innerHTML = `
+                    <div class="worksheet-title-preview visible">
+                        <div class="preview-label">📋 Live Preview</div>
+                        <div class="preview-text" id="worksheetPreview" style="font-family: ${formatConfigs['worksheet-titles'].fontFamily}; font-size: ${formatConfigs['worksheet-titles'].fontSize}px; color: ${formatConfigs['worksheet-titles'].color}; font-style: ${formatConfigs['worksheet-titles'].fontStyle === 'italic' ? 'italic' : 'normal'}; font-weight: ${formatConfigs['worksheet-titles'].fontStyle === 'bold' ? '700' : '400'};">
+                            My Worksheet Title
+                        </div>
+                    </div>
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label>Font Size (pt):</label>
+                            <input type="number" id="wshedFontSize" value="${formatConfigs['worksheet-titles'].fontSize}" min="8" max="48">
+                        </div>
+                        <div class="form-group">
+                            <label>Font Family:</label>
+                            <select id="wshedFontFamily">
+                                <optgroup label="Calibre">
+                                    <option value="Calibre" ${formatConfigs['worksheet-titles'].fontFamily === 'Calibre' ? 'selected' : ''}>Calibre</option>
+                                    <option value="Calibre Medium" ${formatConfigs['worksheet-titles'].fontFamily === 'Calibre Medium' ? 'selected' : ''}>Calibre Medium</option>
+                                    <option value="Calibre Bold" ${formatConfigs['worksheet-titles'].fontFamily === 'Calibre Bold' ? 'selected' : ''}>Calibre Bold</option>
+                                    <option value="Calibre Light" ${formatConfigs['worksheet-titles'].fontFamily === 'Calibre Light' ? 'selected' : ''}>Calibre Light</option>
+                                </optgroup>
+                                <optgroup label="Arial">
+                                    <option value="Arial" ${formatConfigs['worksheet-titles'].fontFamily === 'Arial' ? 'selected' : ''}>Arial</option>
+                                    <option value="Arial Bold" ${formatConfigs['worksheet-titles'].fontFamily === 'Arial Bold' ? 'selected' : ''}>Arial Bold</option>
+                                    <option value="Arial Narrow" ${formatConfigs['worksheet-titles'].fontFamily === 'Arial Narrow' ? 'selected' : ''}>Arial Narrow</option>
+                                </optgroup>
+                                <optgroup label="Helvetica">
+                                    <option value="Helvetica" ${formatConfigs['worksheet-titles'].fontFamily === 'Helvetica' ? 'selected' : ''}>Helvetica</option>
+                                    <option value="Helvetica Bold" ${formatConfigs['worksheet-titles'].fontFamily === 'Helvetica Bold' ? 'selected' : ''}>Helvetica Bold</option>
+                                    <option value="Helvetica Light" ${formatConfigs['worksheet-titles'].fontFamily === 'Helvetica Light' ? 'selected' : ''}>Helvetica Light</option>
+                                </optgroup>
+                                <optgroup label="Segoe UI">
+                                    <option value="Segoe UI" ${formatConfigs['worksheet-titles'].fontFamily === 'Segoe UI' ? 'selected' : ''}>Segoe UI</option>
+                                    <option value="Segoe UI Light" ${formatConfigs['worksheet-titles'].fontFamily === 'Segoe UI Light' ? 'selected' : ''}>Segoe UI Light</option>
+                                    <option value="Segoe UI Semibold" ${formatConfigs['worksheet-titles'].fontFamily === 'Segoe UI Semibold' ? 'selected' : ''}>Segoe UI Semibold</option>
+                                </optgroup>
+                                <optgroup label="Times">
+                                    <option value="Times New Roman" ${formatConfigs['worksheet-titles'].fontFamily === 'Times New Roman' ? 'selected' : ''}>Times New Roman</option>
+                                    <option value="Times New Roman Bold" ${formatConfigs['worksheet-titles'].fontFamily === 'Times New Roman Bold' ? 'selected' : ''}>Times New Roman Bold</option>
+                                </optgroup>
+                                <optgroup label="Serif Fonts">
+                                    <option value="Georgia" ${formatConfigs['worksheet-titles'].fontFamily === 'Georgia' ? 'selected' : ''}>Georgia</option>
+                                    <option value="Garamond" ${formatConfigs['worksheet-titles'].fontFamily === 'Garamond' ? 'selected' : ''}>Garamond</option>
+                                    <option value="Book Antiqua" ${formatConfigs['worksheet-titles'].fontFamily === 'Book Antiqua' ? 'selected' : ''}>Book Antiqua</option>
+                                    <option value="Palatino Linotype" ${formatConfigs['worksheet-titles'].fontFamily === 'Palatino Linotype' ? 'selected' : ''}>Palatino Linotype</option>
+                                </optgroup>
+                                <optgroup label="Sans-Serif Fonts">
+                                    <option value="Verdana" ${formatConfigs['worksheet-titles'].fontFamily === 'Verdana' ? 'selected' : ''}>Verdana</option>
+                                    <option value="Trebuchet MS" ${formatConfigs['worksheet-titles'].fontFamily === 'Trebuchet MS' ? 'selected' : ''}>Trebuchet MS</option>
+                                    <option value="Tahoma" ${formatConfigs['worksheet-titles'].fontFamily === 'Tahoma' ? 'selected' : ''}>Tahoma</option>
+                                    <option value="Myriad Pro" ${formatConfigs['worksheet-titles'].fontFamily === 'Myriad Pro' ? 'selected' : ''}>Myriad Pro</option>
+                                </optgroup>
+                                <optgroup label="Monospace Fonts">
+                                    <option value="Courier New" ${formatConfigs['worksheet-titles'].fontFamily === 'Courier New' ? 'selected' : ''}>Courier New</option>
+                                    <option value="Consolas" ${formatConfigs['worksheet-titles'].fontFamily === 'Consolas' ? 'selected' : ''}>Consolas</option>
+                                    <option value="Lucida Console" ${formatConfigs['worksheet-titles'].fontFamily === 'Lucida Console' ? 'selected' : ''}>Lucida Console</option>
+                                </optgroup>
+                                <optgroup label="Display Fonts">
+                                    <option value="Impact" ${formatConfigs['worksheet-titles'].fontFamily === 'Impact' ? 'selected' : ''}>Impact</option>
+                                    <option value="Comic Sans MS" ${formatConfigs['worksheet-titles'].fontFamily === 'Comic Sans MS' ? 'selected' : ''}>Comic Sans MS</option>
+                                    <option value="Century Gothic" ${formatConfigs['worksheet-titles'].fontFamily === 'Century Gothic' ? 'selected' : ''}>Century Gothic</option>
+                                </optgroup>
+                                <optgroup label="Modern Web Fonts">
+                                    <option value="Roboto" ${formatConfigs['worksheet-titles'].fontFamily === 'Roboto' ? 'selected' : ''}>Roboto</option>
+                                    <option value="Open Sans" ${formatConfigs['worksheet-titles'].fontFamily === 'Open Sans' ? 'selected' : ''}>Open Sans</option>
+                                    <option value="Lato" ${formatConfigs['worksheet-titles'].fontFamily === 'Lato' ? 'selected' : ''}>Lato</option>
+                                    <option value="Montserrat" ${formatConfigs['worksheet-titles'].fontFamily === 'Montserrat' ? 'selected' : ''}>Montserrat</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Color:</label>
+                            <input type="color" id="wshedColor" value="${formatConfigs['worksheet-titles'].color}">
+                        </div>
+                        <div class="form-group">
+                            <label>Font Style:</label>
+                            <select id="wshedFontStyle">
+                                <option value="normal" ${formatConfigs['worksheet-titles'].fontStyle === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="bold" ${formatConfigs['worksheet-titles'].fontStyle === 'bold' ? 'selected' : ''}>Bold</option>
+                                <option value="italic" ${formatConfigs['worksheet-titles'].fontStyle === 'italic' ? 'selected' : ''}>Italic</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                
+                // Add live preview update
+                setTimeout(() => {
+                    const preview = document.getElementById('worksheetPreview');
+                    const fsInput = document.getElementById('wshedFontSize');
+                    const ffInput = document.getElementById('wshedFontFamily');
+                    const fcInput = document.getElementById('wshedColor');
+                    const fsSelect = document.getElementById('wshedFontStyle');
+                    
+                    const updatePreview = () => {
+                        if (preview) {
+                            preview.style.fontSize = fsInput.value + 'px';
+                            preview.style.fontFamily = ffInput.value;
+                            preview.style.color = fcInput.value;
+                            preview.style.fontWeight = fsSelect.value === 'bold' ? '700' : '400';
+                            preview.style.fontStyle = fsSelect.value === 'italic' ? 'italic' : 'normal';
+                        }
+                    };
+                    
+                    fsInput?.addEventListener('input', updatePreview);
+                    ffInput?.addEventListener('input', updatePreview);
+                    fcInput?.addEventListener('input', updatePreview);
+                    fsSelect?.addEventListener('change', updatePreview);
+                }, 0);
+            } else if (optionId === 'dashboard-sizes') {
+                configTitle.textContent = 'Configure Dashboard Sizes';
+                configBody.innerHTML = `
+                    <div class="config-section">
+                        <div class="form-group">
+                            <label>Width (px):</label>
+                            <input type="number" id="dashSizeWidth" value="${formatConfigs['dashboard-sizes'].width}" min="800" max="4000" step="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Height (px):</label>
+                            <input type="number" id="dashSizeHeight" value="${formatConfigs['dashboard-sizes'].height}" min="600" max="4000" step="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Sizing Mode:</label>
+                            <select id="dashSizingMode">
+                                <option value="fixed" ${formatConfigs['dashboard-sizes'].sizingMode === 'fixed' ? 'selected' : ''}>Fixed</option>
+                                <option value="responsive" ${formatConfigs['dashboard-sizes'].sizingMode === 'responsive' ? 'selected' : ''}>Responsive</option>
+                            </select>
+                        </div>
+                        <div style="background: #f0f9f8; border-left: 4px solid #00897B; padding: 12px; border-radius: 4px; margin-top: 20px; font-size: 13px; line-height: 1.5;">
+                            <strong>📌 Current Defaults:</strong><br>
+                            • Most dashboards: <strong>1366 x 1000 px</strong> (Fixed)<br>
+                            • Compact dashboards: <strong>1366 x 768 px</strong> (Fixed)
+                        </div>
+                    </div>
+                `;
+            } else if (optionId === 'hide-used-worksheets') {
+                configTitle.textContent = 'Hide Used Worksheets';
+                configBody.innerHTML = `
+                    <div class="config-section">
+                        <div style="background: #f0f9f8; border-left: 4px solid #00897B; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
+                            <strong>🎯 What This Does:</strong><br>
+                            • Automatically identifies all worksheets used in dashboards<br>
+                            • Hides those worksheets from the sheet tabs<br>
+                            • Leaves unused/support worksheets visible for reference<br><br>
+                            <strong>✨ Result:</strong> Cleaner sheet tab area with only support worksheets visible
+                        </div>
+                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; border-radius: 4px; font-size: 13px; line-height: 1.6;">
+                            <strong>⚠️ Note:</strong> Worksheets are hidden, not deleted. Users can unhide them in Tableau if needed.
+                        </div>
+                    </div>
+                `;
+            } else if (optionId === 'delete-phone-layouts') {
+                configTitle.textContent = 'Delete Phone Layouts';
+                configBody.innerHTML = `
+                    <div class="config-section">
+                        <div style="background: #f0f9f8; border-left: 4px solid #00897B; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; line-height: 1.6;">
+                            <strong>📱 What This Does:</strong><br>
+                            • Scans all dashboards in the workbook<br>
+                            • Removes phone/mobile device-specific layouts<br>
+                            • Keeps desktop layouts intact<br><br>
+                            <strong>✨ Result:</strong> Clean workbook without unnecessary phone layouts
+                        </div>
+                        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; border-radius: 4px; font-size: 13px; line-height: 1.6;">
+                            <strong>⚠️ Note:</strong> This only deletes phone layout configurations, not the dashboards themselves. Desktop layouts are preserved.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeConfigModal() {
+            document.getElementById('formatConfigModal').style.display = 'none';
+            currentConfigOptionId = null;
+        }
+
+        function saveFormatConfig() {
+            if (!currentConfigOptionId) return;
+            
+            if (currentConfigOptionId === 'filters') {
+                formatConfigs.filters = {
+                    titleColor: document.getElementById('titleColor').value,
+                    titleFont: document.getElementById('titleFont').value,
+                    titleSize: document.getElementById('titleSize').value,
+                    valueColor: document.getElementById('valueColor').value,
+                    valueFont: document.getElementById('valueFont').value,
+                    valueSize: document.getElementById('valueSize').value
+                };
+                formatConfigs.parameters = {
+                    titleColor: document.getElementById('paramTitleColor').value,
+                    titleFont: document.getElementById('paramTitleFont').value,
+                    titleSize: document.getElementById('paramTitleSize').value,
+                    valueColor: document.getElementById('paramValueColor').value,
+                    valueFont: document.getElementById('paramValueFont').value,
+                    valueSize: document.getElementById('paramValueSize').value
+                };
+            } else if (currentConfigOptionId === 'dashboard-titles') {
+                formatConfigs['dashboard-titles'] = {
+                    font: document.getElementById('dashFont').value,
+                    size: document.getElementById('dashSize').value,
+                    color: document.getElementById('dashColor').value,
+                    bold: document.getElementById('dashBold').checked
+                };
+            } else if (currentConfigOptionId === 'worksheet-titles') {
+                formatConfigs['worksheet-titles'] = {
+                    fontSize: document.getElementById('wshedFontSize').value,
+                    fontFamily: document.getElementById('wshedFontFamily').value,
+                    color: document.getElementById('wshedColor').value,
+                    fontStyle: document.getElementById('wshedFontStyle').value
+                };
+            } else if (currentConfigOptionId === 'dashboard-sizes') {
+                formatConfigs['dashboard-sizes'] = {
+                    width: document.getElementById('dashSizeWidth').value,
+                    height: document.getElementById('dashSizeHeight').value,
+                    sizingMode: document.getElementById('dashSizingMode').value
+                };
+            } else if (currentConfigOptionId === 'hide-used-worksheets') {
+                formatConfigs['hide-used-worksheets'] = {
+                    enabled: true
+                };
+            } else if (currentConfigOptionId === 'delete-phone-layouts') {
+                formatConfigs['delete-phone-layouts'] = {
+                    enabled: true
+                };
+            }
+            
+            // Add highlight effect to the Save button
+            const saveBtn = document.getElementById('saveConfigBtn');
+            saveBtn.classList.add('saved');
+            saveBtn.textContent = '✓ Saved!';
+            
+            // Reset button after animation
+            setTimeout(() => {
+                saveBtn.classList.remove('saved');
+                saveBtn.textContent = 'Save Configuration';
+            }, 2000);
+            
+            // Close modal after a short delay
+            setTimeout(() => {
+                closeConfigModal();
+                showToast('✅ Format configuration saved!', 'success');
+            }, 800);
+        }
+
+        // Attach event listeners to modal buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeBtn = document.getElementById('closeConfigBtn');
+            const cancelBtn = document.getElementById('cancelConfigBtn');
+            const saveBtn = document.getElementById('saveConfigBtn');
+            
+            if (closeBtn) closeBtn.addEventListener('click', closeConfigModal);
+            if (cancelBtn) cancelBtn.addEventListener('click', closeConfigModal);
+            if (saveBtn) saveBtn.addEventListener('click', saveFormatConfig);
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('formatConfigModal');
+            if (event.target === modal) {
+                closeConfigModal();
+            }
+        };
+
+        // ====== CALCULATED FIELDS - MOVED TO SEPARATE PAGE ======
+        // See /calculated-fields page for calculated fields search functionality
+
+        // Placeholder function (removed - functionality moved to dedicated page)
+        async function searchCalculatedFields() {
+            // Functionality moved to /calculated-fields page
+            return;
+        }
+
+        function showCalcFieldsResults(searchTerm, totalFields, results) {
+            // Functionality moved to /calculated-fields page
+            return;
+        }
+    </script>
+</body>
+</html>
