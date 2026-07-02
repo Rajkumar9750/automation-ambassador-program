@@ -72,19 +72,21 @@ Both commands will automatically:
 
 ## Launching the Monitor
 
-After setup is complete, start the monitor to access all tools.
+After setup is complete, run this command any time you want to start the monitor.
 
-**macOS** — Double-click **`Launch Monitor.command`** in Finder.
+**macOS** — run in Terminal:
+```bash
+cd ~/automation-ambassador-program && bash "Launch Monitor.command"
+```
 
-**Windows** — Double-click **`Launch Monitor.bat`**.
+**Windows** — run in PowerShell:
+```powershell
+cd $HOME\automation-ambassador-program; cmd /c "Launch Monitor.bat"
+```
 
-> **macOS security note:** If you see *"cannot be opened because it is from an unidentified developer"*, this only happens when the folder is downloaded as a ZIP from GitHub. Since you cloned via `git clone` in Terminal, double-click works directly with no prompts.
+The browser opens automatically at **http://localhost:9000**.
 
-> **Windows security note:** If Windows SmartScreen appears, click **More info** → **Run anyway**.
-
-A terminal window opens and the browser launches automatically at **http://localhost:9000**.
-
-To stop everything, close the terminal window or press `Ctrl + C` inside it.
+To stop, press `Ctrl + C` in the terminal.
 
 ---
 
