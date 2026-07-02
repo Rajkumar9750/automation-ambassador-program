@@ -131,7 +131,7 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
                     if ws_name not in ws_usage[col_name]:
                         ws_usage[col_name].append(ws_name)
 
-    # ── Extract calculated fields from each datasource ────────────────────
+    # ── Extract ALL fields from each datasource ───────────────────────────
     for ds in ds_container.findall("datasource"):
         ds_name    = ds.get("name", "")
         ds_caption = ds.get("caption", ds_name)
@@ -147,21 +147,27 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
                 name_map[col_name] = caption
 
         for col in ds.findall("column"):
-            calc = col.find("calculation")
-            if calc is None or calc.get("class") != "tableau":
-                continue
-
             internal_name = col.get("name", "")
             caption       = col.get("caption", internal_name.strip("[]"))
-            formula       = _resolve_formula(calc.get("formula", ""), name_map)
+            calc          = col.find("calculation")
             used_on       = ws_usage.get(internal_name, [])
+
+            if calc is not None and calc.get("class") == "tableau":
+                field_type = "Calculated Field"
+                formula    = _resolve_formula(calc.get("formula", ""), name_map)
+            elif calc is not None:
+                field_type = "Group / Bin"
+                formula    = calc.get("formula", "")
+            else:
+                field_type = "Database Field"
+                formula    = ""
 
             fields.append({
                 "datasource":    ds_caption or ds_name,
                 "caption":       caption,
                 "original_name": internal_name,
                 "formula":       formula,
-                "field_type":    "Calculated Field",
+                "field_type":    field_type,
                 "datatype":      col.get("datatype", ""),
                 "hidden":        col.get("hidden", "false").lower() == "true",
                 "times_used":    len(used_on),
@@ -174,37 +180,28 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
 # ── Excel helpers ────────────────────────────────────────────────────────────
 
 def _title_block(ws, workbook_name: str, total: int, generated: str) -> None:
-    """Rows 1-3: branded title banner + metadata strip."""
-    # Row 1 — main title
+    """Rows 1-2: metadata strip + column headers."""
+    # Row 1 — metadata strip
     ws.merge_cells(f"A1:{_LAST_COL}1")
-    t = ws["A1"]
-    t.value     = f"  Data Dictionary  ·  {workbook_name}"
-    t.font      = TITLE_FONT
-    t.fill      = TITLE_FILL
-    t.alignment = Alignment(horizontal="left", vertical="center")
-    ws.row_dimensions[1].height = 38
-
-    # Row 2 — metadata strip
-    ws.merge_cells(f"A2:{_LAST_COL}2")
-    m = ws["A2"]
-    m.value     = f"  Generated {generated}   ·   {total} calculated field(s) extracted"
+    m = ws["A1"]
+    m.value     = f"  {workbook_name}   ·   Generated {generated}   ·   {total} field(s) extracted"
     m.font      = SUBHDR_FONT
-    m.fill      = PatternFill("solid", fgColor=C_GREEN_MID)
+    m.fill      = PatternFill("solid", fgColor=C_GREEN_DARK)
     m.alignment = Alignment(horizontal="left", vertical="center")
-    ws.row_dimensions[2].height = 20
+    ws.row_dimensions[1].height = 22
 
-    # Row 3 — column headers
+    # Row 2 — column headers
     for col_idx, (header, width) in enumerate(COLUMNS, start=1):
-        c = ws.cell(row=3, column=col_idx, value=header)
+        c = ws.cell(row=2, column=col_idx, value=header)
         c.font      = HEADER_FONT
         c.fill      = HEADER_FILL
         c.alignment = CENTER
         c.border    = HDR_BORDER
         ws.column_dimensions[get_column_letter(col_idx)].width = width
-    ws.row_dimensions[3].height = 24
+    ws.row_dimensions[2].height = 24
 
-    ws.freeze_panes = "A4"
-    ws.auto_filter.ref = f"A3:{_LAST_COL}3"
+    ws.freeze_panes = "A3"
+    ws.auto_filter.ref = f"A2:{_LAST_COL}2"
 
 
 def _write_data_row(ws, row_num: int, field: dict, workbook_name: str, alt: bool) -> None:
@@ -282,14 +279,16 @@ def export(twbx_paths: List[Path], output_path: str) -> int:
     _title_block(ws, wb_label, total, generated)
 
     for i, (wb_name, field) in enumerate(all_fields):
-        _write_data_row(ws, i + 4, field, wb_name, alt=(i % 2 == 0))
+        _write_data_row(ws, i + 3, field, wb_name, alt=(i % 2 == 0))
 
     # Summary row at bottom
-    last_row = total + 4
+    last_row = total + 3
     ws.merge_cells(f"A{last_row}:{_LAST_COL}{last_row}")
     sr = ws[f"A{last_row}"]
     hidden_count = sum(1 for _, f in all_fields if f["hidden"])
-    sr.value     = f"  Total: {total} fields   ·   {hidden_count} hidden   ·   {total - hidden_count} visible"
+    calc_count = sum(1 for _, f in all_fields if f["field_type"] == "Calculated Field")
+    db_count   = sum(1 for _, f in all_fields if f["field_type"] == "Database Field")
+    sr.value   = f"  Total: {total} fields   ·   {calc_count} calculated   ·   {db_count} database   ·   {hidden_count} hidden"
     sr.font      = Font(italic=True, color=C_MUTED, size=9, name="Calibri")
     sr.fill      = PatternFill("solid", fgColor="F4F8F7")
     sr.alignment = Alignment(horizontal="left", vertical="center")
