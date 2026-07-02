@@ -21,11 +21,18 @@ python_ok() {
   command -v "$py" &>/dev/null || return 1
   local ver; ver=$("$py" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null) || return 1
   local major="${ver%%.*}"; local minor="${ver##*.}"
-  [[ "$major" -ge "$REQUIRED_MAJOR" && "$minor" -ge "$REQUIRED_MINOR" ]]
+  # Accept 3.9, 3.10, 3.11 only — 3.12+ breaks pandas and other dependencies
+  [[ "$major" -eq 3 && "$minor" -ge 9 && "$minor" -le 11 ]]
 }
 
 find_python() {
-  for py in python3.11 python3.10 python3.9 python3 python; do
+  # Prefer Homebrew python@3.11 explicitly first
+  for prefix in /opt/homebrew/opt/python@3.11/bin /usr/local/opt/python@3.11/bin; do
+    if [ -x "$prefix/python3.11" ]; then
+      echo "$prefix/python3.11" && return 0
+    fi
+  done
+  for py in python3.11 python3.10 python3.9; do
     python_ok "$py" && echo "$py" && return 0
   done
   return 1
