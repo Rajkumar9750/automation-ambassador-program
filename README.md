@@ -41,9 +41,10 @@ Setup will:
 
 Then launch:
 ```
-Right-click "Launch Monitor.command" → Open
-(macOS security prompt on first launch — click Open)
+Double-click "Launch Monitor.command"
 ```
+
+> **Note:** If macOS shows a security warning (only happens if you downloaded the folder as a ZIP instead of using `git clone`), right-click the file → **Open** → **Open**. Only needed once.
 
 Browser opens automatically at **http://localhost:9000**
 
@@ -172,8 +173,9 @@ Generates an Excel timesheet based on your Jira comment activity. Project Code a
 ## Troubleshooting
 
 ### macOS: "Cannot be opened because it is from an unidentified developer"
-Right-click the `.command` file → **Open** → click **Open** in the prompt.
-Only needed once.
+This only happens if the folder was downloaded as a ZIP from GitHub instead of cloned via `git clone`.
+Fix: right-click the `.command` file → **Open** → **Open**. Only needed once.
+Next time you can double-click normally.
 
 ### Windows: SmartScreen blocks the `.bat` file
 Click **More info** → **Run anyway**.
