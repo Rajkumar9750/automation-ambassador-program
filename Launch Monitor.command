@@ -35,6 +35,14 @@ echo ""
 echo "Press Ctrl+C to stop."
 echo ""
 
+# Free the port if something is already using it
+EXISTING=$(lsof -t -i TCP:${PORT} -s TCP:LISTEN 2>/dev/null || true)
+if [ -n "$EXISTING" ]; then
+  echo "  Port ${PORT} in use — stopping existing process..."
+  echo "$EXISTING" | xargs kill -9 2>/dev/null || true
+  sleep 1
+fi
+
 (sleep 2 && open "http://localhost:${PORT}") &
 venv/bin/uvicorn monitor:app --host 0.0.0.0 --port "$PORT" --reload \
   --reload-exclude "*/venv/*" --reload-exclude "*/.venv/*"
