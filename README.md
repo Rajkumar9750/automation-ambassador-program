@@ -73,6 +73,24 @@ This will:
 
 ### Windows
 
+> **Don't have Git?** Follow **Option A** below. If you already have Git installed, use **Option B**.
+
+#### Option A — No Git installed (first time)
+
+1. Go to **https://github.com/Rajkumar9750/automation-ambassador-program**
+2. Click the green **Code** button → **Download ZIP**
+3. Extract the ZIP (right-click → **Extract All**)
+4. Open the extracted folder
+5. Double-click **`setup.bat`**
+
+`setup.bat` will automatically install Git and Python if they are missing, then set up all tools.
+
+> After setup, you can run `git pull` from inside the folder to get future updates — Git will be available since setup installed it.
+
+---
+
+#### Option B — Git already installed
+
 **Step 1 — Open Command Prompt**
 Press `Win + R`, type `cmd`, press Enter.
 
@@ -87,9 +105,11 @@ cd automation-ambassador-program
 setup.bat
 ```
 
-This will:
-- Check if Python 3.9+ is installed — if not, installs it automatically via **winget**
-- If winget is unavailable, falls back to **Chocolatey**
+---
+
+`setup.bat` will:
+- Install **Git** via winget if not already present
+- Install **Python 3.11** via winget if not already present (falls back to Chocolatey)
 - Create virtual environments for all 4 tools
 - Install all Python dependencies
 

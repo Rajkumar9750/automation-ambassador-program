@@ -9,7 +9,26 @@ echo +==================================================+
 echo.
 
 :: -------------------------------------------------------
-:: 1. Find or install Python 3.9+
+:: 1. Ensure Git is installed (needed for future git pull)
+:: -------------------------------------------------------
+
+where git >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Git not found. Installing via winget...
+    where winget >nul 2>&1
+    if %errorlevel%==0 (
+        winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
+        echo   Git installed. You may need to close and reopen this window for git to work.
+    ) else (
+        echo   winget not available. Install Git manually from https://git-scm.com/downloads
+    )
+) else (
+    for /f "tokens=*" %%i in ('git --version') do echo   Git: %%i
+)
+echo.
+
+:: -------------------------------------------------------
+:: 2. Find or install Python 3.9+
 :: -------------------------------------------------------
 
 set PYTHON=
