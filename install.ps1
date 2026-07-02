@@ -48,41 +48,27 @@ Write-Host ""
 
 # ── 3. Kill any running instances (release file locks) ──
 Write-Host "► Stopping any running instances..."
-@(9000, 8080, 5555, 8082) | ForEach-Object {
-    $port = $_
-    try {
-        $pids = (Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue).OwningProcess | Select-Object -Unique
-        $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
-    } catch {}
-}
-# Also kill any python/uvicorn from the project folder
-Get-Process -Name "python","python3","uvicorn" -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -like "*automation-ambassador*" } |
-    ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
-Start-Sleep -Seconds 2
+# Use taskkill — most reliable way to force-kill on Windows
+cmd /c "taskkill /F /IM python.exe /T >nul 2>&1"
+cmd /c "taskkill /F /IM python3.exe /T >nul 2>&1"
+cmd /c "taskkill /F /IM uvicorn.exe /T >nul 2>&1"
+Start-Sleep -Seconds 3
 Write-Host ""
 
-# ── 4. Clone or update ──────────────────────────────────
+# ── 4. Clone fresh ──────────────────────────────────────
 if (Test-Path $DEST) {
-    Write-Host "► Removing existing folder and cloning fresh..."
+    Write-Host "► Removing existing folder..."
     Remove-Item -Recurse -Force $DEST -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds 2
 }
 if (Test-Path $DEST) {
-    # Still locked — pull instead
-    Write-Host "  (Some files still locked — pulling latest instead)"
-    Set-Location $DEST
-    git pull
-    # Delete old venvs so setup recreates them with Python 3.11
-    @("venv","01_Dashboard_Factory\venv","02_Dashboard_Factory_QA\.venv","03_Jira_Tracker\venv") | ForEach-Object {
-        $vpath = Join-Path $DEST $_
-        if (Test-Path $vpath) { Remove-Item -Recurse -Force $vpath -ErrorAction SilentlyContinue }
-    }
-} else {
-    Write-Host "► Cloning repository to $DEST..."
-    git clone $REPO $DEST
-    Set-Location $DEST
+    # Last resort — rename old folder and clone fresh
+    $OLD = "$DEST-old-$(Get-Random)"
+    Write-Host "  Still locked — moving to $OLD and cloning fresh..."
+    Rename-Item -Path $DEST -NewName $OLD -ErrorAction SilentlyContinue
 }
+Write-Host "► Cloning repository to $DEST..."
+git clone $REPO $DEST
 Set-Location $DEST
 
 Write-Host ""
