@@ -210,11 +210,11 @@ def _title_block(ws, workbook_name: str, total: int, generated: str) -> None:
     fc_hidden.filters = Filters(filter=["No"])
     ws.auto_filter.filterColumn.append(fc_hidden)
 
-    # Default filter: # of Times Used > 0 (col index 8, 0-based)
+    # Default filter: # of Times Used ≠ 0 (deselect 0)
     used_col_idx = next(i for i, (h, _) in enumerate(COLUMNS) if h == "# of Times Used")
     fc_used = FilterColumn(colId=used_col_idx)
     fc_used.customFilters = CustomFilters(
-        customFilter=[CustomFilter(operator="greaterThan", val="0")]
+        customFilter=[CustomFilter(operator="notEqual", val="0")]
     )
     ws.auto_filter.filterColumn.append(fc_used)
 
