@@ -17,6 +17,7 @@ from typing import List, Dict
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side, GradientFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.filters import FilterColumn, Filters, CustomFilter, CustomFilters
 from datetime import datetime
 
 
@@ -202,6 +203,20 @@ def _title_block(ws, workbook_name: str, total: int, generated: str) -> None:
 
     ws.freeze_panes = "A3"
     ws.auto_filter.ref = f"A2:{_LAST_COL}2"
+
+    # Default filter: Hidden = "No" (col index 7, 0-based)
+    hidden_col_idx = next(i for i, (h, _) in enumerate(COLUMNS) if h == "Hidden")
+    fc_hidden = FilterColumn(colId=hidden_col_idx)
+    fc_hidden.filters = Filters(filter=["No"])
+    ws.auto_filter.filterColumn.append(fc_hidden)
+
+    # Default filter: # of Times Used > 0 (col index 8, 0-based)
+    used_col_idx = next(i for i, (h, _) in enumerate(COLUMNS) if h == "# of Times Used")
+    fc_used = FilterColumn(colId=used_col_idx)
+    fc_used.customFilters = CustomFilters(
+        customFilter=[CustomFilter(operator="greaterThan", val="0")]
+    )
+    ws.auto_filter.filterColumn.append(fc_used)
 
 
 def _write_data_row(ws, row_num: int, field: dict, workbook_name: str, alt: bool) -> None:

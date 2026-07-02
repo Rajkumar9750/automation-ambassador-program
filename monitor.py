@@ -389,8 +389,9 @@ async def calc_fields_extract(file: UploadFile = File(...)):
     try:
         loop = asyncio.get_event_loop()
         count = await loop.run_in_executor(None, _run_extraction, twbx_path, output_path)
-        CF_JOBS[job_id] = {"status": "done", "path": str(output_path), "count": count, "filename": f"{stem}.xlsx"}
-        return {"job_id": job_id, "count": count, "filename": f"{stem}.xlsx"}
+        dl_name = f"{stem} - Data Dictionary.xlsx"
+        CF_JOBS[job_id] = {"status": "done", "path": str(output_path), "count": count, "filename": dl_name}
+        return {"job_id": job_id, "count": count, "filename": dl_name}
     except Exception as exc:
         CF_JOBS[job_id] = {"status": "error", "error": str(exc)}
         return JSONResponse({"error": str(exc)}, status_code=500)
