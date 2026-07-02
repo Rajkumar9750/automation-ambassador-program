@@ -26,11 +26,12 @@ python_ok() {
 }
 
 find_python() {
-  # Prefer Homebrew python@3.11 explicitly first
-  for prefix in /opt/homebrew/opt/python@3.11/bin /usr/local/opt/python@3.11/bin; do
-    if [ -x "$prefix/python3.11" ]; then
-      echo "$prefix/python3.11" && return 0
-    fi
+  # Check all known locations including pyenv (no-admin fallback)
+  for p in \
+    "$HOME/.pyenv/versions/3.11.9/bin/python3.11" \
+    "/opt/homebrew/opt/python@3.11/bin/python3.11" \
+    "/usr/local/opt/python@3.11/bin/python3.11"; do
+    [[ -x "$p" ]] && python_ok "$p" && echo "$p" && return 0
   done
   for py in python3.11 python3.10 python3.9; do
     python_ok "$py" && echo "$py" && return 0
