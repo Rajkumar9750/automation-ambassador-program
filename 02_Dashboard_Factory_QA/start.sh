@@ -10,4 +10,4 @@ fi
 .venv/bin/pip install -r requirements.txt -q
 
 echo "Starting Dashboard Factory QA on http://localhost:5555"
-.venv/bin/python3 "Tableau QA Compliance /app.py"
+.venv/bin/python3 "Tableau QA Compliance/app.py"

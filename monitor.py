@@ -81,7 +81,7 @@ TOOLS = {
         "description": "Tableau workbook formatting & QA compliance checks",
         "port": 5555,
         "url": "http://localhost:5555",
-        "cwd": str(BASE / "02_Dashboard_Factory_QA" / "Tableau QA Compliance "),
+        "cwd": str(BASE / "02_Dashboard_Factory_QA" / "Tableau QA Compliance"),
         "cmd": [str(BASE / "02_Dashboard_Factory_QA" / ".venv" / _SCRIPTS / _PY), "app.py"],
         "health_path": "/",
         "color": "#A78BFA",
