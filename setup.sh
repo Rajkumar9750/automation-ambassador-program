@@ -4,36 +4,106 @@
 
 set -e
 BASE="$(cd "$(dirname "$0")" && pwd)"
-PYTHON=python3
-
-check_python() {
-  if ! command -v python3 &>/dev/null; then
-    echo "ERROR: python3 not found. Install Python 3.9+ from https://www.python.org"; exit 1
-  fi
-  echo "  Python: $(python3 --version)"
-}
-
-make_venv() {
-  local name="$1" venv_path="$2" req="$3"
-  echo ""
-  echo "[$name]"
-  if [ -f "$venv_path/bin/python3" ]; then
-    echo "  venv already exists, updating..."
-  else
-    echo "  Creating venv..."
-    python3 -m venv "$venv_path"
-  fi
-  echo "  Installing dependencies..."
-  "$venv_path/bin/pip" install --quiet --upgrade pip
-  "$venv_path/bin/pip" install --quiet -r "$req"
-  echo "  Done."
-}
+REQUIRED_MAJOR=3
+REQUIRED_MINOR=9
 
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   Automation Ambassador Program – Setup          ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
-check_python
+
+# ---------------------------------------------------------------------------
+# 1. Ensure Python 3.9+ is available
+# ---------------------------------------------------------------------------
+
+python_ok() {
+  local py="$1"
+  command -v "$py" &>/dev/null || return 1
+  local ver; ver=$("$py" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null) || return 1
+  local major="${ver%%.*}"; local minor="${ver##*.}"
+  [[ "$major" -ge "$REQUIRED_MAJOR" && "$minor" -ge "$REQUIRED_MINOR" ]]
+}
+
+find_python() {
+  for py in python3.11 python3.10 python3.9 python3 python; do
+    python_ok "$py" && echo "$py" && return 0
+  done
+  return 1
+}
+
+install_python_macos() {
+  echo "  Python $REQUIRED_MAJOR.$REQUIRED_MINOR+ not found. Attempting auto-install..."
+  echo ""
+
+  # Try Homebrew
+  if command -v brew &>/dev/null; then
+    echo "  Homebrew found — installing Python 3.11..."
+    brew install python@3.11
+    brew link --overwrite python@3.11 2>/dev/null || true
+    return 0
+  fi
+
+  # Try to install Homebrew first
+  echo "  Homebrew not found — installing Homebrew first..."
+  echo "  (You may be prompted for your Mac password)"
+  echo ""
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Add brew to PATH for Apple Silicon
+  if [[ -f /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  fi
+
+  if command -v brew &>/dev/null; then
+    echo ""
+    echo "  Installing Python 3.11 via Homebrew..."
+    brew install python@3.11
+    brew link --overwrite python@3.11 2>/dev/null || true
+    return 0
+  fi
+
+  echo ""
+  echo "  ╔══════════════════════════════════════════════════╗"
+  echo "  ║  Auto-install failed.                            ║"
+  echo "  ║  Please install Python 3.9+ manually:           ║"
+  echo "  ║  https://www.python.org/downloads/              ║"
+  echo "  ╚══════════════════════════════════════════════════╝"
+  exit 1
+}
+
+PYTHON=$(find_python || true)
+if [[ -z "$PYTHON" ]]; then
+  install_python_macos
+  PYTHON=$(find_python || true)
+  if [[ -z "$PYTHON" ]]; then
+    echo "ERROR: Python install succeeded but python3 still not found."
+    echo "Close this window, open a new Terminal, and run setup.sh again."
+    exit 1
+  fi
+fi
+
+echo "  Python: $($PYTHON --version)"
+echo ""
+
+# ---------------------------------------------------------------------------
+# 2. Create / update virtual environments
+# ---------------------------------------------------------------------------
+
+make_venv() {
+  local name="$1" venv_path="$2" req="$3"
+  echo "[$name]"
+  if [ -f "$venv_path/bin/python3" ]; then
+    echo "  venv already exists, updating..."
+  else
+    echo "  Creating venv..."
+    "$PYTHON" -m venv "$venv_path"
+  fi
+  echo "  Installing dependencies..."
+  "$venv_path/bin/pip" install --quiet --upgrade pip
+  "$venv_path/bin/pip" install --quiet -r "$req"
+  echo "  Done."
+  echo ""
+}
 
 make_venv "Monitor"              "$BASE/venv"                            "$BASE/requirements.txt"
 make_venv "Dashboard Factory"    "$BASE/01_Dashboard_Factory/venv"       "$BASE/01_Dashboard_Factory/requirements.txt"
@@ -46,8 +116,7 @@ chmod +x "$BASE/01_Dashboard_Factory/start.sh" 2>/dev/null || true
 chmod +x "$BASE/02_Dashboard_Factory_QA/start.sh" 2>/dev/null || true
 chmod +x "$BASE/03_Jira_Tracker/start.sh" 2>/dev/null || true
 
-echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║   Setup complete! Double-click:                  ║"
-echo "║   'Launch Monitor.command' to get started.       ║"
+echo "║   Setup complete!                                ║"
+echo "║   Double-click 'Launch Monitor.command' to go.  ║"
 echo "╚══════════════════════════════════════════════════╝"
