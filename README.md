@@ -37,56 +37,80 @@ One launcher starts a browser dashboard where you control all tools from a singl
 
 ## Installation
 
-Everything installs automatically — Git, Python, and all dependencies — from a single terminal command. Nothing needs to be pre-installed.
+Paste the commands for your OS into a terminal. Git and Python install automatically if missing.
 
 ---
 
 ### macOS
 
-Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and paste this command:
+Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and run these commands one by one:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.sh -o /tmp/install.sh && bash /tmp/install.sh
+# 1. Install Git and Python via Homebrew (skips if already installed)
+command -v brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install git python@3.11 2>/dev/null || true
+
+# 2. Clone the repository (enter your GitHub username + token when prompted)
+git clone https://github.com/Rajkumar9750/automation-ambassador-program.git ~/automation-ambassador-program
+
+# 3. Run setup
+cd ~/automation-ambassador-program && bash setup.sh
+
+# 4. Launch the monitor
+bash "Launch Monitor.command"
 ```
 
-This will automatically:
-1. Install **Git** via Homebrew (installs Homebrew first if needed)
-2. Install **Python 3.11** via Homebrew if missing
-3. Clone the repository to `~/automation-ambassador-program`
-4. Install all tool dependencies
-5. Launch the Monitor — browser opens at http://localhost:9000
+Browser opens automatically at **http://localhost:9000**
 
-> Takes **2–5 minutes** on first run. Run it only once.
+> Takes **2–5 minutes** on first run. You will only need to do this once.
 
 ---
 
 ### Windows
 
-Open **PowerShell** (`Win + R` → type `powershell` → Enter) and paste this command:
+Open **PowerShell** (`Win + R` → type `powershell` → Enter) and run these commands one by one:
 
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.ps1" -OutFile "$env:TEMP\install.ps1"; & "$env:TEMP\install.ps1"
+# 1. Install Git (skips if already installed)
+winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
+
+# 2. Install Python 3.11 (skips if already installed)
+winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
+
+# 3. Refresh PATH so git and python are available in this session
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# 4. Clone the repository (enter your GitHub username + token when prompted)
+git clone https://github.com/Rajkumar9750/automation-ambassador-program.git "$HOME\automation-ambassador-program"
+
+# 5. Run setup
+cd "$HOME\automation-ambassador-program"; cmd /c setup.bat
 ```
 
-This will automatically:
-1. Install **Git** via winget if missing
-2. Install **Python 3.11** via winget if missing
-3. Clone the repository to `%USERPROFILE%\automation-ambassador-program`
-4. Install all tool dependencies
-5. Launch the Monitor — browser opens at http://localhost:9000
+Then launch:
+```powershell
+# 6. Launch the monitor
+cd "$HOME\automation-ambassador-program"; cmd /c "Launch Monitor.bat"
+```
 
-> Takes **2–5 minutes** on first run. Run it only once.
+Browser opens automatically at **http://localhost:9000**
+
+> Takes **2–5 minutes** on first run. You will only need to do this once.
 
 ---
 
-### Getting a GitHub Personal Access Token
+### GitHub Credentials (required for cloning)
 
-The repository is private — you will be prompted for credentials when cloning. Use a **Personal Access Token** as your password (GitHub no longer accepts account passwords).
+The repository is private — you will be asked for credentials when running the `git clone` step.
 
+- **Username:** your GitHub username
+- **Password:** a Personal Access Token (GitHub no longer accepts your account password)
+
+**To create a token:**
 1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
 2. Click **Generate new token (classic)**
 3. Give it a name, tick the **`repo`** scope → **Generate**
-4. Copy the token and paste it as the **password** when prompted during install
+4. Copy the token — paste it as the password when `git clone` prompts you
 
 ---
 
