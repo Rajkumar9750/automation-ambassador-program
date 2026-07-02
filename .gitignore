@@ -13,6 +13,8 @@ __pycache__/
 
 # Generated output
 calc_fields_output/
+01_Dashboard_Factory/uploads/
+01_Dashboard_Factory/outputs/
 
 # OS files
 .DS_Store
