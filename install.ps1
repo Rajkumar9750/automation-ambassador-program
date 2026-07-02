@@ -10,7 +10,15 @@ Write-Host "|   Automation Ambassador Program - Installer      |"
 Write-Host "+==================================================+"
 Write-Host ""
 
-# ── 1. Git ──────────────────────────────────────────────
+# ── 1. Python 3.11 ──────────────────────────────────────
+# Force Python 3.11 — 3.12+ breaks pandas and other dependencies
+Write-Host "► Ensuring Python 3.11 is installed..."
+winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements 2>$null
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
+            [System.Environment]::GetEnvironmentVariable("Path","User")
+Write-Host ""
+
+# ── 2. Git ──────────────────────────────────────────────
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "► Git not found — installing via winget..."
     winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements

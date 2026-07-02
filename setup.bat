@@ -29,38 +29,37 @@ if %errorlevel% neq 0 (
 echo.
 
 :: -------------------------------------------------------
-:: 2. Find or install Python 3.9+
+:: 2. Ensure Python 3.11 is installed (3.12+ breaks deps)
 :: -------------------------------------------------------
+
+:: Always try to install Python 3.11 via winget — safe to run even if already installed
+where winget >nul 2>&1
+if %errorlevel%==0 (
+    echo   Ensuring Python 3.11 is installed...
+    winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
+    :: Refresh PATH so newly installed python3.11 is found
+    for /f "usebackq tokens=*" %%p in (`where python3.11 2^>nul`) do set PYTHON=%%p
+    if defined PYTHON goto :python_found
+    :: Winget installs to AppData\Local\Programs\Python\Python311
+    set PYTHON=%LOCALAPPDATA%\Programs\Python\Python311\python.exe
+    if exist "%PYTHON%" goto :python_found
+    set PYTHON=%PROGRAMFILES%\Python311\python.exe
+    if exist "%PYTHON%" goto :python_found
+)
 
 set PYTHON=
 call :find_python
 if defined PYTHON goto :python_found
 
-echo   Python 3.9+ not found. Attempting auto-install...
 echo.
-
-:: Try winget (available on Windows 10 1709+ and Windows 11)
-where winget >nul 2>&1
-if %errorlevel%==0 (
-    echo   Installing Python 3.11 via winget...
-    winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
-    if %errorlevel%==0 (
-        echo   Python installed. Refreshing PATH...
-        :: Refresh PATH so python is available in this session
-        for /f "tokens=*" %%i in ('where python 2^>nul') do set PYTHON=%%i
-        call :find_python
-        goto :python_found
-    )
-)
-
-:: Try chocolatey
-where choco >nul 2>&1
-if %errorlevel%==0 (
-    echo   Installing Python 3.11 via Chocolatey...
-    choco install python311 -y
-    call :find_python
-    goto :python_found
-)
+echo +==================================================+
+echo ^|  Python 3.11 could not be installed.           ^|
+echo ^|  Please install it manually:                   ^|
+echo ^|  https://www.python.org/downloads/3.11.9/      ^|
+echo ^|  Check "Add Python to PATH" during install.    ^|
+echo +==================================================+
+pause
+exit /b 1
 
 :: Manual fallback
 echo.
@@ -125,12 +124,12 @@ exit /b 0
 :: Helper: find a working Python 3.9+
 :: -------------------------------------------------------
 :find_python
-for %%p in (python3.11 python3.10 python3.9 python3 python) do (
+for %%p in (python3.11 python3.10 python3.9) do (
     where %%p >nul 2>&1
     if !errorlevel!==0 (
         for /f "tokens=2 delims= " %%v in ('%%p --version 2^>^&1') do (
             for /f "tokens=1,2 delims=." %%a in ("%%v") do (
-                if %%a geq 3 if %%b geq 9 (
+                if %%a==3 if %%b geq 9 if %%b leq 11 (
                     set PYTHON=%%p
                     exit /b 0
                 )
