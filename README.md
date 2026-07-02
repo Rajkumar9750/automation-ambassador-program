@@ -9,8 +9,6 @@ One launcher starts a browser dashboard where you control all tools from a singl
 
 - [What's Included](#whats-included)
 - [Installation](#installation)
-  - [macOS](#macos)
-  - [Windows](#windows)
 - [Launching the Monitor](#launching-the-monitor)
 - [Monitor Dashboard](#monitor-dashboard)
 - [Tool — Dashboard Factory](#tool--dashboard-factory)
@@ -37,82 +35,38 @@ One launcher starts a browser dashboard where you control all tools from a singl
 
 ## Installation
 
-Paste the commands for your OS into a terminal. Git and Python install automatically if missing.
+Paste **one command** into your terminal. It installs everything automatically — Git, Python, all dependencies — nothing needs to be pre-installed.
 
 ---
 
 ### macOS
 
-Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and run these commands one by one:
+Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and run:
 
 ```bash
-# 1. Install Git and Python via Homebrew (skips if already installed)
-command -v brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install git python@3.11 2>/dev/null || true
-
-# 2. Clone the repository (enter your GitHub username + token when prompted)
-git clone https://github.com/Rajkumar9750/automation-ambassador-program.git ~/automation-ambassador-program
-
-# 3. Run setup
-cd ~/automation-ambassador-program && bash setup.sh
-
-# 4. Launch the monitor
-bash "Launch Monitor.command"
+curl -fsSL https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.sh | bash
 ```
-
-Browser opens automatically at **http://localhost:9000**
-
-> Takes **2–5 minutes** on first run. You will only need to do this once.
 
 ---
 
 ### Windows
 
-Open **PowerShell** (`Win + R` → type `powershell` → Enter) and run these commands one by one:
+Open **PowerShell** (`Win + R` → type `powershell` → Enter) and run:
 
 ```powershell
-# 1. Install Git (skips if already installed)
-winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
-
-# 2. Install Python 3.11 (skips if already installed)
-winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
-
-# 3. Refresh PATH so git and python are available in this session
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-# 4. Clone the repository (enter your GitHub username + token when prompted)
-git clone https://github.com/Rajkumar9750/automation-ambassador-program.git "$HOME\automation-ambassador-program"
-
-# 5. Run setup
-cd "$HOME\automation-ambassador-program"; cmd /c setup.bat
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex (irm https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.ps1)
 ```
-
-Then launch:
-```powershell
-# 6. Launch the monitor
-cd "$HOME\automation-ambassador-program"; cmd /c "Launch Monitor.bat"
-```
-
-Browser opens automatically at **http://localhost:9000**
-
-> Takes **2–5 minutes** on first run. You will only need to do this once.
 
 ---
 
-### GitHub Credentials (required for cloning)
+Both commands will automatically:
+1. Install **Git** if missing
+2. Install **Python 3.11** if missing
+3. Clone this repository to your home folder
+4. Install all tool dependencies
+5. Launch the Monitor — browser opens at **http://localhost:9000**
 
-The repository is private — you will be asked for credentials when running the `git clone` step.
-
-- **Username:** your GitHub username
-- **Password:** a Personal Access Token (GitHub no longer accepts your account password)
-
-**To create a token:**
-1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
-2. Click **Generate new token (classic)**
-3. Give it a name, tick the **`repo`** scope → **Generate**
-4. Copy the token — paste it as the password when `git clone` prompts you
-
----
+> Takes **2–5 minutes** on first run. You only need to do this once. No GitHub account required.
 
 ---
 

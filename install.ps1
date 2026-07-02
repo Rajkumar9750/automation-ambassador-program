@@ -1,5 +1,5 @@
 # Automation Ambassador Program – Windows Installer
-# Run in PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; .\install.ps1
+# Run in PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; iex (irm https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.ps1)
 
 $REPO = "https://github.com/Rajkumar9750/automation-ambassador-program.git"
 $DEST = "$HOME\automation-ambassador-program"
