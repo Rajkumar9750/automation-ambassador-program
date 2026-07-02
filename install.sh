@@ -33,6 +33,11 @@ echo ""
 if [ -d "$DEST/.git" ]; then
   echo "► Folder already exists — pulling latest changes..."
   cd "$DEST" && git pull
+elif [ -d "$DEST" ]; then
+  echo "► Incomplete folder found — removing and cloning fresh..."
+  rm -rf "$DEST"
+  git clone "$REPO" "$DEST"
+  cd "$DEST"
 else
   echo "► Cloning repository to $DEST..."
   git clone "$REPO" "$DEST"

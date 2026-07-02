@@ -43,6 +43,11 @@ if (Test-Path "$DEST\.git") {
     Write-Host "► Folder already exists — pulling latest changes..."
     Set-Location $DEST
     git pull
+} elseif (Test-Path $DEST) {
+    Write-Host "► Incomplete folder found — removing and cloning fresh..."
+    Remove-Item -Recurse -Force $DEST
+    git clone $REPO $DEST
+    Set-Location $DEST
 } else {
     Write-Host "► Cloning repository to $DEST..."
     git clone $REPO $DEST
