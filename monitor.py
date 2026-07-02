@@ -110,7 +110,6 @@ LOG_BUFFER = 500
 
 app = FastAPI(title="Automation Ambassador Program Monitor", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-_load_project_lookup()
 
 
 # ---------------------------------------------------------------------------
@@ -532,6 +531,8 @@ def _get_project_info(summary: str, jira_project_key: str) -> tuple:
     if info:
         return info  # (project_code, activity_code)
     return ("", act_code)
+
+_load_project_lookup()
 
 def _build_timesheet_sheet(ws, rows: list, month_label: str):
     import openpyxl
