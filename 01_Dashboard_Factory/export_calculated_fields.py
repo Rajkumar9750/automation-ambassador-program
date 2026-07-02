@@ -32,13 +32,16 @@ THIN         = Side(style="thin", color="B0B0B0")
 THIN_BORDER  = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
 COLUMNS = [
-    ("Workbook",     28),
-    ("Datasource",   28),
-    ("Field Name",   30),
-    ("Formula",      60),
-    ("Data Type",    12),
-    ("Role",         12),
-    ("Hidden",       10),
+    ("Workbook",          28),
+    ("Datasource",        28),
+    ("Field Name",        30),
+    ("Original Name",     36),
+    ("Formula",           60),
+    ("Field Type",        16),
+    ("Data Type",         12),
+    ("Hidden",            10),
+    ("# of Times Used",   16),
+    ("Worksheets Used On",50),
 ]
 
 
@@ -54,10 +57,8 @@ def _resolve_formula(formula: str, name_map: Dict[str, str]) -> str:
 
 def _extract_calc_fields(twbx_path: str) -> List[Dict]:
     """
-    Parse a .twbx and return all calculated fields across all datasources.
-
-    A calculated field is a <column> element whose direct <calculation> child
-    has class="tableau". Parameters datasource is excluded.
+    Parse a .twbx and return all calculated fields across all datasources,
+    including original name, worksheet usage count, and worksheet list.
     """
     fields = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -80,6 +81,20 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
     if ds_container is None:
         return fields
 
+    # ── Build worksheet usage map: internal_col_name → [worksheet names] ──
+    ws_usage: Dict[str, List[str]] = {}
+    worksheets_el = root.find("worksheets")
+    if worksheets_el is not None:
+        for worksheet in worksheets_el.findall("worksheet"):
+            ws_name = worksheet.get("name", "")
+            for col in worksheet.iter("column"):
+                col_name = col.get("name", "")
+                if col_name:
+                    ws_usage.setdefault(col_name, [])
+                    if ws_name not in ws_usage[col_name]:
+                        ws_usage[col_name].append(ws_name)
+
+    # ── Extract calculated fields from each datasource ────────────────────
     for ds in ds_container.findall("datasource"):
         ds_name    = ds.get("name", "")
         ds_caption = ds.get("caption", ds_name)
@@ -87,7 +102,6 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
         if ds_name == "Parameters" or not ds_name:
             continue
 
-        # Build internal-name → caption map for all columns in this datasource
         name_map: Dict[str, str] = {}
         for col in ds.findall("column"):
             col_name = col.get("name", "")
@@ -100,16 +114,21 @@ def _extract_calc_fields(twbx_path: str) -> List[Dict]:
             if calc is None or calc.get("class") != "tableau":
                 continue
 
-            name    = col.get("name", "")
-            caption = col.get("caption", name.strip("[]"))
-            formula = _resolve_formula(calc.get("formula", ""), name_map)
+            internal_name = col.get("name", "")
+            caption       = col.get("caption", internal_name.strip("[]"))
+            formula       = _resolve_formula(calc.get("formula", ""), name_map)
+            used_on       = ws_usage.get(internal_name, [])
+
             fields.append({
-                "datasource": ds_caption or ds_name,
-                "caption":    caption,
-                "formula":    formula,
-                "datatype":   col.get("datatype", ""),
-                "role":       col.get("role", ""),
-                "hidden":     col.get("hidden", "false").lower() == "true",
+                "datasource":    ds_caption or ds_name,
+                "caption":       caption,
+                "original_name": internal_name,
+                "formula":       formula,
+                "field_type":    "Calculated Field",
+                "datatype":      col.get("datatype", ""),
+                "hidden":        col.get("hidden", "false").lower() == "true",
+                "times_used":    len(used_on),
+                "worksheets":    str(used_on) if used_on else "",
             })
 
     return fields
@@ -163,10 +182,13 @@ def export(twbx_paths: List[Path], output_path: str) -> int:
                 workbook_name,
                 field["datasource"],
                 field["caption"],
+                field["original_name"],
                 field["formula"],
+                field["field_type"],
                 field["datatype"],
-                field["role"],
                 "Yes" if field["hidden"] else "No",
+                field["times_used"],
+                field["worksheets"],
             ], alt=(row_num % 2 == 0))
             row_num += 1
             total   += 1
