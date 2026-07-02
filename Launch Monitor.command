@@ -44,5 +44,5 @@ if [ -n "$EXISTING" ]; then
 fi
 
 (sleep 2 && open "http://localhost:${PORT}") &
-venv/bin/uvicorn monitor:app --host 0.0.0.0 --port "$PORT" --reload \
+venv/bin/uvicorn monitor:app --host 127.0.0.1 --port "$PORT" --reload \
   --reload-exclude "*/venv/*" --reload-exclude "*/.venv/*"

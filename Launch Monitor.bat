@@ -27,4 +27,4 @@ echo.
 :: Open browser after 2 seconds
 start /b cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:%PORT%"
 
-venv\Scripts\uvicorn monitor:app --host 0.0.0.0 --port %PORT% --reload
+venv\Scripts\uvicorn monitor:app --host 127.0.0.1 --port %PORT% --reload
