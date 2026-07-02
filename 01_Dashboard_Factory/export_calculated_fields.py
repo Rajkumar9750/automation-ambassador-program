@@ -294,11 +294,7 @@ def export(twbx_paths: List[Path], output_path: str) -> int:
     _title_block(ws, wb_label, total, generated)
 
     for i, (wb_name, field) in enumerate(all_fields):
-        row_num = i + 3
-        _write_data_row(ws, row_num, field, wb_name, alt=(i % 2 == 0))
-        # Hide rows that don't match default filters: Hidden=No and Times Used > 0
-        if field["hidden"] or field["times_used"] == 0:
-            ws.row_dimensions[row_num].hidden = True
+        _write_data_row(ws, i + 3, field, wb_name, alt=(i % 2 == 0))
 
     # Summary row at bottom
     last_row = total + 3
