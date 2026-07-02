@@ -37,83 +37,58 @@ One launcher starts a browser dashboard where you control all tools from a singl
 
 ## Installation
 
-### Prerequisites
-
-Only **Git** is required before running setup. Python is installed automatically.
-
-- **Git** → download from [git-scm.com/downloads](https://git-scm.com/downloads)
+Everything installs automatically — Git, Python, and all dependencies — from a single terminal command. Nothing needs to be pre-installed.
 
 ---
 
 ### macOS
 
-**Step 1 — Open Terminal**
-Press `Cmd + Space`, type `Terminal`, press Enter.
+Open **Terminal** (`Cmd + Space` → type `Terminal` → Enter) and paste this command:
 
-**Step 2 — Clone the repository**
 ```bash
-git clone https://github.com/Rajkumar9750/automation-ambassador-program.git
-cd automation-ambassador-program
+curl -fsSL https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.sh -o /tmp/install.sh && bash /tmp/install.sh
 ```
 
-**Step 3 — Run setup**
-```bash
-bash setup.sh
-```
+This will automatically:
+1. Install **Git** via Homebrew (installs Homebrew first if needed)
+2. Install **Python 3.11** via Homebrew if missing
+3. Clone the repository to `~/automation-ambassador-program`
+4. Install all tool dependencies
+5. Launch the Monitor — browser opens at http://localhost:9000
 
-This will:
-- Check if Python 3.9+ is installed — if not, installs it automatically via **Homebrew**
-- If Homebrew is also missing, installs Homebrew first (you may be prompted for your Mac password)
-- Create virtual environments for all 4 tools
-- Install all Python dependencies
-
-> Setup takes **2–5 minutes** on first run. You will only need to run it once.
+> Takes **2–5 minutes** on first run. Run it only once.
 
 ---
 
 ### Windows
 
-> **Don't have Git?** Follow **Option A** below. If you already have Git installed, use **Option B**.
+Open **PowerShell** (`Win + R` → type `powershell` → Enter) and paste this command:
 
-#### Option A — No Git installed (first time)
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Rajkumar9750/automation-ambassador-program/main/install.ps1" -OutFile "$env:TEMP\install.ps1"; & "$env:TEMP\install.ps1"
+```
 
-1. Go to **https://github.com/Rajkumar9750/automation-ambassador-program**
-2. Click the green **Code** button → **Download ZIP**
-3. Extract the ZIP (right-click → **Extract All**)
-4. Open the extracted folder
-5. Double-click **`setup.bat`**
+This will automatically:
+1. Install **Git** via winget if missing
+2. Install **Python 3.11** via winget if missing
+3. Clone the repository to `%USERPROFILE%\automation-ambassador-program`
+4. Install all tool dependencies
+5. Launch the Monitor — browser opens at http://localhost:9000
 
-`setup.bat` will automatically install Git and Python if they are missing, then set up all tools.
-
-> After setup, you can run `git pull` from inside the folder to get future updates — Git will be available since setup installed it.
+> Takes **2–5 minutes** on first run. Run it only once.
 
 ---
 
-#### Option B — Git already installed
+### Getting a GitHub Personal Access Token
 
-**Step 1 — Open Command Prompt**
-Press `Win + R`, type `cmd`, press Enter.
+The repository is private — you will be prompted for credentials when cloning. Use a **Personal Access Token** as your password (GitHub no longer accepts account passwords).
 
-**Step 2 — Clone the repository**
-```bat
-git clone https://github.com/Rajkumar9750/automation-ambassador-program.git
-cd automation-ambassador-program
-```
-
-**Step 3 — Run setup**
-```bat
-setup.bat
-```
+1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
+2. Click **Generate new token (classic)**
+3. Give it a name, tick the **`repo`** scope → **Generate**
+4. Copy the token and paste it as the **password** when prompted during install
 
 ---
-
-`setup.bat` will:
-- Install **Git** via winget if not already present
-- Install **Python 3.11** via winget if not already present (falls back to Chocolatey)
-- Create virtual environments for all 4 tools
-- Install all Python dependencies
-
-> Setup takes **2–5 minutes** on first run. You will only need to run it once.
 
 ---
 
