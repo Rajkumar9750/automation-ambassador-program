@@ -458,7 +458,9 @@ async def generate(req: GenerateRequest):
     safe_db       = "".join(c if c.isalnum() or c in "-_" else "_" for c in req.connection.database).strip("_")
     raw_wb_name   = session.get("original_filename", "Dashboard")
     safe_wb_name  = "".join(c if c.isalnum() or c in "-_" else "_" for c in raw_wb_name).strip("_")
-    parts = [p for p in [safe_client, safe_db, safe_wb_name] if p]
+    # Skip database name if it duplicates the client name
+    db_part = safe_db if safe_db.lower() != safe_client.lower() else ""
+    parts = [p for p in [safe_client, db_part, safe_wb_name] if p]
     output_filename = "_".join(parts) + ".twbx"
     output_path = os.path.join(OUTPUT_DIR, output_filename)
 
