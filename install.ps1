@@ -46,21 +46,44 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 
 Write-Host ""
 
-# ── 2. Clone or update ──────────────────────────────────
-if (Test-Path "$DEST\.git") {
-    Write-Host "► Folder already exists — pulling latest changes..."
+# ── 3. Kill any running instances (release file locks) ──
+Write-Host "► Stopping any running instances..."
+@(9000, 8080, 5555, 8082) | ForEach-Object {
+    $port = $_
+    try {
+        $pids = (Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue).OwningProcess | Select-Object -Unique
+        $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }
+    } catch {}
+}
+# Also kill any python/uvicorn from the project folder
+Get-Process -Name "python","python3","uvicorn" -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -like "*automation-ambassador*" } |
+    ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
+Start-Sleep -Seconds 2
+Write-Host ""
+
+# ── 4. Clone or update ──────────────────────────────────
+if (Test-Path $DEST) {
+    Write-Host "► Removing existing folder and cloning fresh..."
+    Remove-Item -Recurse -Force $DEST -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
+}
+if (Test-Path $DEST) {
+    # Still locked — pull instead
+    Write-Host "  (Some files still locked — pulling latest instead)"
     Set-Location $DEST
     git pull
-} elseif (Test-Path $DEST) {
-    Write-Host "► Incomplete folder found — removing and cloning fresh..."
-    Remove-Item -Recurse -Force $DEST
-    git clone $REPO $DEST
-    Set-Location $DEST
+    # Delete old venvs so setup recreates them with Python 3.11
+    @("venv","01_Dashboard_Factory\venv","02_Dashboard_Factory_QA\.venv","03_Jira_Tracker\venv") | ForEach-Object {
+        $vpath = Join-Path $DEST $_
+        if (Test-Path $vpath) { Remove-Item -Recurse -Force $vpath -ErrorAction SilentlyContinue }
+    }
 } else {
     Write-Host "► Cloning repository to $DEST..."
     git clone $REPO $DEST
     Set-Location $DEST
 }
+Set-Location $DEST
 
 Write-Host ""
 

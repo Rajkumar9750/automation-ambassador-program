@@ -88,27 +88,27 @@ echo.
 :: -------------------------------------------------------
 
 echo [1/4] Setting up Monitor...
-if not exist "venv\Scripts\python.exe" %PYTHON% -m venv venv
-venv\Scripts\pip install --quiet --upgrade pip
-venv\Scripts\pip install --quiet -r requirements.txt
+call :make_venv "venv" "%PYTHON%"
+venv\Scripts\pip install -q --upgrade pip 2>nul
+venv\Scripts\pip install -q -r requirements.txt
 echo   Done.
 
 echo [2/4] Setting up Dashboard Factory...
-if not exist "01_Dashboard_Factory\venv\Scripts\python.exe" %PYTHON% -m venv 01_Dashboard_Factory\venv
-01_Dashboard_Factory\venv\Scripts\pip install --quiet --upgrade pip
-01_Dashboard_Factory\venv\Scripts\pip install --quiet -r 01_Dashboard_Factory\requirements.txt
+call :make_venv "01_Dashboard_Factory\venv" "%PYTHON%"
+01_Dashboard_Factory\venv\Scripts\pip install -q --upgrade pip 2>nul
+01_Dashboard_Factory\venv\Scripts\pip install -q -r 01_Dashboard_Factory\requirements.txt
 echo   Done.
 
 echo [3/4] Setting up Dashboard Factory QA...
-if not exist "02_Dashboard_Factory_QA\.venv\Scripts\python.exe" %PYTHON% -m venv 02_Dashboard_Factory_QA\.venv
-02_Dashboard_Factory_QA\.venv\Scripts\pip install --quiet --upgrade pip
-02_Dashboard_Factory_QA\.venv\Scripts\pip install --quiet -r 02_Dashboard_Factory_QA\requirements.txt
+call :make_venv "02_Dashboard_Factory_QA\.venv" "%PYTHON%"
+02_Dashboard_Factory_QA\.venv\Scripts\pip install -q --upgrade pip 2>nul
+02_Dashboard_Factory_QA\.venv\Scripts\pip install -q -r 02_Dashboard_Factory_QA\requirements.txt
 echo   Done.
 
 echo [4/4] Setting up Jira Tracker...
-if not exist "03_Jira_Tracker\venv\Scripts\python.exe" %PYTHON% -m venv 03_Jira_Tracker\venv
-03_Jira_Tracker\venv\Scripts\pip install --quiet --upgrade pip
-03_Jira_Tracker\venv\Scripts\pip install --quiet -r 03_Jira_Tracker\requirements.txt
+call :make_venv "03_Jira_Tracker\venv" "%PYTHON%"
+03_Jira_Tracker\venv\Scripts\pip install -q --upgrade pip 2>nul
+03_Jira_Tracker\venv\Scripts\pip install -q -r 03_Jira_Tracker\requirements.txt
 echo   Done.
 
 echo.
@@ -121,7 +121,25 @@ pause
 exit /b 0
 
 :: -------------------------------------------------------
-:: Helper: find a working Python 3.9+
+:: Helper: create venv, recreating if wrong Python version
+:: -------------------------------------------------------
+:make_venv
+set VPATH=%~1
+set VPY=%~2
+if exist "%VPATH%\Scripts\python.exe" (
+    for /f "tokens=2 delims= " %%v in ('"%VPATH%\Scripts\python.exe" --version 2^>^&1') do (
+        for /f "tokens=1,2 delims=." %%a in ("%%v") do (
+            if %%a==3 if %%b leq 11 exit /b 0
+        )
+    )
+    echo   Wrong Python version in %VPATH% — recreating...
+    rmdir /s /q "%VPATH%" 2>nul
+)
+%VPY% -m venv "%VPATH%"
+exit /b 0
+
+:: -------------------------------------------------------
+:: Helper: find a working Python 3.9-3.11
 :: -------------------------------------------------------
 :find_python
 for %%p in (python3.11 python3.10 python3.9) do (
