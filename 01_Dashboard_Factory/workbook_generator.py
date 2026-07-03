@@ -467,10 +467,28 @@ def generate_twbx(
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as out_zip:
             for rel_path in all_files:
+                # Strip .hyper extract files — they belong to the reference workbook's
+                # schema and cause Tableau error 2F8B7E6C when creating a new extract.
+                # The generated workbook will open as a live connection; the user can
+                # create a fresh extract in Tableau once the connection is confirmed.
+                if rel_path.lower().endswith(".hyper"):
+                    continue
                 abs_path = os.path.join(tmp, rel_path)
                 if os.path.isfile(abs_path):
                     out_zip.write(abs_path, rel_path)
 
+        repair_log.append({
+            "type":     "hyper_stripped",
+            "severity": "info",
+            "title":    "Extract files removed — workbook is now live connection",
+            "description": (
+                "The reference workbook contained .hyper extract file(s) tied to the original "
+                "schema. These have been removed from the generated workbook to prevent "
+                "Tableau error 2F8B7E6C ('Unable to create extract'). "
+                "The workbook will open using a live Postgres connection."
+            ),
+            "fix": "In Tableau Desktop: Data menu → Extract Data to create a fresh extract from your connection.",
+        })
     return output_path, repair_log
 
 
