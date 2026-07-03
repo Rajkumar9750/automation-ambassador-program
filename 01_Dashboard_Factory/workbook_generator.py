@@ -1235,6 +1235,11 @@ def _apply_all_modifications(
         type_issues = _report_type_preserved(type_fixes)
         repair_log.extend(type_issues)
 
+    # Fix lat/lon columns typed as string — MAKEPOINT requires real numbers and
+    # Tableau throws error 2F8B7E6C on extract if these are string-typed.
+    content, geo_issues = _fix_geo_column_types(content)
+    repair_log.extend(geo_issues)
+
     # Remove tables explicitly excluded from the data model
     if removed_tables:
         content, removal_issues = _remove_table_relations(content, removed_tables)
@@ -1574,6 +1579,55 @@ def _scan_for_remaining_issues(
             })
 
     return issues
+
+
+def _fix_geo_column_types(content: str) -> Tuple[str, List[Dict]]:
+    """
+    Force latitude/longitude columns to datatype='real'.
+
+    When a federated datasource carries these columns as datatype='string'
+    (common with Custom SQL queries), MAKEPOINT/MAKELINE calculations fail
+    and Tableau throws error 2F8B7E6C on extract creation.
+    """
+    GEO_KEYWORDS = ['latitude', 'longitude', 'longtitude', 'lat_code', 'lon_code', 'lng_code']
+    issues: List[Dict] = []
+    fixed: List[str] = []
+
+    def _fix_col(m: re.Match) -> str:
+        attrs = m.group(1)
+        name_m = re.search(r"name='([^']*)'", attrs)
+        if not name_m:
+            return m.group(0)
+        name_lower = name_m.group(1).lower().strip('[]')
+        if not any(kw in name_lower for kw in GEO_KEYWORDS):
+            return m.group(0)
+        # Only fix string-typed geo columns
+        if "datatype='string'" not in attrs and 'datatype="string"' not in attrs:
+            return m.group(0)
+        fixed.append(name_m.group(1))
+        new_attrs = re.sub(r"datatype='string'", "datatype='real'", attrs)
+        new_attrs = re.sub(r'datatype="string"', 'datatype="real"', new_attrs)
+        return m.group(0).replace(attrs, new_attrs)
+
+    # Match both self-closing and open <column> tags
+    content = re.sub(r'<column\b([^>]*)/>', _fix_col, content)
+    content = re.sub(r'<column\b([^>]*)>', _fix_col, content)
+
+    if fixed:
+        unique = sorted(set(fixed))
+        issues.append({
+            "type":     "geo_column_type_fix",
+            "severity": "fixed",
+            "title":    f"Fixed {len(unique)} lat/lon column(s) typed as string → real",
+            "description": (
+                f"The following geographic columns were defined as string in the datasource "
+                f"but are required to be real numbers for MAKEPOINT/MAKELINE to work during "
+                f"extract creation: {', '.join(unique[:10])}."
+            ),
+            "fix": "Column types corrected automatically in the generated workbook.",
+        })
+
+    return content, issues
 
 
 def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
