@@ -1227,6 +1227,12 @@ def _apply_all_modifications(
         content, join_issues = _apply_join_condition_overrides(content, join_overrides)
         repair_log.extend(join_issues)
 
+    # Strip RAWSQL / live-only calculated fields so extract creation succeeds
+    content, rawsql_issues, bad_names = _scan_extract_incompatible_fields(content)
+    if bad_names:
+        content = _strip_columns_by_name(content, bad_names)
+    repair_log.extend(rawsql_issues)
+
     # Post-generation scan: detect anything still wrong and report it
     scan_issues = _scan_for_remaining_issues(content, oid_schema_map, new_conn)
     repair_log.extend(scan_issues)
@@ -1549,19 +1555,17 @@ def _scan_for_remaining_issues(
                 "fix":         "Map at least one table from this datasource in Step 2 so its connection is updated.",
             })
 
-    issues += _scan_extract_incompatible_fields(content)
     return issues
 
 
 def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
     """
-    Detect calculated fields whose formulas cannot survive an extract conversion.
+    Detect AND REMOVE calculated fields that would cause Tableau error 2F8B7E6C
+    ("Invalid field formula due to limitations in the data source / Unable to create extract").
 
-    Tableau error 2F8B7E6C ("Invalid field formula due to limitations in the
-    data source") is almost always caused by one of these patterns.
+    Returns (cleaned_content, issues).  The cleaned content has the offending
+    <column type='calc'> blocks stripped so extract creation succeeds.
     """
-    issues: List[Dict] = []
-
     # Functions that are live-connection-only and break extract creation
     LIVE_ONLY = [
         "RAWSQL", "RAWSQLAGG", "RAWSQLBOOL", "RAWSQLREAL", "RAWSQLINT",
@@ -1572,7 +1576,9 @@ def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
     cap_pattern  = re.compile(r"\bcaption='([^']*)'")
     name_pattern = re.compile(r"\bname='([^']*)'")
 
+    bad_names  = set()   # internal [name] values to strip
     bad_fields = []
+
     for col_m in col_pattern.finditer(content):
         attrs = col_m.group(1)
         body  = col_m.group(2)
@@ -1586,31 +1592,47 @@ def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
         hits    = [fn for fn in LIVE_ONLY if fn in upper]
         if not hits:
             continue
-        cap  = cap_pattern.search(attrs)
-        name = name_pattern.search(attrs)
+        cap   = cap_pattern.search(attrs)
+        name  = name_pattern.search(attrs)
         label = (cap.group(1) if cap else None) or (name.group(1) if name else "Unknown field")
+        if name:
+            bad_names.add(name.group(1))
         bad_fields.append({"field": label, "functions": hits, "formula": formula[:120]})
 
+    issues = []
     if bad_fields:
         field_list = ", ".join(f['field'] for f in bad_fields)
         issues.append({
             "type":     "extract_incompatible_formula",
-            "severity": "error",
-            "title":    f"Extract will fail — {len(bad_fields)} calculated field(s) use live-only functions",
+            "severity": "fixed",
+            "title":    f"Removed {len(bad_fields)} extract-incompatible calculated field(s)",
             "description": (
-                f"The following calculated fields use functions that Tableau cannot convert to an extract "
-                f"(Tableau error 2F8B7E6C): {field_list}. "
-                f"Live-only functions detected: {', '.join(set(fn for f in bad_fields for fn in f['functions']))}."
+                f"The following calculated fields used RAWSQL or similar live-only functions "
+                f"that cause Tableau error 2F8B7E6C when creating an extract: {field_list}. "
+                f"They have been automatically removed from the generated workbook."
             ),
             "fix": (
-                "Open the workbook in Tableau Desktop → Analysis → Edit Calculated Fields → "
-                "find each listed field and either delete it or rewrite the formula without "
-                "RAWSQL/RAWSQLAGG. Alternatively, use a live connection instead of an extract."
+                "These fields were stripped automatically. The workbook will now support "
+                "extract creation. If you need these calculations, recreate them in Tableau "
+                "Desktop using extract-compatible functions."
             ),
             "affected_fields": bad_fields,
         })
 
-    return issues
+    return content, issues, bad_names
+
+
+def _strip_columns_by_name(content: str, bad_names: set) -> str:
+    """Remove <column> blocks whose name= attribute is in bad_names."""
+    if not bad_names:
+        return content
+    def _remove(m: re.Match) -> str:
+        attrs = m.group(1)
+        name_m = re.search(r"\bname='([^']*)'", attrs)
+        if name_m and name_m.group(1) in bad_names:
+            return ""
+        return m.group(0)
+    return re.sub(r"<column\b([^>]*)>.*?</column>", _remove, content, flags=re.DOTALL)
 
 
 def _extract_custom_sql(content: str) -> str:
