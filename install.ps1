@@ -37,6 +37,10 @@ if ($needPython) {
     Invoke-WebRequest -UseBasicParsing -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip
     & "$pyDir\python.exe" $getPip --quiet
 
+    # Embeddable Python has no venv module — install virtualenv as replacement
+    Write-Host "  Installing virtualenv..."
+    & "$pyDir\python.exe" -m pip install --quiet virtualenv
+
     # Add to user PATH persistently
     $userPath = [Environment]::GetEnvironmentVariable("Path","User")
     if ($userPath -notlike "*python311*") {

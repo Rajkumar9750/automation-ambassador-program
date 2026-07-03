@@ -125,7 +125,11 @@ if exist "%VPATH%\Scripts\python.exe" (
     echo   Wrong Python version in %VPATH% — recreating...
     rmdir /s /q "%VPATH%" 2>nul
 )
-%VPY% -m venv "%VPATH%"
+%VPY% -m venv "%VPATH%" 2>nul
+if %errorlevel% neq 0 (
+    %VPY% -m pip install --quiet virtualenv 2>nul
+    %VPY% -m virtualenv "%VPATH%" --quiet
+)
 exit /b 0
 
 :: -------------------------------------------------------
