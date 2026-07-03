@@ -13,9 +13,26 @@ Write-Host ""
 # ── 1. Python 3.11 ──────────────────────────────────────
 # Force Python 3.11 — 3.12+ breaks pandas and other dependencies
 Write-Host "► Ensuring Python 3.11 is installed..."
-winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements 2>$null
+# --scope user installs for current user only — no admin/UAC required
+winget install --id Python.Python.3.11 --scope user --silent --accept-package-agreements --accept-source-agreements 2>$null
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
             [System.Environment]::GetEnvironmentVariable("Path","User")
+
+# If winget user-scope failed, fall back to pyenv-win (fully no-admin)
+$py311 = Get-Command python3.11 -ErrorAction SilentlyContinue
+if (-not $py311) {
+    $pyCheck = & python --version 2>&1
+    if ($pyCheck -notmatch "3\.11") {
+        Write-Host "  winget failed — installing Python 3.11 via pyenv-win (no admin needed)..."
+        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "$env:TEMP\install-pyenv-win.ps1"
+        & "$env:TEMP\install-pyenv-win.ps1"
+        $env:PYENV = "$HOME\.pyenv\pyenv-win"
+        $env:Path  = "$env:PYENV\bin;$env:PYENV\shims;$env:Path"
+        pyenv install 3.11.9 --quiet
+        pyenv global 3.11.9
+        $env:Path = "$HOME\.pyenv\pyenv-win\shims;$env:Path"
+    }
+}
 Write-Host ""
 
 # ── 2. Git ──────────────────────────────────────────────
