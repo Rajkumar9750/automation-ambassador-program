@@ -293,13 +293,25 @@ async def api_start(tool_id: str):
     except FileNotFoundError as e:
         return JSONResponse({"error": f"Could not launch {tool['name']}: {e}. Try re-running install.ps1."}, status_code=500)
     PROCS[tool_id] = {"proc": proc, "started_at": time.time(), "log_lines": []}
-    _capture_output(tool_id, proc)
-    # Wait briefly then check if the process died immediately
-    await asyncio.sleep(0.8)
+
+    # Wait before starting capture threads — if the process dies within this window
+    # we read the pipes directly (no race with threads).
+    await asyncio.sleep(2.5)
+
     if proc.poll() is not None:
-        lines = PROCS.pop(tool_id, {}).get("log_lines", [])
-        error_msg = "\n".join(lines[-15:]) if lines else "Process exited immediately with no output."
-        return JSONResponse({"error": f"{tool['name']} crashed on start:\n{error_msg}"}, status_code=500)
+        out, err = b"", b""
+        try:
+            out = proc.stdout.read() if proc.stdout else b""
+            err = proc.stderr.read() if proc.stderr else b""
+        except Exception:
+            pass
+        PROCS.pop(tool_id, None)
+        combined = (out + err).decode("utf-8", errors="replace").strip()
+        error_msg = combined[-2000:] if combined else "Process exited with no output — the venv may be missing packages. Try re-running install.ps1."
+        return JSONResponse({"error": f"{tool['name']} failed to start:\n{error_msg}"}, status_code=500)
+
+    # Process is alive — start background threads for ongoing log capture
+    _capture_output(tool_id, proc)
     return {"status": "started", "pid": proc.pid}
 
 
