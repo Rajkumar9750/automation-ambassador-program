@@ -1549,6 +1549,67 @@ def _scan_for_remaining_issues(
                 "fix":         "Map at least one table from this datasource in Step 2 so its connection is updated.",
             })
 
+    issues += _scan_extract_incompatible_fields(content)
+    return issues
+
+
+def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
+    """
+    Detect calculated fields whose formulas cannot survive an extract conversion.
+
+    Tableau error 2F8B7E6C ("Invalid field formula due to limitations in the
+    data source") is almost always caused by one of these patterns.
+    """
+    issues: List[Dict] = []
+
+    # Functions that are live-connection-only and break extract creation
+    LIVE_ONLY = [
+        "RAWSQL", "RAWSQLAGG", "RAWSQLBOOL", "RAWSQLREAL", "RAWSQLINT",
+    ]
+
+    col_pattern  = re.compile(r"<column\b([^>]*)>(.*?)</column>", re.DOTALL)
+    calc_pattern = re.compile(r"<calculation\b[^>]*\bformula='([^']*)'", re.DOTALL)
+    cap_pattern  = re.compile(r"\bcaption='([^']*)'")
+    name_pattern = re.compile(r"\bname='([^']*)'")
+
+    bad_fields = []
+    for col_m in col_pattern.finditer(content):
+        attrs = col_m.group(1)
+        body  = col_m.group(2)
+        if "type='calc'" not in attrs:
+            continue
+        calc_m = calc_pattern.search(body)
+        if not calc_m:
+            continue
+        formula = calc_m.group(1)
+        upper   = formula.upper()
+        hits    = [fn for fn in LIVE_ONLY if fn in upper]
+        if not hits:
+            continue
+        cap  = cap_pattern.search(attrs)
+        name = name_pattern.search(attrs)
+        label = (cap.group(1) if cap else None) or (name.group(1) if name else "Unknown field")
+        bad_fields.append({"field": label, "functions": hits, "formula": formula[:120]})
+
+    if bad_fields:
+        field_list = ", ".join(f['field'] for f in bad_fields)
+        issues.append({
+            "type":     "extract_incompatible_formula",
+            "severity": "error",
+            "title":    f"Extract will fail — {len(bad_fields)} calculated field(s) use live-only functions",
+            "description": (
+                f"The following calculated fields use functions that Tableau cannot convert to an extract "
+                f"(Tableau error 2F8B7E6C): {field_list}. "
+                f"Live-only functions detected: {', '.join(set(fn for f in bad_fields for fn in f['functions']))}."
+            ),
+            "fix": (
+                "Open the workbook in Tableau Desktop → Analysis → Edit Calculated Fields → "
+                "find each listed field and either delete it or rewrite the formula without "
+                "RAWSQL/RAWSQLAGG. Alternatively, use a live connection instead of an extract."
+            ),
+            "affected_fields": bad_fields,
+        })
+
     return issues
 
 
