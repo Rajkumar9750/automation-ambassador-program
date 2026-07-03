@@ -601,7 +601,11 @@ const state = {
 // ────────────────────────────────────────────────────────────
 async function apiFetch(path, method = 'GET') {
   const r = await fetch(path, { method });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  if (!r.ok) {
+    let msg = `HTTP ${r.status}`;
+    try { const d = await r.json(); msg = d.error || msg; } catch {}
+    throw new Error(msg);
+  }
   return r.json();
 }
 

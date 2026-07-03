@@ -290,6 +290,12 @@ async def api_start(tool_id: str):
         return JSONResponse({"error": f"Could not launch {tool['name']}: {e}. Try re-running install.ps1."}, status_code=500)
     PROCS[tool_id] = {"proc": proc, "started_at": time.time(), "log_lines": []}
     _capture_output(tool_id, proc)
+    # Wait briefly then check if the process died immediately
+    await asyncio.sleep(0.8)
+    if proc.poll() is not None:
+        lines = PROCS.pop(tool_id, {}).get("log_lines", [])
+        error_msg = "\n".join(lines[-15:]) if lines else "Process exited immediately with no output."
+        return JSONResponse({"error": f"{tool['name']} crashed on start:\n{error_msg}"}, status_code=500)
     return {"status": "started", "pid": proc.pid}
 
 
