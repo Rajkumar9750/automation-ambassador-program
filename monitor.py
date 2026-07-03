@@ -219,7 +219,7 @@ def _local_version() -> str:
 @app.get("/", response_class=HTMLResponse)
 async def root():
     html = Path(__file__).parent / "monitor.html"
-    return HTMLResponse(html.read_text())
+    return HTMLResponse(html.read_text(encoding="utf-8"))
 
 
 @app.get("/api/version")
