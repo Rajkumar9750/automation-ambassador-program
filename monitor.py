@@ -71,7 +71,7 @@ TOOLS = {
         "port": 8080,
         "url": "http://localhost:8080",
         "cwd": str(BASE / "01_Dashboard_Factory"),
-        "cmd": [f"venv/{_SCRIPTS}/{_UVI}", "app:app", "--host", "127.0.0.1", "--port", "8080"],
+        "cmd": [f"venv/{_SCRIPTS}/{_PY}", "-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8080"],
         "health_path": "/docs",
         "color": "#4F9CF9",
         "icon": "🏭",
@@ -93,7 +93,7 @@ TOOLS = {
         "port": 8082,
         "url": "http://localhost:8082",
         "cwd": str(BASE / "03_Jira_Tracker"),
-        "cmd": [f"venv/{_SCRIPTS}/{_UVI}", "jira_tracker:app", "--host", "127.0.0.1", "--port", "8082"],
+        "cmd": [f"venv/{_SCRIPTS}/{_PY}", "-m", "uvicorn", "jira_tracker:app", "--host", "127.0.0.1", "--port", "8082"],
         "health_path": "/docs",
         "color": "#34D399",
         "icon": "📋",
@@ -284,7 +284,10 @@ async def api_start(tool_id: str):
         popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
         popen_kwargs["preexec_fn"] = os.setsid
-    proc = subprocess.Popen(tool["cmd"], **popen_kwargs)
+    try:
+        proc = subprocess.Popen(tool["cmd"], **popen_kwargs)
+    except FileNotFoundError as e:
+        return JSONResponse({"error": f"Could not launch {tool['name']}: {e}. Try re-running install.ps1."}, status_code=500)
     PROCS[tool_id] = {"proc": proc, "started_at": time.time(), "log_lines": []}
     _capture_output(tool_id, proc)
     return {"status": "started", "pid": proc.pid}
