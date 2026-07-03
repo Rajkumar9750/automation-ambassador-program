@@ -279,7 +279,11 @@ async def api_start(tool_id: str):
         return {"status": "already_running", "pid": PROCS[tool_id]["proc"].pid}
 
     tool = TOOLS[tool_id]
-    popen_kwargs: dict = dict(cwd=tool["cwd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Force UTF-8 I/O on all child processes — prevents emoji/unicode crashes on Windows
+    child_env = os.environ.copy()
+    child_env["PYTHONIOENCODING"] = "utf-8"
+    child_env["PYTHONUTF8"] = "1"
+    popen_kwargs: dict = dict(cwd=tool["cwd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=child_env)
     if _IS_WIN:
         popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
