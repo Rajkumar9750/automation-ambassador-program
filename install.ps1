@@ -13,50 +13,59 @@ Write-Host ""
 # ── 1. Python 3.11 ──────────────────────────────────────
 # Force Python 3.11 — 3.12+ breaks pandas and other dependencies
 Write-Host "► Ensuring Python 3.11 is installed..."
-# --scope user installs for current user only — no admin/UAC required
-winget install --id Python.Python.3.11 --scope user --silent --accept-package-agreements --accept-source-agreements 2>$null
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-            [System.Environment]::GetEnvironmentVariable("Path","User")
 
-# If winget user-scope failed, fall back to pyenv-win (fully no-admin)
-$py311 = Get-Command python3.11 -ErrorAction SilentlyContinue
-if (-not $py311) {
-    $pyCheck = & python --version 2>&1
-    if ($pyCheck -notmatch "3\.11") {
-        Write-Host "  winget failed — installing Python 3.11 via pyenv-win (no admin needed)..."
-        Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "$env:TEMP\install-pyenv-win.ps1"
-        & "$env:TEMP\install-pyenv-win.ps1"
-        $env:PYENV = "$HOME\.pyenv\pyenv-win"
-        $env:Path  = "$env:PYENV\bin;$env:PYENV\shims;$env:Path"
-        pyenv install 3.11.9 --quiet
-        pyenv global 3.11.9
-        $env:Path = "$HOME\.pyenv\pyenv-win\shims;$env:Path"
+$pyCheck = & python --version 2>&1
+$needPython = $pyCheck -notmatch "3\.11"
+
+if ($needPython) {
+    # Use the embeddable zip — pure zip extract, no installer EXE, no UAC prompt on any machine
+    Write-Host "  Downloading Python 3.11 embeddable package (no admin needed)..."
+    $pyDir = "$HOME\python311"
+    $pyZip = "$env:TEMP\python311-embed.zip"
+    Invoke-WebRequest -UseBasicParsing -Uri "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip" -OutFile $pyZip
+    Expand-Archive -Path $pyZip -DestinationPath $pyDir -Force
+
+    # Uncomment 'import site' so pip-installed packages are importable
+    $pthFile = "$pyDir\python311._pth"
+    if (Test-Path $pthFile) {
+        (Get-Content $pthFile) -replace '#import site','import site' | Set-Content $pthFile
     }
+
+    # Bootstrap pip (downloads a .py file and runs it — no EXE, no UAC)
+    Write-Host "  Installing pip..."
+    $getPip = "$env:TEMP\get-pip.py"
+    Invoke-WebRequest -UseBasicParsing -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip
+    & "$pyDir\python.exe" $getPip --quiet
+
+    # Add to user PATH persistently
+    $userPath = [Environment]::GetEnvironmentVariable("Path","User")
+    if ($userPath -notlike "*python311*") {
+        [Environment]::SetEnvironmentVariable("Path", "$pyDir\Scripts;$pyDir;$userPath", "User")
+    }
+    $env:Path = "$pyDir\Scripts;$pyDir;$env:Path"
+    Write-Host "  ✔ Python 3.11 ready at $pyDir"
 }
 Write-Host ""
 
 # ── 2. Git ──────────────────────────────────────────────
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "► Git not found — installing via winget..."
-    winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
-    # Refresh PATH in this session
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-                [System.Environment]::GetEnvironmentVariable("Path","User")
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        Write-Host ""
-        Write-Host "  Git was installed but needs a new terminal session to activate."
-        Write-Host "  Please close this window, open a new PowerShell, and run:"
-        Write-Host "  cd '$DEST' then .\setup.bat"
-        Write-Host ""
-        # Still try to clone using the full path
-        $gitPath = "C:\Program Files\Git\cmd\git.exe"
-        if (-not (Test-Path $gitPath)) {
-            Write-Host "  Could not find git.exe. Please restart and run install.ps1 again."
-            Read-Host "Press Enter to exit"
-            exit 1
-        }
-        Set-Alias git $gitPath
+    Write-Host "► Git not found — downloading PortableGit (no admin needed)..."
+    $gitVersion  = "2.49.0"
+    $portableUrl = "https://github.com/git-for-windows/git/releases/download/v$gitVersion.windows.1/PortableGit-$gitVersion-64-bit.7z.exe"
+    $portableExe = "$env:TEMP\PortableGit.exe"
+    $gitDir      = "$HOME\PortableGit"
+
+    Invoke-WebRequest -UseBasicParsing -Uri $portableUrl -OutFile $portableExe
+    # 7-zip SFX: -o sets output dir, -y suppresses prompts — no installer, no UAC
+    & $portableExe -o"$gitDir" -y | Out-Null
+    Start-Sleep -Seconds 8
+
+    $userPath = [Environment]::GetEnvironmentVariable("Path","User")
+    if ($userPath -notlike "*PortableGit*") {
+        [Environment]::SetEnvironmentVariable("Path", "$gitDir\cmd;$userPath", "User")
     }
+    $env:Path = "$gitDir\cmd;$env:Path"
+    Write-Host "  ✔ PortableGit ready at $gitDir"
 } else {
     Write-Host "✔ Git: $(git --version)"
 }

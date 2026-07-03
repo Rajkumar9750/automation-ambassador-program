@@ -10,64 +10,54 @@ echo +==================================================+
 echo.
 
 :: -------------------------------------------------------
-:: 1. Ensure Git is installed (needed for future git pull)
+:: 1. Ensure Git is available
 :: -------------------------------------------------------
 
 where git >nul 2>&1
 if %errorlevel% neq 0 (
-    echo   Git not found. Installing via winget...
-    where winget >nul 2>&1
-    if %errorlevel%==0 (
-        winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements
-        echo   Git installed. You may need to close and reopen this window for git to work.
-    ) else (
-        echo   winget not available. Install Git manually from https://git-scm.com/downloads
+    :: install.ps1 puts PortableGit here — add it to PATH for this session
+    if exist "%USERPROFILE%\PortableGit\cmd\git.exe" (
+        set "PATH=%USERPROFILE%\PortableGit\cmd;%PATH%"
     )
+)
+where git >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Git not found. Please re-run install.ps1 to install it automatically.
+    pause
+    exit /b 1
 ) else (
     for /f "tokens=*" %%i in ('git --version') do echo   Git: %%i
 )
 echo.
 
 :: -------------------------------------------------------
-:: 2. Ensure Python 3.11 is installed (3.12+ breaks deps)
+:: 2. Ensure Python 3.11 is available
 :: -------------------------------------------------------
 
-:: Always try to install Python 3.11 via winget — safe to run even if already installed
-where winget >nul 2>&1
-if %errorlevel%==0 (
-    echo   Ensuring Python 3.11 is installed...
-    winget install --id Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements >nul 2>&1
-    :: Refresh PATH so newly installed python3.11 is found
-    for /f "usebackq tokens=*" %%p in (`where python3.11 2^>nul`) do set PYTHON=%%p
-    if defined PYTHON goto :python_found
-    :: Winget installs to AppData\Local\Programs\Python\Python311
-    set PYTHON=%LOCALAPPDATA%\Programs\Python\Python311\python.exe
-    if exist "%PYTHON%" goto :python_found
-    set PYTHON=%PROGRAMFILES%\Python311\python.exe
-    if exist "%PYTHON%" goto :python_found
-)
+echo   Ensuring Python 3.11 is installed...
 
+:: Check embeddable Python placed by install.ps1 (no-admin path)
+set PYTHON=%USERPROFILE%\python311\python.exe
+if exist "%PYTHON%" goto :python_found
+
+:: Check standard per-user install location
+set PYTHON=%LOCALAPPDATA%\Programs\Python\Python311\python.exe
+if exist "%PYTHON%" goto :python_found
+
+:: Check system install location
+set PYTHON=%PROGRAMFILES%\Python311\python.exe
+if exist "%PYTHON%" goto :python_found
+
+:: Search PATH for python3.11 / python3.10 / python3.9 / python (3.11)
 set PYTHON=
 call :find_python
 if defined PYTHON goto :python_found
 
 echo.
 echo +==================================================+
-echo ^|  Python 3.11 could not be installed.           ^|
-echo ^|  Please install it manually:                   ^|
-echo ^|  https://www.python.org/downloads/3.11.9/      ^|
-echo ^|  Check "Add Python to PATH" during install.    ^|
-echo +==================================================+
-pause
-exit /b 1
-
-:: Manual fallback
-echo.
-echo +==================================================+
-echo ^|  Auto-install failed.                           ^|
-echo ^|  Please install Python 3.9+ manually:          ^|
-echo ^|  https://www.python.org/downloads/             ^|
-echo ^|  Check "Add Python to PATH" during install.    ^|
+echo ^|  Python 3.11 could not be found.               ^|
+echo ^|  Please re-run install.ps1 — it will install   ^|
+echo ^|  Python automatically without admin rights.    ^|
 echo +==================================================+
 pause
 exit /b 1
@@ -142,7 +132,7 @@ exit /b 0
 :: Helper: find a working Python 3.9-3.11
 :: -------------------------------------------------------
 :find_python
-for %%p in (python3.11 python3.10 python3.9) do (
+for %%p in (python3.11 python3.10 python3.9 python) do (
     where %%p >nul 2>&1
     if !errorlevel!==0 (
         for /f "tokens=2 delims= " %%v in ('%%p --version 2^>^&1') do (
