@@ -3824,22 +3824,26 @@ function selectJoinType(edId, type) {
 
 // Relationship fan layout (Image 2 style)
 function _renderRelationshipDsHtml(ds) {
-  const joins       = ds.joins || [];
-  const tables      = ds.tables || [];
-  const parentName  = joins.length ? joins[0].left_table : (tables[0] ? tables[0].name : ds.caption);
-  const childNames  = [...new Set(joins.map(j => j.right_table))];
-  if (!childNames.length) childNames.push(...tables.slice(1).map(t => t.name));
+  const joins  = ds.joins || [];
+  const tables = ds.tables || [];
 
   // Build map: relation name → db table name (for toggleRemoveTable)
   const nameToTable = {};
   tables.forEach(t => { nameToTable[t.name] = t.table || t.name; });
 
+  // Show ALL tables in ds.tables — not just join right-hand sides
+  const allTableNames = tables.map(t => t.name);
+
+  // The "parent" is just a label (datasource name) — not a removable table
+  const parentName  = joins.length ? joins[0].left_table : (tables[0] ? tables[0].name : ds.caption);
+  const displayName = ds.caption || parentName;
+
   const CHILD_H = 42, GAP = 10;
-  const totalH  = Math.max(childNames.length * (CHILD_H + GAP) - GAP, CHILD_H);
+  const totalH  = Math.max(allTableNames.length * (CHILD_H + GAP) - GAP, CHILD_H);
   const midY    = totalH / 2;
   const svgW    = 56;
 
-  const paths = childNames.map((_, i) => {
+  const paths = allTableNames.map((_, i) => {
     const cy  = i * (CHILD_H + GAP) + CHILD_H / 2;
     const cpx = svgW * 0.45;
     return `<path d="M 0 ${midY} C ${cpx} ${midY}, ${cpx} ${cy}, ${svgW} ${cy}"
@@ -3851,8 +3855,6 @@ function _renderRelationshipDsHtml(ds) {
     <circle cx="15" cy="8" r="6" fill="none" stroke="#4a7fb5" stroke-width="1.5"/>
   </svg>`;
 
-  const displayName = ds.caption || parentName;
-
   return `
     <div class="dm-ds-block">
       <div class="dm-ds-name">📊 ${escHtml(ds.caption)}</div>
@@ -3863,7 +3865,7 @@ function _renderRelationshipDsHtml(ds) {
         </div>
         <svg width="${svgW}" height="${totalH}" style="flex-shrink:0">${paths}</svg>
         <div class="dm-rel-children">
-          ${childNames.map(n => {
+          ${allTableNames.map(n => {
             const tbl = nameToTable[n] || n;
             const isRemoved = S.removedTables.has(tbl);
             const label = n.length > 26 ? n.slice(0, 26) + '…' : n;
