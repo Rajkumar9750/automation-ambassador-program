@@ -465,7 +465,12 @@ def generate_twbx(
         # layer tied to the reference schema. Leaving them causes Tableau error
         # 2F8B7E6C even when the .hyper files are absent, because Tableau tries to
         # create a new extract using the stale extract-layer definitions.
-        content = re.sub(r'<extract\b[^>]*>.*?</extract>', '', content, flags=re.DOTALL)
+        # Loop because extract blocks can be nested — non-greedy regex only removes
+        # the innermost block per pass; repeat until none remain.
+        prev = None
+        while prev != content:
+            prev = content
+            content = re.sub(r'<extract\b[^>]*>.*?</extract>', '', content, flags=re.DOTALL)
 
         with open(twb_abs, "w", encoding="utf-8") as f:
             f.write(content)
