@@ -2185,7 +2185,7 @@ select {
           <label>Port</label>
           <input id="db-port" type="number" value="5432" />
         </div>
-        <div class="form-row">
+        <div class="form-row" id="row-db-name">
           <label>Database Name</label>
           <input id="db-name" type="text" placeholder="e.g. jll_prod" oninput="autoFillUserFromDb(this.value)" />
         </div>
@@ -2591,6 +2591,7 @@ function setConnType(type) {
   document.getElementById('btn-type-postgres').className   = isKyvos ? 'btn btn-outline' : 'btn btn-primary';
   document.getElementById('btn-type-kyvos').className      = isKyvos ? 'btn btn-primary' : 'btn btn-outline';
   document.getElementById('row-ssl').style.display         = isKyvos ? 'none' : '';
+  document.getElementById('row-db-name').style.display     = isKyvos ? 'none' : '';
   document.getElementById('row-http-path').style.display   = isKyvos ? '' : 'none';
   document.getElementById('row-require-ssl').style.display = isKyvos ? '' : 'none';
   // Swap default port

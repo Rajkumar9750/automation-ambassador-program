@@ -69,37 +69,37 @@ class ConnDetails(BaseModel):
 
 def _test_connection(c: "ConnDetails"):
     if c.conn_type == "kyvos":
-        return _kyvos.test_connection(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl)
+        return _kyvos.test_connection(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl)
     return pg_test_connection(c.host, c.port, c.database, c.username, c.password, c.sslmode)
 
 def _list_schemas(c: "ConnDetails"):
     if c.conn_type == "kyvos":
-        return _kyvos.list_schemas(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl)
+        return _kyvos.list_schemas(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl)
     return pg_list_schemas(c.host, c.port, c.database, c.username, c.password, c.sslmode)
 
 def _list_tables(c: "ConnDetails", schema: str):
     if c.conn_type == "kyvos":
-        return _kyvos.list_tables(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema)
+        return _kyvos.list_tables(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl, schema)
     return pg_list_tables(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema)
 
 def _validate_sql(c: "ConnDetails", sql: str):
     if c.conn_type == "kyvos":
-        return _kyvos.validate_sql(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, sql)
+        return _kyvos.validate_sql(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl, sql)
     return pg_validate_sql(c.host, c.port, c.database, c.username, c.password, c.sslmode, sql)
 
 def _check_table_accessible(c: "ConnDetails", schema: str, table: str):
     if c.conn_type == "kyvos":
-        return _kyvos.check_table_accessible(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, table)
+        return _kyvos.check_table_accessible(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl, schema, table)
     return pg_check_table_accessible(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, table)
 
 def _get_column_types_for_tables(c: "ConnDetails", schema: str, tables: list, extra_schemas: list = None):
     if c.conn_type == "kyvos":
-        return _kyvos.get_column_types_for_tables(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, tables, extra_schemas)
+        return _kyvos.get_column_types_for_tables(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl, schema, tables, extra_schemas)
     return pg_get_column_types_for_tables(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, tables, extra_schemas)
 
 def _list_columns(c: "ConnDetails", schema: str, table: str):
     if c.conn_type == "kyvos":
-        return _kyvos.list_columns(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, table)
+        return _kyvos.list_columns(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl, schema, table)
     return pg_list_columns(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, table)
 
 

@@ -1,28 +1,25 @@
 import pyodbc
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 
-def _get_conn(host: str, port: int, database: str, username: str, password: str,
+def _get_conn(host: str, port: int, username: str, password: str,
               http_path: str = "kyvos/sql", ssl: bool = True):
-    parts = [
-        "Driver={Kyvos ODBC Driver}",
-        f"Host={host}",
-        f"Port={port}",
-        f"HttpPath={http_path}",
-        f"SSL={'1' if ssl else '0'}",
-        f"UID={username}",
-        f"PWD={password}",
-    ]
-    if database:
-        parts.insert(3, f"Database={database}")
-    conn_str = ";".join(parts)
+    conn_str = (
+        f"Driver={{Kyvos ODBC Driver}};"
+        f"Host={host};Port={port};"
+        f"HTTPPath={http_path};"
+        f"AuthMech=3;"
+        f"UID={username};PWD={password};"
+        f"SSL={'1' if ssl else '0'};"
+        f"Locale=en-US"
+    )
     return pyodbc.connect(conn_str, timeout=10)
 
 
-def test_connection(host: str, port: int, database: str, username: str, password: str,
+def test_connection(host: str, port: int, username: str, password: str,
                     http_path: str = "kyvos/sql", ssl: bool = True) -> Dict:
     try:
-        conn = _get_conn(host, port, database, username, password, http_path, ssl)
+        conn = _get_conn(host, port, username, password, http_path, ssl)
         cursor = conn.cursor()
         cursor.execute("SELECT 1")
         cursor.fetchone()
@@ -32,9 +29,9 @@ def test_connection(host: str, port: int, database: str, username: str, password
         return {"success": False, "message": str(e)}
 
 
-def list_schemas(host: str, port: int, database: str, username: str, password: str,
+def list_schemas(host: str, port: int, username: str, password: str,
                  http_path: str = "kyvos/sql", ssl: bool = True) -> List[str]:
-    conn = _get_conn(host, port, database, username, password, http_path, ssl)
+    conn = _get_conn(host, port, username, password, http_path, ssl)
     try:
         cursor = conn.cursor()
         schemas: set = set()
@@ -47,9 +44,9 @@ def list_schemas(host: str, port: int, database: str, username: str, password: s
         conn.close()
 
 
-def list_tables(host: str, port: int, database: str, username: str, password: str,
+def list_tables(host: str, port: int, username: str, password: str,
                 http_path: str, ssl: bool, schema: str) -> List[Dict]:
-    conn = _get_conn(host, port, database, username, password, http_path, ssl)
+    conn = _get_conn(host, port, username, password, http_path, ssl)
     try:
         cursor = conn.cursor()
         tables = []
@@ -61,9 +58,9 @@ def list_tables(host: str, port: int, database: str, username: str, password: st
         conn.close()
 
 
-def validate_sql(host: str, port: int, database: str, username: str, password: str,
+def validate_sql(host: str, port: int, username: str, password: str,
                  http_path: str, ssl: bool, sql: str) -> Dict:
-    conn = _get_conn(host, port, database, username, password, http_path, ssl)
+    conn = _get_conn(host, port, username, password, http_path, ssl)
     try:
         cursor = conn.cursor()
         clean_sql = sql.rstrip().rstrip(";")
@@ -76,10 +73,10 @@ def validate_sql(host: str, port: int, database: str, username: str, password: s
         conn.close()
 
 
-def check_table_accessible(host: str, port: int, database: str, username: str, password: str,
+def check_table_accessible(host: str, port: int, username: str, password: str,
                             http_path: str, ssl: bool, schema: str, table: str) -> Dict:
     try:
-        conn = _get_conn(host, port, database, username, password, http_path, ssl)
+        conn = _get_conn(host, port, username, password, http_path, ssl)
         cursor = conn.cursor()
         cursor.execute(f'SELECT 1 FROM "{schema}"."{table}" LIMIT 0')
         conn.close()
@@ -89,13 +86,13 @@ def check_table_accessible(host: str, port: int, database: str, username: str, p
 
 
 def get_column_types_for_tables(
-    host: str, port: int, database: str, username: str, password: str,
+    host: str, port: int, username: str, password: str,
     http_path: str, ssl: bool, schema: str, tables: List[str],
     extra_schemas: List[str] = None,
 ) -> Dict[str, Dict[str, str]]:
     all_schemas = list({schema} | set(extra_schemas or []))
     try:
-        conn = _get_conn(host, port, database, username, password, http_path, ssl)
+        conn = _get_conn(host, port, username, password, http_path, ssl)
         try:
             cursor = conn.cursor()
             result: Dict[str, Dict[str, str]] = {}
@@ -112,9 +109,9 @@ def get_column_types_for_tables(
         return {}
 
 
-def list_columns(host: str, port: int, database: str, username: str, password: str,
+def list_columns(host: str, port: int, username: str, password: str,
                  http_path: str, ssl: bool, schema: str, table: str) -> List[Dict]:
-    conn = _get_conn(host, port, database, username, password, http_path, ssl)
+    conn = _get_conn(host, port, username, password, http_path, ssl)
     try:
         cursor = conn.cursor()
         cols = []
