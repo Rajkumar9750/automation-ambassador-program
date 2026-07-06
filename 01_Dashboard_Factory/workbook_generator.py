@@ -461,6 +461,12 @@ def generate_twbx(
             client_col_types=client_col_types or {},
         )
 
+        # Strip <extract> blocks from the TWB — these define the old hyper extract
+        # layer tied to the reference schema. Leaving them causes Tableau error
+        # 2F8B7E6C even when the .hyper files are absent, because Tableau tries to
+        # create a new extract using the stale extract-layer definitions.
+        content = re.sub(r'<extract\b[^>]*>.*?</extract>', '', content, flags=re.DOTALL)
+
         with open(twb_abs, "w", encoding="utf-8") as f:
             f.write(content)
 
