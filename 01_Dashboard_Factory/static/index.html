@@ -2163,8 +2163,18 @@ select {
     </div>
 
     <div class="card">
-      <h2>Postgres Connection</h2>
-      <p class="subtitle">Connect to the client's Postgres database. Used to browse schemas and tables for mapping.</p>
+      <h2>Database Connection</h2>
+      <p class="subtitle">Connect to the client's database. Used to browse schemas and tables for mapping.</p>
+
+      <!-- Connection type toggle -->
+      <div style="display:flex; gap:8px; margin-bottom:20px;">
+        <button id="btn-type-postgres" class="btn btn-primary" onclick="setConnType('postgres')" style="min-width:130px">
+          🐘 Postgres
+        </button>
+        <button id="btn-type-kyvos" class="btn btn-outline" onclick="setConnType('kyvos')" style="min-width:130px">
+          🔷 Kyvos ODBC
+        </button>
+      </div>
 
       <div class="form-grid">
         <div class="form-row">
@@ -2187,7 +2197,8 @@ select {
           <label>Password</label>
           <input id="db-pass" type="password" placeholder="••••••••" />
         </div>
-        <div class="form-row">
+        <!-- Postgres-only: SSL Mode -->
+        <div class="form-row" id="row-ssl">
           <label>SSL Mode</label>
           <select id="db-ssl">
             <option value="require">require</option>
@@ -2196,6 +2207,15 @@ select {
             <option value="verify-ca">verify-ca</option>
             <option value="verify-full">verify-full</option>
           </select>
+        </div>
+        <!-- Kyvos-only fields -->
+        <div class="form-row" id="row-http-path" style="display:none">
+          <label>HTTP Path</label>
+          <input id="db-http-path" type="text" value="kyvos/sql" placeholder="e.g. kyvos/sql" />
+        </div>
+        <div class="form-row" id="row-require-ssl" style="display:none">
+          <label>Require SSL</label>
+          <input id="db-require-ssl" type="checkbox" checked style="width:auto;margin-top:6px" />
         </div>
       </div>
 
@@ -2562,10 +2582,35 @@ function goStep(n) {
 // ═══════════════════════════════════════════════════════
 // STEP 1 — CLIENT & DB
 // ═══════════════════════════════════════════════════════
+
+let _connType = 'postgres';
+
+function setConnType(type) {
+  _connType = type;
+  const isKyvos = type === 'kyvos';
+  document.getElementById('btn-type-postgres').className   = isKyvos ? 'btn btn-outline' : 'btn btn-primary';
+  document.getElementById('btn-type-kyvos').className      = isKyvos ? 'btn btn-primary' : 'btn btn-outline';
+  document.getElementById('row-ssl').style.display         = isKyvos ? 'none' : '';
+  document.getElementById('row-http-path').style.display   = isKyvos ? '' : 'none';
+  document.getElementById('row-require-ssl').style.display = isKyvos ? '' : 'none';
+  // Swap default port
+  const portEl = document.getElementById('db-port');
+  if (isKyvos  && (portEl.value === '5432' || portEl.value === '')) portEl.value = '443';
+  if (!isKyvos && (portEl.value === '443'  || portEl.value === '')) portEl.value = '5432';
+  // Reset connection tested state when type changes
+  S.connTested = false;
+  document.getElementById('btn-step1-next').disabled = true;
+  showConnStatus('');
+}
+
 async function testConnection() {
   const conn = getConnForm();
-  if (!conn.host || !conn.database || !conn.username) {
-    showConnStatus('<span class="alert alert-warn" style="display:inline-flex">⚠️ Fill in host, database, and username first</span>');
+  const isKyvos = conn.conn_type === 'kyvos';
+  if (!conn.host || !conn.username || (!isKyvos && !conn.database)) {
+    const msg = isKyvos
+      ? '⚠️ Fill in server, username, and password first'
+      : '⚠️ Fill in host, database, and username first';
+    showConnStatus(`<span class="alert alert-warn" style="display:inline-flex">${msg}</span>`);
     return;
   }
   const btn = document.getElementById('btn-test');
@@ -2630,13 +2675,17 @@ async function loadSchemasAndGoStep2() {
 }
 
 function getConnForm() {
+  const isKyvos = _connType === 'kyvos';
   return {
-    host:     document.getElementById('db-host').value.trim(),
-    port:     parseInt(document.getElementById('db-port').value) || 5432,
-    database: document.getElementById('db-name').value.trim(),
-    username: document.getElementById('db-user').value.trim(),
-    password: document.getElementById('db-pass').value,
-    sslmode:  document.getElementById('db-ssl').value,
+    host:        document.getElementById('db-host').value.trim(),
+    port:        parseInt(document.getElementById('db-port').value) || (isKyvos ? 443 : 5432),
+    database:    document.getElementById('db-name').value.trim(),
+    username:    document.getElementById('db-user').value.trim(),
+    password:    document.getElementById('db-pass').value,
+    sslmode:     document.getElementById('db-ssl').value,
+    conn_type:   _connType,
+    http_path:   (document.getElementById('db-http-path') || {value: 'kyvos/sql'}).value.trim() || 'kyvos/sql',
+    require_ssl: (document.getElementById('db-require-ssl') || {checked: true}).checked,
   };
 }
 

@@ -1283,25 +1283,44 @@ def _apply_all_modifications(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _replace_postgres_connections(content: str, old_conn: Dict, new_conn: Dict) -> str:
-    old_server = old_conn.get("server", "")
+    old_server  = old_conn.get("server", "")
+    conn_type   = new_conn.get("conn_type", "postgres")
+    is_kyvos    = conn_type == "kyvos"
 
     def replace_attrs(m: re.Match) -> str:
         tag = m.group(0)
         if old_server and f"server='{old_server}'" not in tag:
             return tag
-        new_host = new_conn.get("host", "")
-        new_db   = new_conn.get("database", "")
-        new_user = new_conn.get("username", "")
-        new_port = str(new_conn.get("port", 5432))
-        new_ssl  = new_conn.get("sslmode", "require")
+        new_host      = new_conn.get("host", "")
+        new_db        = new_conn.get("database", "")
+        new_user      = new_conn.get("username", "")
+        new_port      = str(new_conn.get("port", 443 if is_kyvos else 5432))
+        new_http_path = new_conn.get("http_path", "kyvos/sql")
+        new_ssl_bool  = new_conn.get("require_ssl", True)
         if new_host:
             tag = re.sub(r"server='[^']*'",   f"server='{new_host}'",  tag)
         if new_db:
             tag = re.sub(r"dbname='[^']*'",   f"dbname='{new_db}'",    tag)
         if new_user:
             tag = re.sub(r"username='[^']*'", f"username='{new_user}'", tag)
-        tag = re.sub(r"port='[^']*'",    f"port='{new_port}'",   tag)
-        tag = re.sub(r"sslmode='[^']*'", f"sslmode='{new_ssl}'", tag)
+        tag = re.sub(r"port='[^']*'", f"port='{new_port}'", tag)
+        if is_kyvos:
+            # Kyvos uses http-path and ssl boolean — remove postgres sslmode
+            tag = re.sub(r"\s+sslmode='[^']*'", "", tag)
+            ssl_str = "true" if new_ssl_bool else "false"
+            if "http-path='" in tag:
+                tag = re.sub(r"http-path='[^']*'", f"http-path='{new_http_path}'", tag)
+            else:
+                tag = re.sub(r"\s*/>$", f" http-path='{new_http_path}'/>", tag)
+            if "ssl='" in tag:
+                tag = re.sub(r"ssl='[^']*'", f"ssl='{ssl_str}'", tag)
+            else:
+                tag = re.sub(r"\s*/>$", f" ssl='{ssl_str}'/>", tag)
+            if "authentication-type='" not in tag:
+                tag = re.sub(r"\s*/>$", " authentication-type='username-password'/>", tag)
+        else:
+            new_ssl = new_conn.get("sslmode", "require")
+            tag = re.sub(r"sslmode='[^']*'", f"sslmode='{new_ssl}'", tag)
         new_pass = new_conn.get("password", "")
         if new_pass:
             escaped_pass = _escape_conn_attr(new_pass)
@@ -1315,13 +1334,19 @@ def _replace_postgres_connections(content: str, old_conn: Dict, new_conn: Dict) 
     pattern = re.compile(
         r"<connection\s[^>]*class='(?:postgres|kyvos|sqlserver|mysql|redshift|snowflake|databricks|oracle|teradata)'[^>]*/>"
     )
-    # Also rewrite the class to postgres for the new connection
+
     def replace_and_reclass(m: re.Match) -> str:
         tag = replace_attrs(m)
-        tag = re.sub(r"class='[^']*'", "class='postgres'", tag)
-        # Remove kyvos/non-postgres-specific attributes that don't belong in a postgres tag
-        tag = re.sub(r"\s+(?:service|v-krb\w*|authentication-type|odbc-connect-string-extras)='[^']*'", "", tag)
+        if is_kyvos:
+            tag = re.sub(r"class='[^']*'", "class='kyvos'", tag)
+            # Remove postgres-only attributes that don't belong in a kyvos tag
+            tag = re.sub(r"\s+(?:service|v-krb\w*|sslmode|odbc-connect-string-extras)='[^']*'", "", tag)
+        else:
+            tag = re.sub(r"class='[^']*'", "class='postgres'", tag)
+            # Remove kyvos-specific attributes that don't belong in a postgres tag
+            tag = re.sub(r"\s+(?:service|v-krb\w*|authentication-type|odbc-connect-string-extras|http-path|ssl)='[^']*'", "", tag)
         return tag
+
     return pattern.sub(replace_and_reclass, content)
 
 
@@ -1329,15 +1354,19 @@ def _replace_remaining_postgres_connections(
     content: str, already_replaced: set, new_conn: Dict
 ) -> Tuple[str, List[Dict]]:
     issues: List[Dict] = []
-    new_host = new_conn.get("host", "")
+    new_host  = new_conn.get("host", "")
     if not new_host:
         return content, issues
 
-    new_db   = new_conn.get("database", "")
-    new_user = new_conn.get("username", "")
-    new_port = str(new_conn.get("port", 5432))
-    new_ssl  = new_conn.get("sslmode", "require")
-    new_pass = new_conn.get("password", "")
+    conn_type     = new_conn.get("conn_type", "postgres")
+    is_kyvos      = conn_type == "kyvos"
+    new_db        = new_conn.get("database", "")
+    new_user      = new_conn.get("username", "")
+    new_port      = str(new_conn.get("port", 443 if is_kyvos else 5432))
+    new_ssl       = new_conn.get("sslmode", "require")
+    new_http_path = new_conn.get("http_path", "kyvos/sql")
+    new_ssl_bool  = new_conn.get("require_ssl", True)
+    new_pass      = new_conn.get("password", "")
     fixed_servers: set = set()
 
     def replace_attrs(m: re.Match) -> str:
@@ -1354,8 +1383,22 @@ def _replace_remaining_postgres_connections(
             tag = re.sub(r"dbname='[^']*'",   f"dbname='{new_db}'",   tag)
         if new_user:
             tag = re.sub(r"username='[^']*'", f"username='{new_user}'", tag)
-        tag = re.sub(r"port='[^']*'",     f"port='{new_port}'",   tag)
-        tag = re.sub(r"sslmode='[^']*'",  f"sslmode='{new_ssl}'", tag)
+        tag = re.sub(r"port='[^']*'", f"port='{new_port}'", tag)
+        if is_kyvos:
+            tag = re.sub(r"\s+sslmode='[^']*'", "", tag)
+            ssl_str = "true" if new_ssl_bool else "false"
+            if "http-path='" in tag:
+                tag = re.sub(r"http-path='[^']*'", f"http-path='{new_http_path}'", tag)
+            else:
+                tag = re.sub(r"\s*/>$", f" http-path='{new_http_path}'/>", tag)
+            if "ssl='" in tag:
+                tag = re.sub(r"ssl='[^']*'", f"ssl='{ssl_str}'", tag)
+            else:
+                tag = re.sub(r"\s*/>$", f" ssl='{ssl_str}'/>", tag)
+            if "authentication-type='" not in tag:
+                tag = re.sub(r"\s*/>$", " authentication-type='username-password'/>", tag)
+        else:
+            tag = re.sub(r"sslmode='[^']*'", f"sslmode='{new_ssl}'", tag)
         if new_pass:
             ep = _escape_conn_attr(new_pass)
             if "password='" in tag:
@@ -1367,11 +1410,17 @@ def _replace_remaining_postgres_connections(
     pattern = re.compile(
         r"<connection\s[^>]*class='(?:postgres|kyvos|sqlserver|mysql|redshift|snowflake|databricks|oracle|teradata)'[^>]*/>"
     )
+
     def replace_and_reclass(m: re.Match) -> str:
         tag = replace_attrs(m)
-        tag = re.sub(r"class='[^']*'", "class='postgres'", tag)
-        tag = re.sub(r"\s+(?:service|v-krb\w*|authentication-type|odbc-connect-string-extras)='[^']*'", "", tag)
+        if is_kyvos:
+            tag = re.sub(r"class='[^']*'", "class='kyvos'", tag)
+            tag = re.sub(r"\s+(?:service|v-krb\w*|sslmode|odbc-connect-string-extras)='[^']*'", "", tag)
+        else:
+            tag = re.sub(r"class='[^']*'", "class='postgres'", tag)
+            tag = re.sub(r"\s+(?:service|v-krb\w*|authentication-type|odbc-connect-string-extras)='[^']*'", "", tag)
         return tag
+
     content = pattern.sub(replace_and_reclass, content)
 
     for old_server in fixed_servers:

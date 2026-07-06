@@ -15,7 +15,16 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
 
-from postgres_connector import check_table_accessible, get_column_types_for_tables, list_columns, list_schemas, list_tables, test_connection, validate_sql
+from postgres_connector import (
+    check_table_accessible as pg_check_table_accessible,
+    get_column_types_for_tables as pg_get_column_types_for_tables,
+    list_columns as pg_list_columns,
+    list_schemas as pg_list_schemas,
+    list_tables as pg_list_tables,
+    test_connection as pg_test_connection,
+    validate_sql as pg_validate_sql,
+)
+import kyvos_connector as _kyvos
 from workbook_generator import generate_twbx, _pg_to_tableau_type
 from workbook_parser import parse_column_types_from_metadata, parse_join_tree, parse_twbx
 
@@ -45,10 +54,53 @@ SESSIONS: Dict[str, Dict] = {}
 class ConnDetails(BaseModel):
     host: str
     port: int = 5432
-    database: str
+    database: str = ""
     username: str
     password: str
     sslmode: str = "require"
+    conn_type: str = "postgres"        # "postgres" | "kyvos"
+    http_path: str = "kyvos/sql"       # Kyvos: HTTP path (e.g. kyvos/sql)
+    require_ssl: bool = True           # Kyvos: Require SSL checkbox
+
+
+# ---------------------------------------------------------------------------
+# Connector routing helpers
+# ---------------------------------------------------------------------------
+
+def _test_connection(c: "ConnDetails"):
+    if c.conn_type == "kyvos":
+        return _kyvos.test_connection(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl)
+    return pg_test_connection(c.host, c.port, c.database, c.username, c.password, c.sslmode)
+
+def _list_schemas(c: "ConnDetails"):
+    if c.conn_type == "kyvos":
+        return _kyvos.list_schemas(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl)
+    return pg_list_schemas(c.host, c.port, c.database, c.username, c.password, c.sslmode)
+
+def _list_tables(c: "ConnDetails", schema: str):
+    if c.conn_type == "kyvos":
+        return _kyvos.list_tables(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema)
+    return pg_list_tables(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema)
+
+def _validate_sql(c: "ConnDetails", sql: str):
+    if c.conn_type == "kyvos":
+        return _kyvos.validate_sql(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, sql)
+    return pg_validate_sql(c.host, c.port, c.database, c.username, c.password, c.sslmode, sql)
+
+def _check_table_accessible(c: "ConnDetails", schema: str, table: str):
+    if c.conn_type == "kyvos":
+        return _kyvos.check_table_accessible(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, table)
+    return pg_check_table_accessible(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, table)
+
+def _get_column_types_for_tables(c: "ConnDetails", schema: str, tables: list, extra_schemas: list = None):
+    if c.conn_type == "kyvos":
+        return _kyvos.get_column_types_for_tables(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, tables, extra_schemas)
+    return pg_get_column_types_for_tables(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, tables, extra_schemas)
+
+def _list_columns(c: "ConnDetails", schema: str, table: str):
+    if c.conn_type == "kyvos":
+        return _kyvos.list_columns(c.host, c.port, c.database, c.username, c.password, c.http_path, c.require_ssl, schema, table)
+    return pg_list_columns(c.host, c.port, c.database, c.username, c.password, c.sslmode, schema, table)
 
 
 class TableMapping(BaseModel):
@@ -280,13 +332,13 @@ async def fetch_status(job_id: str):
 
 @app.post("/api/db/test")
 async def db_test(conn: ConnDetails):
-    return test_connection(conn.host, conn.port, conn.database, conn.username, conn.password, conn.sslmode)
+    return _test_connection(conn)
 
 
 @app.post("/api/db/schemas")
 async def db_schemas(conn: ConnDetails):
     try:
-        schemas = list_schemas(conn.host, conn.port, conn.database, conn.username, conn.password, conn.sslmode)
+        schemas = _list_schemas(conn)
         return {"schemas": schemas}
     except Exception as e:
         raise HTTPException(400, detail=str(e))
@@ -295,7 +347,7 @@ async def db_schemas(conn: ConnDetails):
 @app.post("/api/db/tables/{schema}")
 async def db_tables(schema: str, conn: ConnDetails):
     try:
-        tables = list_tables(conn.host, conn.port, conn.database, conn.username, conn.password, conn.sslmode, schema)
+        tables = _list_tables(conn, schema)
         return {"tables": tables}
     except Exception as e:
         raise HTTPException(400, detail=str(e))
@@ -317,21 +369,15 @@ def _normalize_tableau_sql(sql: str) -> str:
 @app.post("/api/db/validate-sql")
 async def db_validate_sql(req: ValidateSQLRequest):
     try:
-        return validate_sql(
-            req.connection.host, req.connection.port, req.connection.database,
-            req.connection.username, req.connection.password, req.connection.sslmode,
-            _normalize_tableau_sql(req.sql),
-        )
+        return _validate_sql(req.connection, _normalize_tableau_sql(req.sql))
     except Exception as e:
         return {"valid": False, "error": str(e), "columns": [], "column_count": 0}
-
-
 
 
 @app.post("/api/db/columns/{schema}/{table}")
 async def db_columns(schema: str, table: str, conn: ConnDetails):
     try:
-        cols = list_columns(conn.host, conn.port, conn.database, conn.username, conn.password, conn.sslmode, schema, table)
+        cols = _list_columns(conn, schema, table)
         return {"columns": cols}
     except Exception as e:
         raise HTTPException(400, detail=str(e))
@@ -368,7 +414,7 @@ async def preflight_check(req: PreflightRequest):
                     sql = _re.sub(rf'\b{_re.escape(m.old_schema)}\.', f'{m.new_schema}.', sql)
 
             if sql:
-                res = validate_sql(c.host, c.port, c.database, c.username, c.password, c.sslmode, sql)
+                res = _validate_sql(c, sql)
                 if not res["valid"]:
                     issues.append({
                         "index": i,
@@ -380,14 +426,11 @@ async def preflight_check(req: PreflightRequest):
                         "fix": "Open the SQL editor for this mapping and correct the query.",
                     })
         else:
-            res = check_table_accessible(
-                c.host, c.port, c.database, c.username, c.password, c.sslmode,
-                m.new_schema, m.new_table,
-            )
+            res = _check_table_accessible(c, m.new_schema, m.new_table)
             if not res["accessible"]:
                 similar: list = []
                 try:
-                    all_tables = list_tables(c.host, c.port, c.database, c.username, c.password, c.sslmode, m.new_schema)
+                    all_tables = _list_tables(c, m.new_schema)
                     nt = m.new_table.lower()
                     similar = [
                         t["name"] for t in all_tables
@@ -481,8 +524,8 @@ async def generate(req: GenerateRequest):
                 new_tables  = [m.new_table  for m in non_sql_mappings]
                 all_schemas = list({m.new_schema for m in non_sql_mappings if m.new_schema})
                 c = req.connection
-                client_col_types = get_column_types_for_tables(
-                    c.host, c.port, c.database, c.username, c.password, c.sslmode,
+                client_col_types = _get_column_types_for_tables(
+                    c,
                     all_schemas[0] if all_schemas else "",
                     new_tables,
                     extra_schemas=all_schemas[1:],
