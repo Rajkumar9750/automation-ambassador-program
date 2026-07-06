@@ -3830,6 +3830,10 @@ function _renderRelationshipDsHtml(ds) {
   const childNames  = [...new Set(joins.map(j => j.right_table))];
   if (!childNames.length) childNames.push(...tables.slice(1).map(t => t.name));
 
+  // Build map: relation name → db table name (for toggleRemoveTable)
+  const nameToTable = {};
+  tables.forEach(t => { nameToTable[t.name] = t.table || t.name; });
+
   const CHILD_H = 42, GAP = 10;
   const totalH  = Math.max(childNames.length * (CHILD_H + GAP) - GAP, CHILD_H);
   const midY    = totalH / 2;
@@ -3859,9 +3863,17 @@ function _renderRelationshipDsHtml(ds) {
         </div>
         <svg width="${svgW}" height="${totalH}" style="flex-shrink:0">${paths}</svg>
         <div class="dm-rel-children">
-          ${childNames.map(n => `
-            <div class="dm-rel-child-box" title="${escHtml(n)}">${escHtml(n.length>30?n.slice(0,30)+'…':n)}</div>
-          `).join('')}
+          ${childNames.map(n => {
+            const tbl = nameToTable[n] || n;
+            const isRemoved = S.removedTables.has(tbl);
+            const label = n.length > 26 ? n.slice(0, 26) + '…' : n;
+            const removeLbl = isRemoved ? '↩' : '×';
+            const removeTip = isRemoved ? 'Restore table' : 'Remove from data model';
+            return `<div class="dm-rel-child-box${isRemoved ? ' removed' : ''}" title="${escHtml(n)}" style="position:relative;padding-right:26px">
+              <span style="${isRemoved ? 'text-decoration:line-through;opacity:.5' : ''}">${escHtml(label)}</span>
+              <button class="dm-remove-btn" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tbl)}')" style="top:50%;transform:translateY(-50%)">${removeLbl}</button>
+            </div>`;
+          }).join('')}
         </div>
       </div>
     </div>`;
