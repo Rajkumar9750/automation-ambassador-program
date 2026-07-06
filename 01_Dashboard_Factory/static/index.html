@@ -3229,8 +3229,12 @@ function renderRepairReport(log) {
     const extractIcon = (item.type === 'extract' && sev === 'fixed') ? '📦' : icon;
 
     // Special render for removed calculated fields — show formula table
-    if (item.type === 'removed_calc_fields' && item.affected_fields && item.affected_fields.length) {
-      const rows = item.affected_fields.map(f => `
+    const removedFields = item.affected_fields || item.stripped_fields || [];
+    if ((item.type === 'removed_calc_fields' || item.type === 'spatial_fields_stripped') && removedFields.length) {
+      // Deduplicate by field name so each field only shows once
+      const seen = new Set();
+      const uniqueFields = removedFields.filter(f => { if (seen.has(f.field)) return false; seen.add(f.field); return true; });
+      const rows = uniqueFields.map(f => `
         <tr>
           <td style="padding:6px 10px;font-weight:600;white-space:nowrap;color:#92400e;vertical-align:top">${escHtml(f.field)}</td>
           <td style="padding:6px 10px;font-family:monospace;font-size:11px;color:#1e3a5f;word-break:break-all">${escHtml(f.formula || '')}</td>
