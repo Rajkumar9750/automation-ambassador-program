@@ -1235,8 +1235,12 @@ def _apply_all_modifications(
         type_issues = _report_type_preserved(type_fixes)
         repair_log.extend(type_issues)
 
-    # Fix lat/lon columns typed as string — MAKEPOINT requires real numbers and
-    # Tableau throws error 2F8B7E6C on extract if these are string-typed.
+    # Strip MAKEPOINT/MAKELINE spatial fields — they cause error 2F8B7E6C on extract.
+    # Done before geo-type fix since the columns may be gone after this step.
+    content, spatial_issues = _strip_spatial_calc_fields(content)
+    repair_log.extend(spatial_issues)
+
+    # Fix remaining lat/lon columns typed as string → real (for any other spatial usage).
     content, geo_issues = _fix_geo_column_types(content)
     repair_log.extend(geo_issues)
 
@@ -1581,6 +1585,69 @@ def _scan_for_remaining_issues(
     return issues
 
 
+def _strip_spatial_calc_fields(content: str) -> Tuple[str, List[Dict]]:
+    """
+    Remove MAKEPOINT / MAKELINE / BUFFER / DISTANCE calculated fields.
+
+    These spatial functions fail with Tableau error 2F8B7E6C when creating
+    an extract from a PostgreSQL federated datasource.  The fields are logged
+    with their full formulas so the user can recreate them manually in Tableau
+    Desktop after the extract is built.
+    """
+    SPATIAL_FNS = ['MAKEPOINT', 'MAKELINE', 'BUFFER', 'DISTANCE', 'MAKECIRCLE']
+
+    col_full    = re.compile(r'<column\b([^>]*)>(.*?)</column>', re.DOTALL)
+    calc_pat    = re.compile(r"formula='([^']*)'")
+    cap_pat     = re.compile(r"caption='([^']*)'")
+    name_pat    = re.compile(r"name='([^']*)'")
+
+    stripped: List[Dict] = []
+    bad_names: set = set()
+
+    for m in col_full.finditer(content):
+        attrs   = m.group(1)
+        body    = m.group(2)
+        formula_m = calc_pat.search(body)
+        if not formula_m:
+            continue
+        formula = formula_m.group(1)
+        upper   = formula.upper()
+        hits    = [fn for fn in SPATIAL_FNS if fn + '(' in upper]
+        if not hits:
+            continue
+        cap  = cap_pat.search(attrs)
+        name = name_pat.search(attrs)
+        label = (cap.group(1) if cap else None) or (name.group(1) if name else 'Unknown')
+        if name:
+            bad_names.add(name.group(1))
+        stripped.append({
+            "field":   label,
+            "name":    name.group(1) if name else '',
+            "formula": formula,
+            "functions": hits,
+        })
+
+    if bad_names:
+        content = _strip_columns_by_name(content, bad_names)
+
+    issues = []
+    if stripped:
+        issues.append({
+            "type":            "spatial_fields_stripped",
+            "severity":        "warning",
+            "title":           f"{len(stripped)} spatial calculated field(s) removed to allow extract creation",
+            "description":     (
+                "The following MAKEPOINT / MAKELINE fields were automatically removed. "
+                "They work on a live connection but prevent extract creation (Tableau error 2F8B7E6C). "
+                "You can recreate them manually in Tableau Desktop after building the extract."
+            ),
+            "fix":             "Recreate these fields in Tableau Desktop: Worksheet menu → Analysis → Create Calculated Field.",
+            "stripped_fields": stripped,
+        })
+
+    return content, issues
+
+
 def _fix_geo_column_types(content: str) -> Tuple[str, List[Dict]]:
     """
     Force latitude/longitude columns to datatype='real'.
@@ -1638,9 +1705,13 @@ def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
     Returns (cleaned_content, issues).  The cleaned content has the offending
     <column type='calc'> blocks stripped so extract creation succeeds.
     """
-    # Functions that are live-connection-only and break extract creation
+    # Functions that cause extract failure in federated Postgres datasources.
+    # RAWSQL family: live-only passthrough — never works in extracts.
+    # Spatial functions (MAKEPOINT/MAKELINE etc.): fail when lat/lon columns
+    # have type conflicts in a federated source, confirmed by Tableau error 2F8B7E6C.
     LIVE_ONLY = [
         "RAWSQL", "RAWSQLAGG", "RAWSQLBOOL", "RAWSQLREAL", "RAWSQLINT",
+        "MAKEPOINT", "MAKELINE", "MAKECIRCLE", "BUFFER", "DISTANCE",
     ]
 
     col_pattern  = re.compile(r"<column\b([^>]*)>(.*?)</column>", re.DOTALL)
@@ -1674,21 +1745,23 @@ def _scan_extract_incompatible_fields(content: str) -> List[Dict]:
     issues = []
     if bad_fields:
         field_list = ", ".join(f['field'] for f in bad_fields)
+        rawsql_fields   = [f for f in bad_fields if any(fn in ["RAWSQL","RAWSQLAGG","RAWSQLBOOL","RAWSQLREAL","RAWSQLINT"] for fn in f['functions'])]
+        spatial_fields  = [f for f in bad_fields if any(fn in ["MAKEPOINT","MAKELINE","MAKECIRCLE","BUFFER","DISTANCE"] for fn in f['functions'])]
         issues.append({
-            "type":     "extract_incompatible_formula",
-            "severity": "fixed",
-            "title":    f"Removed {len(bad_fields)} extract-incompatible calculated field(s)",
+            "type":     "removed_calc_fields",
+            "severity": "warning",
+            "title":    f"Removed {len(bad_fields)} calculated field(s) that block extract creation",
             "description": (
-                f"The following calculated fields used RAWSQL or similar live-only functions "
-                f"that cause Tableau error 2F8B7E6C when creating an extract: {field_list}. "
-                f"They have been automatically removed from the generated workbook."
+                f"The following calculated fields were automatically removed because they cause "
+                f"Tableau error 2F8B7E6C ('Unable to create extract'): {field_list}."
             ),
             "fix": (
-                "These fields were stripped automatically. The workbook will now support "
-                "extract creation. If you need these calculations, recreate them in Tableau "
-                "Desktop using extract-compatible functions."
+                "Recreate these fields in Tableau Desktop after opening the workbook: "
+                "Analysis menu → Create Calculated Field. The original formulas are shown below."
             ),
             "affected_fields": bad_fields,
+            "rawsql_count":  len(rawsql_fields),
+            "spatial_count": len(spatial_fields),
         })
 
     return content, issues, bad_names

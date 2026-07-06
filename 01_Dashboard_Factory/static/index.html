@@ -3225,9 +3225,45 @@ function renderRepairReport(log) {
   function renderItem(item) {
     const sev  = item.severity || 'warning';
     const icon = iconMap[sev] || '⚠️';
-    // Extract success items get a distinct blue style
     const cls = (item.type === 'extract' && sev === 'fixed') ? 'extract-ok' : escHtml(sev);
     const extractIcon = (item.type === 'extract' && sev === 'fixed') ? '📦' : icon;
+
+    // Special render for removed calculated fields — show formula table
+    if (item.type === 'removed_calc_fields' && item.affected_fields && item.affected_fields.length) {
+      const rows = item.affected_fields.map(f => `
+        <tr>
+          <td style="padding:6px 10px;font-weight:600;white-space:nowrap;color:#92400e;vertical-align:top">${escHtml(f.field)}</td>
+          <td style="padding:6px 10px;font-family:monospace;font-size:11px;color:#1e3a5f;word-break:break-all">${escHtml(f.formula || '')}</td>
+          <td style="padding:6px 10px;white-space:nowrap;font-size:11px;color:#6b7280;vertical-align:top">${escHtml((f.functions||[]).join(', '))}</td>
+        </tr>`).join('');
+      return `
+        <div class="repair-item warning" style="flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            <div class="repair-icon">⚠️</div>
+            <div class="repair-body">
+              <div class="repair-title">${escHtml(item.title || item.type)}</div>
+              ${item.description ? `<div class="repair-desc">${escHtml(item.description)}</div>` : ''}
+            </div>
+          </div>
+          <div style="background:#fff;border:1px solid #f9d27e;border-radius:6px;overflow:hidden">
+            <div style="background:#fffbeb;padding:6px 12px;font-size:11px;font-weight:700;color:#92400e;border-bottom:1px solid #f9d27e;letter-spacing:.4px">
+              REMOVED FIELDS — Recreate these in Tableau Desktop: Analysis → Create Calculated Field
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead>
+                <tr style="background:#fef3c7">
+                  <th style="padding:5px 10px;text-align:left;color:#78350f;font-size:11px">Field Name</th>
+                  <th style="padding:5px 10px;text-align:left;color:#78350f;font-size:11px">Original Formula</th>
+                  <th style="padding:5px 10px;text-align:left;color:#78350f;font-size:11px">Reason Removed</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          ${item.fix ? `<div class="repair-fix" style="padding-left:0">↳ ${escHtml(item.fix)}</div>` : ''}
+        </div>`;
+    }
+
     return `
       <div class="repair-item ${cls}">
         <div class="repair-icon">${extractIcon}</div>
