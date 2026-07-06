@@ -310,7 +310,7 @@ def parse_join_tree(content: str) -> Dict[str, Any]:
                 break
 
         # Object-graph relationship model (newer Tableau workbooks)
-        _collect_object_graph(ds, tables, joins, seen_tables, seen_join_keys)
+        _collect_object_graph(ds, tables, joins, seen_tables, seen_join_keys, pg_conns)
 
         if tables:
             result.append({
@@ -420,6 +420,7 @@ def _collect_object_graph(
     joins: List[Dict],
     seen_tables: set,
     seen_join_keys: set,
+    pg_conns: set = None,
 ) -> None:
     """Parse tables and joins from Tableau's newer object-graph relationship model."""
     og_tag = "_.fcp.ObjectModelEncapsulateLegacy.true...object-graph"
@@ -452,13 +453,13 @@ def _collect_object_graph(
                                     "caption": caption, "is_compound": False,
                                 }
                     elif rel is not None and rel.get("type") == "join":
-                        # Compound object — internal join wrapped in a named object.
-                        # Use the caption as the display name; mark as compound so
-                        # the frontend can render it as a tree hub.
-                        obj_map[obj_id] = {
-                            "name": obj_id, "schema": "", "table": caption or obj_id,
-                            "caption": caption, "is_compound": True,
-                        }
+                        # Compound object — expand its physical sub-tables so they
+                        # appear individually in the mapping UI and can be removed.
+                        if pg_conns is not None:
+                            _collect_classic_joins(
+                                rel, pg_conns, tables, joins, seen_tables, seen_join_keys
+                            )
+                        # Skip adding the compound wrapper itself — sub-tables are what matter.
                     else:
                         # No live relation (e.g. extract-only object) — still add
                         # to obj_map so relationships can reference it.
