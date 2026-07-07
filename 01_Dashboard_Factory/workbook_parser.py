@@ -90,29 +90,38 @@ def _parse_datasources(content: str) -> List[Dict]:
 
         # Collect SQL named-connections (postgres, kyvos, etc.)
         pg_conns: Dict[str, Dict] = {}
+        file_conns: Dict[str, Dict] = {}  # Excel / CSV / other file connections
         nc_container = live_conn.find("named-connections")
         if nc_container is not None:
             for nc in nc_container.findall("named-connection"):
                 nc_name = nc.get("name", "")
                 inner = nc.find("connection")
-                if inner is not None and inner.get("class") in _SQL_CONNECTION_CLASSES:
-                    pg_conns[nc_name] = {
-                        "named_connection_name": nc_name,
-                        "caption": nc.get("caption", ""),
-                        "server": inner.get("server", ""),
-                        "dbname": inner.get("dbname", inner.get("schema", "")),
-                        "port": inner.get("port", "5432"),
-                        "username": inner.get("username", ""),
-                        "sslmode": inner.get("sslmode", "require"),
-                        "connection_class": inner.get("class", "postgres"),
-                    }
+                if inner is not None:
+                    conn_class = inner.get("class", "")
+                    if conn_class in _SQL_CONNECTION_CLASSES:
+                        pg_conns[nc_name] = {
+                            "named_connection_name": nc_name,
+                            "caption": nc.get("caption", ""),
+                            "server": inner.get("server", ""),
+                            "dbname": inner.get("dbname", inner.get("schema", "")),
+                            "port": inner.get("port", "5432"),
+                            "username": inner.get("username", ""),
+                            "sslmode": inner.get("sslmode", "require"),
+                            "connection_class": conn_class,
+                        }
+                    elif conn_class in ("excel-direct", "textscan", "text", "csv", "excel"):
+                        file_conns[nc_name] = {
+                            "named_connection_name": nc_name,
+                            "connection_class": conn_class,
+                            "filename": inner.get("filename", inner.get("directory", nc.get("caption", nc_name))),
+                        }
 
         if not pg_conns:
             continue
 
         # Recursively collect all Postgres table / custom-SQL relations
         pg_tables: List[Dict] = []
-        _collect_pg_relations(live_conn, pg_conns, pg_tables)
+        _collect_pg_relations(live_conn, pg_conns, pg_tables, file_conns)
 
         # Deduplicate by (schema, table) so joins don't double-count shared tables
         seen = set()
@@ -199,21 +208,12 @@ def parse_column_types_from_metadata(content: str) -> Dict[str, Dict[str, str]]:
     return result
 
 
-def _collect_pg_relations(el: ET.Element, pg_conns: Dict, result: List) -> None:
+def _collect_pg_relations(el: ET.Element, pg_conns: Dict, result: List, file_conns: Dict = None) -> None:
     """
     Recursively walk XML child <relation> elements and collect all Postgres-connected
-    table relations and custom-SQL relations.
-
-    Handles:
-      - type='table'      → direct table reference    [schema].[table]
-      - type='text'       → custom SQL (schema in SQL text replaced at generate time)
-      - type='collection' → flat wrapper; recurse into children
-      - type='join'       → nested join tree; recurse into children
-      - (direct child)    → single table directly under <connection class='federated'>
-
-    Also handles Tableau FCP-prefixed tags (e.g. _.fcp.ObjectModelEncapsulateLegacy.false...relation)
-    which newer workbooks emit instead of plain <relation> elements.
+    table relations, custom-SQL relations, and file (Excel/CSV) relations.
     """
+    file_conns = file_conns or {}
     for child in el:
         if child.tag != "relation" and not child.tag.endswith("...relation"):
             continue
@@ -233,9 +233,27 @@ def _collect_pg_relations(el: ET.Element, pg_conns: Dict, result: List) -> None:
                         "schema":          parts[0],
                         "table":           parts[1],
                         "is_custom_sql":   False,
+                        "is_file":         False,
                         "custom_sql":      "",
                         "old_connection":  pg_conns[conn_ref],
                     })
+
+        elif rel_type == "table" and conn_ref in file_conns:
+            # Excel / CSV file table — not remappable, shown as read-only in UI
+            fc = file_conns[conn_ref]
+            name = child.get("name", fc.get("filename", conn_ref))
+            result.append({
+                "relation_name":   name,
+                "connection_ref":  conn_ref,
+                "schema":          "",
+                "table":           name,
+                "is_custom_sql":   False,
+                "is_file":         True,
+                "file_type":       fc.get("connection_class", "file"),
+                "filename":        fc.get("filename", ""),
+                "custom_sql":      "",
+                "old_connection":  {},
+            })
 
         elif rel_type == "text" and conn_ref in pg_conns:
             # Custom SQL — store full query; preview is a separate truncated field for the UI card
@@ -246,14 +264,15 @@ def _collect_pg_relations(el: ET.Element, pg_conns: Dict, result: List) -> None:
                 "schema":           pg_conns[conn_ref].get("dbname", ""),
                 "table":            child.get("name", "Custom SQL"),
                 "is_custom_sql":    True,
-                "custom_sql":       sql_text,                                           # full SQL
-                "custom_sql_preview": sql_text[:120] + ("…" if len(sql_text) > 120 else ""),  # card display
+                "is_file":          False,
+                "custom_sql":       sql_text,
+                "custom_sql_preview": sql_text[:120] + ("…" if len(sql_text) > 120 else ""),
                 "old_connection":   pg_conns[conn_ref],
             })
 
         else:
             # collection, join, or other wrapper — recurse
-            _collect_pg_relations(child, pg_conns, result)
+            _collect_pg_relations(child, pg_conns, result, file_conns)
 
 
 def parse_join_tree(content: str) -> Dict[str, Any]:
@@ -288,12 +307,17 @@ def parse_join_tree(content: str) -> Dict[str, Any]:
             continue
 
         pg_conns: set = set()
+        file_conns_jt: set = set()  # file connections for join-tree parser
         nc_container = live_conn.find("named-connections")
         if nc_container is not None:
             for nc in nc_container.findall("named-connection"):
                 inner = nc.find("connection")
-                if inner is not None and inner.get("class") in _SQL_CONNECTION_CLASSES:
-                    pg_conns.add(nc.get("name", ""))
+                if inner is not None:
+                    conn_class = inner.get("class", "")
+                    if conn_class in _SQL_CONNECTION_CLASSES:
+                        pg_conns.add(nc.get("name", ""))
+                    elif conn_class in ("excel-direct", "textscan", "text", "csv", "excel"):
+                        file_conns_jt.add(nc.get("name", ""))
 
         if not pg_conns:
             continue
@@ -306,11 +330,11 @@ def parse_join_tree(content: str) -> Dict[str, Any]:
         # Classic join tree: process first relation element only (skip FCP duplicate)
         for child in live_conn:
             if _is_rel_tag(child.tag):
-                _collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys)
+                _collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys, file_conns_jt)
                 break
 
         # Object-graph relationship model (newer Tableau workbooks)
-        _collect_object_graph(ds, tables, joins, seen_tables, seen_join_keys, pg_conns)
+        _collect_object_graph(ds, tables, joins, seen_tables, seen_join_keys, pg_conns, file_conns_jt)
 
         if tables:
             result.append({
@@ -334,24 +358,31 @@ def _collect_classic_joins(
     joins: List[Dict],
     seen_tables: set,
     seen_join_keys: set,
+    file_conns: set = None,
 ) -> List[str]:
     """Recursively collect tables and joins from a classic Tableau relation tree."""
+    file_conns = file_conns or set()
     rel_type = el.get("type", "")
     added: List[str] = []
 
     if rel_type == "table":
         conn_ref = el.get("connection", "")
-        if conn_ref not in pg_conns:
-            return added
-        table_str = el.get("table", "")
         name = el.get("name", "")
-        if table_str.startswith("[") and "].[" in table_str and name not in seen_tables:
-            inner = table_str[1:-1]
-            parts = inner.split("].[")
-            if len(parts) == 2:
-                seen_tables.add(name)
-                tables.append({"name": name, "schema": parts[0], "table": parts[1], "is_custom_sql": False})
-                added.append(name)
+        if conn_ref in pg_conns:
+            table_str = el.get("table", "")
+            if table_str.startswith("[") and "].[" in table_str and name not in seen_tables:
+                inner = table_str[1:-1]
+                parts = inner.split("].[")
+                if len(parts) == 2:
+                    seen_tables.add(name)
+                    tables.append({"name": name, "schema": parts[0], "table": parts[1],
+                                   "is_custom_sql": False, "is_file": False})
+                    added.append(name)
+        elif conn_ref in file_conns and name and name not in seen_tables:
+            seen_tables.add(name)
+            tables.append({"name": name, "schema": "", "table": name,
+                           "is_custom_sql": False, "is_file": True})
+            added.append(name)
 
     elif rel_type == "text":
         conn_ref = el.get("connection", "")
@@ -362,7 +393,7 @@ def _collect_classic_joins(
             sql_text = (el.text or "").strip()
             seen_tables.add(name)
             tables.append({
-                "name": name, "schema": "", "table": name, "is_custom_sql": True,
+                "name": name, "schema": "", "table": name, "is_custom_sql": True, "is_file": False,
                 "sql_preview": sql_text[:80] + ("…" if len(sql_text) > 80 else ""),
             })
             added.append(name)
@@ -379,7 +410,7 @@ def _collect_classic_joins(
 
         for child in el:
             if _is_rel_tag(child.tag):
-                added.extend(_collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys))
+                added.extend(_collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys, file_conns))
 
         # Record join using condition-derived table pairs
         if conditions:
@@ -409,7 +440,7 @@ def _collect_classic_joins(
     else:
         for child in el:
             if _is_rel_tag(child.tag):
-                added.extend(_collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys))
+                added.extend(_collect_classic_joins(child, pg_conns, tables, joins, seen_tables, seen_join_keys, file_conns))
 
     return added
 
@@ -421,6 +452,7 @@ def _collect_object_graph(
     seen_tables: set,
     seen_join_keys: set,
     pg_conns: set = None,
+    file_conns: set = None,
 ) -> None:
     """Parse tables and joins from Tableau's newer object-graph relationship model."""
     og_tag = "_.fcp.ObjectModelEncapsulateLegacy.true...object-graph"
@@ -457,7 +489,8 @@ def _collect_object_graph(
                         # appear individually in the mapping UI and can be removed.
                         if pg_conns is not None:
                             _collect_classic_joins(
-                                rel, pg_conns, tables, joins, seen_tables, seen_join_keys
+                                rel, pg_conns, tables, joins, seen_tables, seen_join_keys,
+                                file_conns or set()
                             )
                         # Skip adding the compound wrapper itself — sub-tables are what matter.
                     else:

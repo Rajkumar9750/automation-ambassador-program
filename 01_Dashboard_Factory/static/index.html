@@ -2737,6 +2737,7 @@ function allReferenceTables() {
         ref_schema:    t.schema,
         ref_table:     t.table,
         is_custom_sql: t.is_custom_sql  || false,
+        is_file:       t.is_file        || false,
         custom_sql:    t.custom_sql     || '',
         old_connection: t.old_connection || (ds.postgres_connections || [])[0] || {},
       });
@@ -2761,7 +2762,18 @@ function buildMappingUI() {
     html += `<div class="section-title">📊 ${escHtml(caption)}</div>`;
     rows.forEach((r, idx) => {
       const rowId = `${dsName}_${idx}`;
-      if (r.is_custom_sql) {
+      if (r.is_file) {
+        html += `
+          <div class="mapping-row" id="row-${escHtml(rowId)}" style="background:#fffbeb;border-color:#fcd34d;grid-template-columns:1fr auto">
+            <div class="ref-col">
+              <div style="font-size:11px;color:#92400e">📎 File / Excel — kept as-is in generated workbook</div>
+              <strong style="color:#78350f">${escHtml(r.ref_table)}</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
+              No remapping needed
+            </div>
+          </div>`;
+      } else if (r.is_custom_sql) {
         html += `
           <div style="margin-bottom:10px">
             <div class="mapping-row" style="grid-template-columns:1fr 24px 1fr auto">
@@ -2821,7 +2833,7 @@ function buildMappingUI() {
 
   container.innerHTML = html;
 
-  S.mappings = refs.map(r => ({
+  S.mappings = refs.filter(r => !r.is_file).map(r => ({
     ...r,
     new_schema: '',
     new_table:  r.is_custom_sql ? r.ref_table : '',
@@ -3899,12 +3911,16 @@ function _renderRelationshipDsHtml(ds) {
         <svg width="${svgW}" height="${totalH}" style="flex-shrink:0">${paths}</svg>
         <div class="dm-rel-children">
           ${allTableNames.map(n => {
+            const tblObj = tables.find(t => t.name === n) || {};
             const tbl = nameToTable[n] || n;
             const isRemoved = S.removedTables.has(tbl);
+            const isFile = tblObj.is_file || false;
+            const icon = isFile ? '📎 ' : '';
             const removeLbl = isRemoved ? '↩' : '×';
             const removeTip = isRemoved ? 'Restore table' : 'Remove from data model';
-            return `<div class="dm-rel-child-box${isRemoved ? ' removed' : ''}" title="${escHtml(n)}">
-              <span class="dm-rel-child-label">${escHtml(n)}</span>
+            const fileStyle = isFile ? 'background:#fffbeb;border-color:#fcd34d;' : '';
+            return `<div class="dm-rel-child-box${isRemoved ? ' removed' : ''}" title="${escHtml(n)}" style="${fileStyle}">
+              <span class="dm-rel-child-label">${icon}${escHtml(n)}</span>
               <button class="dm-rel-child-rm" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tbl)}')">${removeLbl}</button>
             </div>`;
           }).join('')}
