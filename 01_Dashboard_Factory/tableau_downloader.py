@@ -71,9 +71,9 @@ def _find_chromedriver() -> str:
     if found:
         found.sort(reverse=True)
         return found[0]
-    raise FileNotFoundError(
-        "chromedriver not found. Run: pip install --upgrade webdriver-manager"
-    )
+    # Cache miss — download via webdriver-manager
+    print("  chromedriver not cached — downloading via webdriver-manager…")
+    return ChromeDriverManager().install()
 
 
 # ─── Browser launch ───────────────────────────────────────────────────────────
