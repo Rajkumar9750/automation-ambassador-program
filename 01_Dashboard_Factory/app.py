@@ -10,7 +10,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Any, Dict, List, Optional
@@ -143,7 +143,16 @@ class GenerateRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    with open(os.path.join(STATIC_DIR, "index.html"), "r", encoding="utf-8") as f:
+        content = f.read()
+    return HTMLResponse(
+        content=content,
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 # ---------------------------------------------------------------------------
 # Workbook loading

@@ -3,6 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<!-- Cache-bust: if this build token isn't in sessionStorage, force a fresh load -->
+<script>
+(function(){
+  var BUILD = 'df-build-20260727-v4';
+  if (sessionStorage.getItem('build') !== BUILD) {
+    sessionStorage.setItem('build', BUILD);
+    // location.reload(true) bypasses the disk cache
+    location.reload(true);
+  }
+})();
+</script>
 <title>Dashboard Factory · CBRE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -883,6 +897,219 @@ select {
   align-items: center;
   gap: 6px;
 }
+
+/* ══════════════════════════════════════════════════════════
+   JOIN / RELATIONSHIP SECTION (inside Table Mapping)
+══════════════════════════════════════════════════════════ */
+.join-section {
+  margin-top: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+}
+
+.join-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: #f7faf8;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+
+.join-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  flex: 1;
+}
+
+.join-section-counts {
+  display: flex;
+  gap: 6px;
+}
+
+.join-section-toggle {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform .2s;
+}
+.join-section-toggle.open { transform: rotate(180deg); }
+
+.join-section-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* One join/relationship row */
+.join-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: #fafafa;
+  transition: border-color .15s, box-shadow .15s;
+  flex-wrap: wrap;
+}
+.join-row:hover {
+  border-color: rgba(0,63,45,.22);
+  box-shadow: 0 2px 8px rgba(0,63,45,.07);
+}
+
+/* Type badges */
+.badge-join {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ebfaf2;
+  border: 1.5px solid #a8dfc1;
+  color: #155724;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-rel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0ebff;
+  border: 1.5px solid #c4aded;
+  color: #4c1d95;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Table pair */
+.join-pair {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-family: 'Courier New', monospace;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.join-table-chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.join-table-chip.join-style  { border-color: #a8dfc1; background: #f0fff4; color: var(--green); }
+.join-table-chip.rel-style   { border-color: #c4aded; background: #f5f0ff; color: #5b21b6; }
+
+.join-connector {
+  font-size: 14px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Key display */
+.join-keys-display {
+  font-size: 11.5px;
+  font-family: 'Courier New', monospace;
+  color: var(--slate);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  flex-shrink: 0;
+}
+.join-keys-display.overridden {
+  border-color: var(--teal);
+  background: rgba(23,232,143,.08);
+  color: var(--green);
+  font-weight: 600;
+}
+.join-keys-display.no-keys {
+  color: #f59e0b;
+  background: #fffbeb;
+  border-color: #fcd34d;
+  font-style: italic;
+}
+
+.join-edit-btn {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--slate);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background .15s, border-color .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.join-edit-btn:hover {
+  background: var(--bg);
+  border-color: var(--green);
+  color: var(--green);
+}
+.join-edit-btn.has-override {
+  border-color: var(--teal);
+  background: rgba(23,232,143,.08);
+  color: var(--green);
+}
+
+/* Small type badge on table mapping rows */
+.table-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  vertical-align: middle;
+  margin-left: 5px;
+  flex-shrink: 0;
+}
+.table-type-pill.pill-join { background: #ebfaf2; border: 1px solid #a8dfc1; color: #155724; }
+.table-type-pill.pill-rel  { background: #f0ebff; border: 1px solid #c4aded; color: #4c1d95; }
 
 /* ══════════════════════════════════════════════════════════
    MAPPING ROWS
@@ -2025,6 +2252,250 @@ select {
   font-family: 'Inter', sans-serif;
   padding: 0;
 }
+
+/* ══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+══════════════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 28px rgba(0,0,0,.16), 0 1px 4px rgba(0,0,0,.08);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  pointer-events: auto;
+  animation: toast-in .3s cubic-bezier(.34,1.56,.64,1) both;
+  max-width: 360px;
+  border-left: 4px solid var(--teal);
+  line-height: 1.4;
+}
+
+.toast.toast-error { border-left-color: #dc2626; }
+.toast.toast-warn  { border-left-color: #f59e0b; }
+.toast.toast-info  { border-left-color: #3b82f6; }
+.toast.toast-out   { animation: toast-out .25s ease forwards; }
+
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast-msg  { flex: 1; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(16px) scale(.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(16px) scale(.96); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   HOW IT WORKS STRIP
+══════════════════════════════════════════════════════════ */
+.hiw-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 24px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.hiw-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  text-align: center;
+}
+
+.hiw-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+}
+
+.hiw-step:hover .hiw-icon {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.hiw-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hiw-sub {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  max-width: 90px;
+}
+
+.hiw-arrow {
+  font-size: 18px;
+  color: var(--teal);
+  opacity: .8;
+  flex-shrink: 0;
+  padding: 0 6px;
+  margin-top: 17px;
+  user-select: none;
+}
+
+/* ══════════════════════════════════════════════════════════
+   SEGMENTED CONNECTION TYPE TOGGLE
+══════════════════════════════════════════════════════════ */
+.conn-toggle {
+  display: inline-flex;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 20px;
+}
+
+.conn-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .1px;
+}
+
+.conn-toggle-btn.active {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0,63,45,.3);
+}
+
+.conn-toggle-btn:not(.active):hover {
+  background: rgba(0,63,45,.06);
+  color: var(--green);
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAPPING PROGRESS BAR
+══════════════════════════════════════════════════════════ */
+.mapping-progress-wrap {
+  display: none;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f8fff9, #f0fff5);
+  border: 1.5px solid rgba(23,232,143,.3);
+  border-radius: 10px;
+}
+
+.mapping-progress-wrap.visible { display: block; }
+
+.mapping-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.mapping-progress-label .pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.mapping-progress-bar {
+  height: 7px;
+  background: rgba(0,63,45,.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mapping-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green) 0%, var(--teal) 100%);
+  border-radius: 4px;
+  transition: width .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* ══════════════════════════════════════════════════════════
+   GENERATE BUTTON GLOW
+══════════════════════════════════════════════════════════ */
+@keyframes gen-glow {
+  0%, 100% { box-shadow: 0 4px 16px rgba(23,232,143,.3); }
+  50%       { box-shadow: 0 6px 32px rgba(23,232,143,.6), 0 2px 8px rgba(23,232,143,.4); }
+}
+
+.btn-generate-ready {
+  width: 100%;
+  justify-content: center;
+  font-size: 16px;
+  padding: 16px 32px;
+  animation: gen-glow 2.2s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════════
+   STEP PANEL ENTRANCE (extra polish)
+══════════════════════════════════════════════════════════ */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-panel.active {
+  animation: fadeSlideUp .28s ease both;
+}
+
+/* Card section divider with label */
+.card-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .9px;
+  color: var(--muted);
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 </style>
 </head>
 <body>
@@ -2102,6 +2573,27 @@ select {
      UPLOAD HERO (shown when no workbook loaded)
 ════════════════════════════════════════════════════════ -->
 <div id="upload-hero">
+
+  <!-- How it Works strip -->
+  <div class="hiw-strip">
+    <div class="hiw-step">
+      <div class="hiw-icon">📂</div>
+      <div class="hiw-title">Upload Workbook</div>
+      <div class="hiw-sub">Reference .twbx from Tableau</div>
+    </div>
+    <div class="hiw-arrow">›</div>
+    <div class="hiw-step">
+      <div class="hiw-icon">🔌</div>
+      <div class="hiw-title">Connect & Map</div>
+      <div class="hiw-sub">Link client DB tables</div>
+    </div>
+    <div class="hiw-arrow">›</div>
+    <div class="hiw-step">
+      <div class="hiw-icon">🚀</div>
+      <div class="hiw-title">Generate</div>
+      <div class="hiw-sub">Download ready .twbx</div>
+    </div>
+  </div>
 
   <!-- Tab switcher -->
   <div class="upload-tabs">
@@ -2200,12 +2692,14 @@ select {
       <p class="subtitle">Connect to the client's database. Used to browse schemas and tables for mapping.</p>
 
       <!-- Connection type toggle -->
-      <div style="display:flex; gap:8px; margin-bottom:20px;">
-        <button id="btn-type-postgres" class="btn btn-primary" onclick="setConnType('postgres')" style="min-width:130px">
-          🐘 Postgres
+      <div class="conn-toggle">
+        <button id="btn-type-postgres" class="conn-toggle-btn active" onclick="setConnType('postgres')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          PostgreSQL
         </button>
-        <button id="btn-type-kyvos" class="btn btn-outline" onclick="setConnType('kyvos')" style="min-width:130px">
-          🔷 Kyvos ODBC
+        <button id="btn-type-kyvos" class="conn-toggle-btn" onclick="setConnType('kyvos')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+          Kyvos ODBC
         </button>
       </div>
 
@@ -2254,7 +2748,8 @@ select {
 
       <div style="margin-top:20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
         <button class="btn btn-outline" id="btn-test" onclick="testConnection()">
-          🔌 Test Connection
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          Test Connection
         </button>
         <div id="conn-status"></div>
       </div>
@@ -2293,6 +2788,17 @@ select {
           🔍 Auto-Detect Matching Tables
         </button>
         <span id="autodetect-status" style="font-size:13px; color:var(--muted)"></span>
+      </div>
+
+      <!-- Mapping progress -->
+      <div class="mapping-progress-wrap" id="mapping-progress-wrap">
+        <div class="mapping-progress-label">
+          <span id="mapping-progress-text">Tables mapped</span>
+          <span class="pct" id="mapping-progress-pct">0 / 0</span>
+        </div>
+        <div class="mapping-progress-bar">
+          <div class="mapping-progress-fill" id="mapping-progress-fill" style="width:0%"></div>
+        </div>
       </div>
 
       <div id="mapping-container"></div>
@@ -2335,8 +2841,9 @@ select {
       <div id="gen-status"></div>
 
       <div style="margin-top:18px;">
-        <button class="btn btn-teal btn-lg" id="btn-generate" onclick="generateDashboard()">
-          🚀 Generate Dashboard
+        <button class="btn btn-teal btn-lg btn-generate-ready" id="btn-generate" onclick="generateDashboard()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generate Dashboard
         </button>
       </div>
 
@@ -2376,6 +2883,9 @@ select {
 
 </main>
 
+<!-- Toast notification container -->
+<div id="toast-container"></div>
+
 <!-- Global join dialog — direct body child, never inside any stacking context -->
 <div id="global-join-dialog" class="dm-join-dialog"></div>
 <!-- Backdrop sits behind the dialog and closes it on outside click -->
@@ -2405,6 +2915,46 @@ const S = {
   downloadUrl:     null,
   downloadFilename: null,
 };
+
+// ═══════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+function showToast(message, type = 'success', durationMs = 3500) {
+  const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || '✅'}</span><span class="toast-msg">${message}</span>`;
+  container.appendChild(toast);
+  const remove = () => {
+    toast.classList.add('toast-out');
+    setTimeout(() => toast.remove(), 260);
+  };
+  setTimeout(remove, durationMs);
+  toast.addEventListener('click', remove);
+}
+
+// ═══════════════════════════════════════════════════════
+// MAPPING PROGRESS
+// ═══════════════════════════════════════════════════════
+function updateMappingProgress() {
+  const wrap   = document.getElementById('mapping-progress-wrap');
+  const fill   = document.getElementById('mapping-progress-fill');
+  const pct    = document.getElementById('mapping-progress-pct');
+  const text   = document.getElementById('mapping-progress-text');
+  if (!wrap) return;
+
+  const total  = S.mappings.length;
+  if (total === 0) { wrap.classList.remove('visible'); return; }
+
+  const mapped = S.mappings.filter(m => m.is_custom_sql ? true : (m.new_schema && m.new_table)).length;
+  const pctVal = Math.round((mapped / total) * 100);
+
+  fill.style.width = pctVal + '%';
+  pct.textContent  = `${mapped} / ${total}`;
+  text.textContent = mapped === total ? '🎉 All tables mapped!' : 'Tables mapped';
+  wrap.classList.add('visible');
+}
 
 // ═══════════════════════════════════════════════════════
 // UPLOAD / FETCH TAB SWITCHER
@@ -2511,7 +3061,7 @@ function handleFileUpload(e) {
 
 async function uploadFile(file) {
   if (!file.name.match(/\.(twbx|twb)$/i)) {
-    alert('Please upload a .twbx or .twb file.');
+    showToast('Please upload a .twbx or .twb file.', 'warn');
     return;
   }
 
@@ -2569,6 +3119,7 @@ function onWorkbookReady(data) {
   S.sessionId   = data.session_id;
   S.parsedInfo  = data.parsed_info;
   S.workbookName = data.original_filename || 'Dashboard';
+  S.dmData      = null;   // force fresh data-model fetch for this workbook
 
   const dsList  = (data.parsed_info.datasources || []);
   const totalTables = dsList.reduce((n, ds) => n + (ds.tables || []).length, 0);
@@ -2588,6 +3139,7 @@ function onWorkbookReady(data) {
   document.getElementById('steps-bar').classList.remove('locked');
   document.getElementById('steps-bar').classList.add('visible');
   document.getElementById('no-workbook-notice').style.display = 'none';
+  showToast(`Workbook loaded — ${info}`, 'success');
   goStep(1);
 }
 
@@ -2621,8 +3173,8 @@ let _connType = 'postgres';
 function setConnType(type) {
   _connType = type;
   const isKyvos = type === 'kyvos';
-  document.getElementById('btn-type-postgres').className   = isKyvos ? 'btn btn-outline' : 'btn btn-primary';
-  document.getElementById('btn-type-kyvos').className      = isKyvos ? 'btn btn-primary' : 'btn btn-outline';
+  document.getElementById('btn-type-postgres').classList.toggle('active', !isKyvos);
+  document.getElementById('btn-type-kyvos').classList.toggle('active',  isKyvos);
   document.getElementById('row-ssl').style.display         = isKyvos ? 'none' : '';
   document.getElementById('row-db-name').style.display     = isKyvos ? 'none' : '';
   document.getElementById('row-http-path').style.display   = isKyvos ? '' : 'none';
@@ -2656,19 +3208,22 @@ async function testConnection() {
     const res = await postJSON('/api/db/test', conn);
     if (res.success) {
       showConnStatus(`<span class="alert alert-success" style="display:inline-flex">✅ ${escHtml(res.message)}</span>`);
+      showToast('Connection successful!', 'success');
       S.conn       = conn;
       S.connTested = true;
       document.getElementById('btn-step1-next').disabled = false;
     } else {
       showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(res.message)}</span>`);
+      showToast(res.message, 'error', 5000);
       S.connTested = false;
       document.getElementById('btn-step1-next').disabled = true;
     }
   } catch (e) {
     showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(e.message)}</span>`);
+    showToast(e.message, 'error', 5000);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '🔌 Test Connection';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg> Test Connection';
   }
 }
 
@@ -2693,14 +3248,14 @@ async function loadSchemasAndGoStep2() {
   S.clientName = document.getElementById('client-name').value.trim();
   S.conn       = getConnForm();
 
-  if (!S.clientName) { alert('Please enter a client name.'); return; }
-  if (!S.connTested)  { alert('Please test the connection first.'); return; }
+  if (!S.clientName) { showToast('Please enter a client name.', 'warn'); return; }
+  if (!S.connTested)  { showToast('Please test the connection first.', 'warn'); return; }
 
   try {
     const res = await postJSON('/api/db/schemas', S.conn);
     S.schemas = res.schemas || [];
   } catch (e) {
-    alert('Failed to load schemas: ' + e.message);
+    showToast('Failed to load schemas: ' + e.message, 'error');
     return;
   }
 
@@ -2757,11 +3312,39 @@ function buildMappingUI() {
     byDs[r.ds_name].rows.push(r);
   });
 
+  // Build a map of table name → role (join/rel/none) for pill badges on table rows
+  // Keyed by dsName → Set of table names that appear in a join or relationship
+  const dsJoinRoles = {};   // dsName → { tableName → 'join' | 'rel' }
+  if (S.dmData) {
+    (S.dmData.datasources || []).forEach(dmDs => {
+      const roles = {};
+      (dmDs.joins || []).forEach(j => {
+        const role = j.join_type === 'relationship' ? 'rel' : 'join';
+        if (!roles[j.left_table]  || roles[j.left_table]  === 'join') roles[j.left_table]  = role;
+        if (!roles[j.right_table] || roles[j.right_table] === 'join') roles[j.right_table] = role;
+      });
+      // Match by caption or name
+      Object.keys(byDs).forEach(dsName => {
+        if (dsName === dmDs.name || byDs[dsName].caption === dmDs.caption) {
+          dsJoinRoles[dsName] = roles;
+        }
+      });
+    });
+  }
+
   let html = '';
   Object.entries(byDs).forEach(([dsName, { caption, rows }]) => {
     html += `<div class="section-title">📊 ${escHtml(caption)}</div>`;
+    const roles = dsJoinRoles[dsName] || {};
     rows.forEach((r, idx) => {
       const rowId = `${dsName}_${idx}`;
+      const role  = roles[r.ref_table] || roles[r.relation_name] || null;
+      const pillHtml = role === 'join'
+        ? `<span class="table-type-pill pill-join">⟺ Join</span>`
+        : role === 'rel'
+        ? `<span class="table-type-pill pill-rel">◈ Relationship</span>`
+        : '';
+
       if (r.is_file) {
         html += `
           <div class="mapping-row" id="row-${escHtml(rowId)}" style="background:#fffbeb;border-color:#fcd34d;grid-template-columns:1fr auto">
@@ -2778,7 +3361,7 @@ function buildMappingUI() {
           <div style="margin-bottom:10px">
             <div class="mapping-row" style="grid-template-columns:1fr 24px 1fr auto">
               <div class="ref-col">
-                <div style="font-size:11px;color:var(--muted)">Custom SQL</div>
+                <div style="font-size:11px;color:var(--muted)">Custom SQL${pillHtml}</div>
                 <strong style="color:#7d5a00">⚙ ${escHtml(r.ref_table)}</strong>
               </div>
               <div class="arrow">→</div>
@@ -2809,7 +3392,7 @@ function buildMappingUI() {
         html += `
           <div class="mapping-row" id="row-${escHtml(rowId)}">
             <div class="ref-col">
-              <div style="font-size:11px;color:var(--muted)">Reference</div>
+              <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap">Reference${pillHtml}</div>
               <strong>${escHtml(r.ref_schema)}</strong>.<span style="color:#2c3fa0">${escHtml(r.ref_table)}</span>
             </div>
             <div class="arrow">→</div>
@@ -2829,15 +3412,157 @@ function buildMappingUI() {
           </div>`;
       }
     });
+
   });
 
+  // Placeholder where join sections will be appended after dmData loads
+  html += `<div id="all-joins-placeholder"></div>`;
+
   container.innerHTML = html;
+
+  // Render join sections immediately if dmData is already loaded
+  buildJoinSections();
 
   S.mappings = refs.filter(r => !r.is_file).map(r => ({
     ...r,
     new_schema: '',
     new_table:  r.is_custom_sql ? r.ref_table : '',
   }));
+  updateMappingProgress();
+}
+
+// ═══════════════════════════════════════════════════════
+// JOIN / RELATIONSHIP SECTIONS IN TABLE MAPPING
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Render the Joins & Relationships section beneath each datasource's table rows.
+ * Called from buildMappingUI() (if S.dmData already cached) and from
+ * fetchAndRenderDataModel() after the async fetch resolves.
+ */
+function buildJoinSections() {
+  const placeholder = document.getElementById('all-joins-placeholder');
+  if (!placeholder) return;
+
+  if (!S.dmData) {
+    placeholder.innerHTML = '';
+    return;
+  }
+
+  let allHtml = '';
+  let globalIdx = 0;
+
+  (S.dmData.datasources || []).forEach(dmDs => {
+    const joins = (dmDs.joins || []).filter(
+      j => !S.removedTables.has(j.left_table) && !S.removedTables.has(j.right_table)
+    );
+    if (!joins.length) return;
+
+    const joinCount = joins.filter(j => j.join_type !== 'relationship').length;
+    const relCount  = joins.filter(j => j.join_type === 'relationship').length;
+
+    const countBadges = [
+      joinCount ? `<span class="badge-join">⟺ ${joinCount} Join${joinCount > 1 ? 's' : ''}</span>` : '',
+      relCount  ? `<span class="badge-rel">◈ ${relCount} Relationship${relCount > 1 ? 's' : ''}</span>` : '',
+    ].filter(Boolean).join('');
+
+    const dsLabel = escHtml(dmDs.caption || dmDs.name || '');
+
+    let rowsHtml = '';
+    joins.forEach(j => {
+      const isRel   = j.join_type === 'relationship';
+      const edId    = `map-js-${globalIdx++}`;
+      const overKey = [j.left_table, j.right_table].sort().join('::');
+      const ov      = S.joinOverrides[overKey];
+      const hasOv   = !!ov;
+
+      const typeBadge = isRel
+        ? `<span class="badge-rel">◈ Relationship</span>`
+        : `<span class="badge-join">⟺ ${(j.join_type || 'left').toUpperCase()}</span>`;
+
+      const chipCls = isRel ? 'rel-style' : 'join-style';
+      const ltShort = j.left_table.length > 22 ? j.left_table.slice(0,22)+'…' : j.left_table;
+      const rtShort = j.right_table.length > 22 ? j.right_table.slice(0,22)+'…' : j.right_table;
+
+      let keysLabel = 'No keys defined';
+      let keysCls   = 'no-keys';
+      if (hasOv && ov.left_expr && ov.right_expr) {
+        const lc = _extractCol(ov.left_expr, j.left_table) || ov.left_expr;
+        const rc = _extractCol(ov.right_expr, j.right_table) || ov.right_expr;
+        keysLabel = `${lc} = ${rc}`;
+        keysCls   = 'overridden';
+      } else if (j.conditions && j.conditions.length) {
+        const c0 = j.conditions[0];
+        keysLabel = `${c0.left_col || '?'} = ${c0.right_col || '?'}`;
+        if (j.conditions.length > 1) keysLabel += ` +${j.conditions.length - 1}`;
+        keysCls = '';
+      }
+
+      rowsHtml += `
+        <div class="join-row">
+          ${typeBadge}
+          <div class="join-pair">
+            <span class="join-table-chip ${chipCls}" title="${escHtml(j.left_table)}">${escHtml(ltShort)}</span>
+            <span class="join-connector">${isRel ? '◈' : '⟺'}</span>
+            <span class="join-table-chip ${chipCls}" title="${escHtml(j.right_table)}">${escHtml(rtShort)}</span>
+          </div>
+          <span class="join-keys-display ${keysCls}" title="${escHtml(keysLabel)}">${escHtml(keysLabel)}</span>
+          <button class="join-edit-btn${hasOv ? ' has-override' : ''}"
+            onclick="openJoinEditorFromMapping('${escHtml(edId)}','${escHtml(j.left_table)}','${escHtml(j.right_table)}',this)">
+            ✏️ Edit Keys
+          </button>
+        </div>`;
+    });
+
+    allHtml += `
+      <div class="section-title" style="margin-top:20px">📊 ${dsLabel} — Joins &amp; Relationships</div>
+      <div class="join-section">
+        <div class="join-section-header" onclick="toggleJoinSection(this)">
+          <span style="font-size:14px">🔗</span>
+          <span class="join-section-title">Joins &amp; Relationships</span>
+          <span class="join-section-counts">${countBadges}</span>
+          <span class="join-section-toggle open">▼</span>
+        </div>
+        <div class="join-section-body">${rowsHtml}</div>
+      </div>`;
+  });
+
+  placeholder.innerHTML = allHtml;
+}
+
+function toggleJoinSection(headerEl) {
+  const body   = headerEl.nextElementSibling;
+  const toggle = headerEl.querySelector('.join-section-toggle');
+  const open   = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  toggle.classList.toggle('open', !open);
+}
+
+async function openJoinEditorFromMapping(edId, leftTable, rightTable, btnEl) {
+  // Delegate to the existing Data Model join editor — it positions the dialog
+  // anchored to whatever called it. We synthesise a temporary anchor element
+  // at the button's location so the dialog appears next to the mapping row.
+  const existingAnchor = document.getElementById('jvenn-' + edId);
+  if (!existingAnchor) {
+    // Create an invisible anchor positioned at the button so the dialog aligns
+    const anchor = document.createElement('span');
+    anchor.id = 'jvenn-' + edId;
+    anchor.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+    btnEl.parentNode.insertBefore(anchor, btnEl);
+  }
+  await openJoinEditor(edId, leftTable, rightTable);
+
+  // After saving, re-render this section to reflect the updated keys
+  const origSave = window._mappingJoinSaveHook;
+  if (!origSave) {
+    window._mappingJoinSaveHook = true;
+    // Patch: re-render join sections after each saveJoinEdit so key chips update
+    const origSaveJoinEdit = window.saveJoinEdit;
+    window.saveJoinEdit = function(...args) {
+      origSaveJoinEdit(...args);
+      buildJoinSections();
+    };
+  }
 }
 
 async function loadTablesForRow(rowId, schema, refTable) {
@@ -2882,6 +3607,7 @@ function updateMappingState(rowId, schema, table) {
   const refs = allReferenceTables();
   const i    = findMappingIndex(dsName, idx, refs);
   if (i >= 0) { S.mappings[i].new_schema = schema; S.mappings[i].new_table = table; }
+  updateMappingProgress();
 }
 
 function toggleSqlEditor(rowId) {
@@ -3453,6 +4179,8 @@ async function fetchAndRenderDataModel() {
     loading.style.display = 'none';
     renderDataModel(S.dmData.datasources || [], content);
     if (!content.innerHTML.trim()) card.style.display = 'none';
+    // Populate join/relationship rows in the Table Mapping tab now that data is ready
+    buildJoinSections();
   } catch (e) {
     card.style.display = 'none';
   }
@@ -3757,7 +4485,7 @@ function saveJoinEdit(editorId, leftTable, rightTable) {
   }
 
   if (!leftExpr || !rightExpr) {
-    alert('Please provide a column or calculation for both sides of the join.');
+    showToast('Please provide a column or calculation for both sides of the join.', 'warn');
     return;
   }
 
@@ -3780,6 +4508,7 @@ function resetJoinEdit(editorId, leftTable, rightTable) {
   delete S.joinOverrides[key];
   closeAllJoinDialogs();
   if (S.dmData) renderDataModel(S.dmData.datasources || [], document.getElementById('dm-content'));
+  buildJoinSections();
 }
 
 // ═══════════════════════════════════════════════════════

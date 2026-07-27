@@ -470,6 +470,7 @@ def _collect_object_graph(
         for obj in objects_el.findall("object"):
             obj_id  = obj.get("id", "")
             caption = obj.get("caption", "")
+            placed  = False
             for props in obj.findall("properties"):
                 if props.get("context", "") == "":
                     rel = props.find("relation")
@@ -484,6 +485,7 @@ def _collect_object_graph(
                                     "name": name, "schema": parts[0], "table": parts[1],
                                     "caption": caption, "is_compound": False,
                                 }
+                                placed = True
                     elif rel is not None and rel.get("type") == "join":
                         # Compound object — expand its physical sub-tables so they
                         # appear individually in the mapping UI and can be removed.
@@ -492,15 +494,26 @@ def _collect_object_graph(
                                 rel, pg_conns, tables, joins, seen_tables, seen_join_keys,
                                 file_conns or set()
                             )
-                        # Skip adding the compound wrapper itself — sub-tables are what matter.
-                    else:
-                        # No live relation (e.g. extract-only object) — still add
-                        # to obj_map so relationships can reference it.
+                        # ALSO add the compound wrapper to obj_map using its caption
+                        # so that <relationship> endpoint references can resolve.
+                        # Without this, relationships pointing to compound objects
+                        # (type='join' in live properties) silently drop.
                         obj_map[obj_id] = {
-                            "name": obj_id, "schema": "", "table": caption or obj_id,
-                            "caption": caption, "is_compound": False,
+                            "name": caption or obj_id,
+                            "schema": "",
+                            "table": caption or obj_id,
+                            "caption": caption,
+                            "is_compound": True,
                         }
+                        placed = True
                     break
+            if not placed:
+                # No usable live-connection properties (e.g. extract-only object).
+                # Still add to obj_map so relationships can reference it.
+                obj_map[obj_id] = {
+                    "name": caption or obj_id, "schema": "", "table": caption or obj_id,
+                    "caption": caption, "is_compound": False,
+                }
 
     for t in obj_map.values():
         if t["name"] not in seen_tables:
@@ -527,16 +540,8 @@ def _collect_object_graph(
             continue
 
         conditions: List[Dict] = []
-        if expr is not None and expr.get("op") == "=":
-            children = list(expr)
-            if len(children) == 2:
-                col1 = children[0].get("op", "").strip("[]")
-                col2 = children[1].get("op", "").strip("[]")
-                if col1 and col2:
-                    conditions.append({
-                        "left_table": first_tbl["name"], "left_col": col1,
-                        "right_table": second_tbl["name"], "right_col": col2,
-                    })
+        if expr is not None:
+            _parse_rel_expr(expr, first_tbl["name"], second_tbl["name"], conditions)
 
         key = tuple(sorted([first_tbl["name"], second_tbl["name"]]))
         if key not in seen_join_keys:
@@ -547,6 +552,54 @@ def _collect_object_graph(
                 "join_type": "relationship",
                 "conditions": conditions,
             })
+
+
+def _strip_rel_col(raw: str) -> str:
+    """Strip brackets and Tableau's disambiguation suffix from a relationship column op.
+
+    Tableau writes relationship expressions as:
+      op='[col_name]'                          → simple column
+      op='[col_name (table_name)]'             → same column name appears in both tables;
+                                                  Tableau adds (table_name) to disambiguate
+
+    We want just the bare column name for display and editing.
+    """
+    name = raw.strip("[]")
+    # Strip the trailing '(table_name)' disambiguation suffix if present
+    paren = name.rfind(" (")
+    if paren != -1 and name.endswith(")"):
+        name = name[:paren]
+    return name.strip()
+
+
+def _parse_rel_expr(
+    expr_el: ET.Element,
+    left_table: str,
+    right_table: str,
+    conditions: List[Dict],
+) -> None:
+    """Recursively parse a relationship <expression> element into conditions.
+
+    Handles:
+      op='='   — single equality condition (leaf)
+      op='AND' / op='OR' — recurse into children
+    """
+    op = expr_el.get("op", "")
+    if op == "=":
+        children = list(expr_el)
+        if len(children) == 2:
+            col1 = _strip_rel_col(children[0].get("op", ""))
+            col2 = _strip_rel_col(children[1].get("op", ""))
+            if col1 and col2:
+                conditions.append({
+                    "left_table":  left_table,
+                    "left_col":    col1,
+                    "right_table": right_table,
+                    "right_col":   col2,
+                })
+    elif op in ("AND", "OR"):
+        for child in expr_el:
+            _parse_rel_expr(child, left_table, right_table, conditions)
 
 
 def _parse_join_expr(expr_el: ET.Element) -> List[Dict]:
