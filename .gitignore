@@ -4,6 +4,7 @@ venv/
 01_Dashboard_Factory/venv/
 02_Dashboard_Factory_QA/.venv/
 03_Jira_Tracker/venv/
+04_Anthology_Developer/venv/
 
 # Python cache
 __pycache__/
@@ -15,6 +16,8 @@ __pycache__/
 calc_fields_output/
 01_Dashboard_Factory/uploads/
 01_Dashboard_Factory/outputs/
+04_Anthology_Developer/uploads/
+04_Anthology_Developer/outputs/
 
 # OS files
 .DS_Store
@@ -22,3 +25,6 @@ Thumbs.db
 
 # Secrets / local config
 monitor_config.json
+
+# Word lock files (temp files created when a .docx is open)
+~$*.docx

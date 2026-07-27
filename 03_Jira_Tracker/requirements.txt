@@ -3,4 +3,5 @@ uvicorn[standard]==0.24.0
 httpx
 python-multipart==0.0.9
 openpyxl
+schedule
 # rumps removed — macOS-only, not needed for web server functionality

@@ -1,0 +1,18 @@
+{
+  "jira": {
+    "base_url": "https://cbremb.atlassian.net",
+    "email": "rajkumar.ganeshan@cbre.com",
+    "api_token": "${JIRA_API_TOKEN}",
+    "server_type": "cloud",
+    "projects": ["BASS", "GIAA", "BACS", "GISS"]
+  },
+  "teams": {
+    "webhook_url": "https://webhookbot.c-toss.com/api/bot/webhooks/31889c61-45f5-49bc-85db-e523d9141ccc"
+  },
+  "alert": {
+    "due_soon_days": 2,
+    "schedule_time": "09:00",
+    "schedule_interval": "daily",
+    "priority_levels": ["Highest", "High"]
+  }
+}
