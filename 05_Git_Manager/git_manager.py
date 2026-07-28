@@ -93,7 +93,7 @@ async def diff(path: str = "", staged: bool = False):
 
 
 @app.get("/api/git-log")
-async def git_log(limit: int = 30):
+async def git_log(limit: int = 50):
     out, _, _ = _run([
         "git", "log", f"--max-count={limit}",
         "--pretty=format:%H|%h|%s|%an|%ai",
