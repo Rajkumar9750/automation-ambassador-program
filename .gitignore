@@ -25,6 +25,9 @@ Thumbs.db
 
 # Secrets / local config
 monitor_config.json
+.env
+.env.local
+05_Git_Manager/change_log.json
 
 # Word lock files (temp files created when a .docx is open)
 ~$*.docx

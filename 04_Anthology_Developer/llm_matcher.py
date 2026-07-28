@@ -12,10 +12,10 @@ from typing import List, Dict, Optional
 
 from anthropic import AnthropicFoundry
 
-# ── Azure credentials (embedded) ────────────────────────────────────────────
-AZURE_ENDPOINT   = "https://admv-mogidbp0-eastus2.services.ai.azure.com/anthropic/"
-AZURE_API_KEY    = "${AZURE_FOUNDRY_API_KEY}"
-DEPLOYMENT_NAME  = "claude-sonnet-4-6"
+import os
+AZURE_ENDPOINT   = os.environ["AZURE_FOUNDRY_ENDPOINT"]
+AZURE_API_KEY    = os.environ["AZURE_FOUNDRY_API_KEY"]
+DEPLOYMENT_NAME  = os.getenv("AZURE_DEPLOYMENT_NAME", "claude-sonnet-4-6")
 
 MAX_TGT_TABLES   = 30   # max candidates sent per call
 MAX_PARALLEL     = 5    # concurrent LLM calls

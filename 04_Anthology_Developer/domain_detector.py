@@ -10,9 +10,10 @@ from typing import List, Dict, Optional
 
 from anthropic import AnthropicFoundry
 
-AZURE_ENDPOINT  = "https://admv-mogidbp0-eastus2.services.ai.azure.com/anthropic/"
-AZURE_API_KEY   = "${AZURE_FOUNDRY_API_KEY}"
-DEPLOYMENT_NAME = "claude-sonnet-4-6"
+import os
+AZURE_ENDPOINT  = os.environ["AZURE_FOUNDRY_ENDPOINT"]
+AZURE_API_KEY   = os.environ["AZURE_FOUNDRY_API_KEY"]
+DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME", "claude-sonnet-4-6")
 
 DOMAIN_RULES = [
     (["fm", "facilities", "facility", "maintenance"],          "fm_",    "Facilities Management"),
