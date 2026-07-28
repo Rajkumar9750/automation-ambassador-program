@@ -583,6 +583,13 @@ async def generate(req: GenerateRequest):
     except Exception as e:
         raise HTTPException(500, detail=f"Generation failed: {e}")
 
+    # Persist mappings so the extract endpoint can re-run generate_twbx
+    session = SESSIONS[req.session_id]
+    session["last_table_mappings"]   = [m.dict() for m in req.table_mappings]
+    session["last_calc_overrides"]   = [c.dict() for c in req.calc_overrides] if req.calc_overrides else []
+    session["last_removed_tables"]   = req.removed_tables or []
+    session["last_join_overrides"]   = [j.dict() for j in req.join_overrides] if req.join_overrides else []
+
     return {
         "download_url": f"/api/download/{output_filename}",
         "filename": output_filename,
@@ -596,6 +603,200 @@ async def download(filename: str):
     if not os.path.exists(path):
         raise HTTPException(404, detail="Generated file not found")
     return FileResponse(path, media_type="application/octet-stream", filename=filename)
+
+
+# ---------------------------------------------------------------------------
+# Extract endpoint — embeds .hyper files into the generated workbook
+# ---------------------------------------------------------------------------
+
+class ExtractRequest(BaseModel):
+    session_id: str
+    filename: str
+    connection: ConnDetails
+
+
+def _sanitise_extract_block(extract_block: str) -> str:
+    """
+    Prepare the injected <extract> block for a multi-table hyper file.
+
+    Two issues from copying the reference block verbatim:
+    1. schema='Extract' tablename='Extract' on the <connection class='hyper'> tells
+       Tableau to look for a single Extract.Extract table.  Our hyper has multiple
+       named tables, so Tableau can't find that table and falls back to live,
+       triggering a new extract.  Strip both attributes.
+    2. dbname must start with './' so Tableau resolves it relative to the temp dir
+       where the .twbx is unpacked.
+    """
+    import re
+
+    def _fix_hyper_conn(m: "re.Match") -> str:
+        tag = m.group(0)
+        tag = re.sub(r"\s+schema='[^']*'", "", tag)
+        tag = re.sub(r"\s+tablename='[^']*'", "", tag)
+        # Ensure dbname starts with ./
+        tag = re.sub(
+            r"(dbname=')(?!\./)",
+            r"\1./",
+            tag,
+        )
+        return tag
+
+    return re.sub(r"<connection\b[^>]*class='hyper'[^>]*>", _fix_hyper_conn, extract_block)
+
+
+def _inject_extract_blocks(gen_twb: str, ref_twb: str) -> str:
+    """Copy <extract> blocks from the reference TWB into the generated TWB.
+
+    Tableau enforces strict element ordering inside <datasource>. The <extract>
+    element must appear before <layout> and <style> — inserting at end of the
+    datasource block causes schema validation errors (D2E8DA72).
+    """
+    import re
+
+    # Collect extract blocks from reference, keyed by datasource name
+    ref_extracts: Dict[str, str] = {}
+    for m in re.finditer(r"<datasource\b([^>]*)>", ref_twb):
+        name_m = re.search(r"name='([^']*)'", m.group(1))
+        if not name_m:
+            continue
+        ds_name = name_m.group(1)
+        ds_start = m.start()
+        ds_end = ref_twb.find("</datasource>", ds_start)
+        if ds_end == -1:
+            continue
+        block = ref_twb[ds_start:ds_end + len("</datasource>")]
+        ext_m = re.search(r"<extract\b.*?</extract>", block, re.DOTALL)
+        if ext_m:
+            ref_extracts[ds_name] = _sanitise_extract_block(ext_m.group(0))
+
+    if not ref_extracts:
+        return gen_twb
+
+    result = gen_twb
+    for ds_name, extract_block in ref_extracts.items():
+        # Find the datasource block in the generated TWB
+        ds_pat = re.compile(
+            r"<datasource\b[^>]*name='" + re.escape(ds_name) + r"'[^>]*>.*?</datasource>",
+            re.DOTALL,
+        )
+        ds_m = ds_pat.search(result)
+        if not ds_m:
+            continue
+
+        ds_block = ds_m.group(0)
+
+        # Insert before <layout>, <style>, or </datasource> — whichever comes first.
+        # This preserves the element ordering Tableau requires.
+        anchor = re.search(r"<layout\b|<style\b|</datasource>", ds_block)
+        if anchor:
+            insert_pos = ds_m.start() + anchor.start()
+            result = result[:insert_pos] + extract_block + "\n" + result[insert_pos:]
+
+    return result
+
+
+@app.post("/api/extract")
+async def build_extract(req: ExtractRequest):
+    if req.session_id not in SESSIONS:
+        raise HTTPException(404, detail="Session expired. Please reload the reference workbook.")
+
+    session = SESSIONS[req.session_id]
+    generated_path = os.path.join(OUTPUT_DIR, req.filename)
+    if not os.path.exists(generated_path):
+        raise HTTPException(404, detail="Generated workbook not found. Please generate first.")
+
+    loop = asyncio.get_event_loop()
+
+    def _blocking_extract():
+        from extract_builder import build_extracts
+
+        pg_params = {
+            "host":     req.connection.host,
+            "port":     req.connection.port,
+            "database": req.connection.database,
+            "username": req.connection.username,
+            "password": req.connection.password,
+            "sslmode":  req.connection.sslmode,
+        }
+
+        base = req.filename.replace(".twbx", "")
+        extract_filename = f"{base}_extract.twbx"
+        extract_path = os.path.join(OUTPUT_DIR, extract_filename)
+
+        # Re-run generate_twbx with preserve_extract=True so the <extract> block
+        # stays in its original position (where Tableau placed it) rather than being
+        # re-injected by regex. The old .hyper files are kept in the ZIP as placeholders;
+        # build_extracts() will overwrite them in-place with fresh data.
+        from workbook_generator import generate_twbx as _gen
+
+        # Rebuild the same mappings used in the original generate call.
+        # We read them from the already-generated .twbx TWB + session data.
+        with zipfile.ZipFile(generated_path) as z:
+            twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
+            gen_twb_content = z.read(twb_name).decode("utf-8", errors="replace")
+
+        # generate_twbx writes to a file; use a temp path then rebuild hypers on top
+        with tempfile.TemporaryDirectory() as tmp_gen:
+            interim_path = os.path.join(tmp_gen, "interim.twbx")
+            _gen(
+                source_twbx=session["workbook_path"],
+                client_name=req.session_id,          # placeholder, not used in output
+                new_connection=pg_params,
+                table_mappings=session.get("last_table_mappings", []),
+                output_path=interim_path,
+                calc_overrides=session.get("last_calc_overrides", []),
+                type_fixes=[],
+                removed_tables=session.get("last_removed_tables", []),
+                join_overrides=session.get("last_join_overrides", []),
+                preserve_extract=True,
+            )
+
+            # Now read the interim TWB (has extract block preserved) and build hypers
+            with zipfile.ZipFile(interim_path) as z:
+                twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
+                interim_twb = z.read(twb_name).decode("utf-8", errors="replace")
+                all_items = {name: z.read(name) for name in z.namelist()}
+
+            extracts_dir = os.path.join(tmp_gen, "extracts")
+            os.makedirs(extracts_dir, exist_ok=True)
+            modified_twb, repair_log = build_extracts(interim_twb, pg_params, extracts_dir)
+
+            # Collect hyper paths referenced in TWB so we use the exact dbname paths
+            import re as _re
+            hyper_refs = _re.findall(r"dbname='([^']*\.hyper)'", modified_twb)
+
+            with zipfile.ZipFile(extract_path, "w", zipfile.ZIP_DEFLATED) as dst:
+                for name, data in all_items.items():
+                    if name.endswith(".twb"):
+                        dst.writestr(name, modified_twb.encode("utf-8"))
+                    elif name.endswith(".hyper"):
+                        pass   # replaced below with fresh hypers
+                    else:
+                        dst.writestr(name, data)
+
+                for hyper_file in os.listdir(extracts_dir):
+                    if not hyper_file.endswith(".hyper"):
+                        continue
+                    src_path = os.path.join(extracts_dir, hyper_file)
+                    # Use exact dbname path from TWB so Tableau can locate the file
+                    zip_path = next(
+                        (r for r in hyper_refs if r.endswith(hyper_file)),
+                        f"Data/Extracts/{hyper_file}",
+                    )
+                    dst.write(src_path, zip_path)
+
+        return extract_filename, repair_log
+
+    try:
+        extract_filename, repair_log = await loop.run_in_executor(None, _blocking_extract)
+    except Exception as e:
+        raise HTTPException(500, detail=f"Extract build failed: {e}")
+
+    return {
+        "download_url": f"/api/download/{extract_filename}",
+        "filename": extract_filename,
+        "repair_log": repair_log,
+    }
 
 # ---------------------------------------------------------------------------
 # Static files (mounted last so it doesn't shadow API routes)

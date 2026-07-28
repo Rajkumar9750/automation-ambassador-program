@@ -427,6 +427,7 @@ def generate_twbx(
     removed_tables: Optional[List[str]] = None,
     join_overrides: Optional[List[Dict]] = None,
     client_col_types: Optional[Dict[str, Dict[str, str]]] = None,
+    preserve_extract: bool = False,
 ) -> Tuple[str, List[Dict[str, Any]]]:
     """
     Generate a new .twbx with updated Postgres connection and table mappings.
@@ -461,16 +462,15 @@ def generate_twbx(
             client_col_types=client_col_types or {},
         )
 
-        # Strip <extract> blocks from the TWB — these define the old hyper extract
-        # layer tied to the reference schema. Leaving them causes Tableau error
-        # 2F8B7E6C even when the .hyper files are absent, because Tableau tries to
-        # create a new extract using the stale extract-layer definitions.
-        # Loop because extract blocks can be nested — non-greedy regex only removes
-        # the innermost block per pass; repeat until none remain.
-        prev = None
-        while prev != content:
-            prev = content
-            content = re.sub(r'<extract\b[^>]*>.*?</extract>', '', content, flags=re.DOTALL)
+        if not preserve_extract:
+            # Strip <extract> blocks — these define the old hyper extract tied to the
+            # reference schema. Leaving them causes Tableau error 2F8B7E6C when the
+            # .hyper files are absent because Tableau tries to create a new extract
+            # using stale extract-layer definitions.
+            prev = None
+            while prev != content:
+                prev = content
+                content = re.sub(r'<extract\b[^>]*>.*?</extract>', '', content, flags=re.DOTALL)
 
         with open(twb_abs, "w", encoding="utf-8") as f:
             f.write(content)
@@ -478,11 +478,10 @@ def generate_twbx(
         os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as out_zip:
             for rel_path in all_files:
-                # Strip .hyper extract files — they belong to the reference workbook's
-                # schema and cause Tableau error 2F8B7E6C when creating a new extract.
-                # The generated workbook will open as a live connection; the user can
-                # create a fresh extract in Tableau once the connection is confirmed.
-                if rel_path.lower().endswith(".hyper"):
+                if not preserve_extract and rel_path.lower().endswith(".hyper"):
+                    # Strip old hyper files — they belong to the reference schema and
+                    # cause error 2F8B7E6C. Skipped when preserve_extract=True because
+                    # build_extracts() will write fresh ones in the same paths.
                     continue
                 abs_path = os.path.join(tmp, rel_path)
                 if os.path.isfile(abs_path):
