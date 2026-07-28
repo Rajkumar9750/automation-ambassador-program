@@ -11,6 +11,7 @@ def _get_conn(host: str, port: int, database: str, username: str, password: str,
         user=username,
         password=password,
         sslmode=ssl,
+        gssencmode="disable",   # disable GSSAPI/Kerberos — use plain password auth
         connect_timeout=10,
     )
 

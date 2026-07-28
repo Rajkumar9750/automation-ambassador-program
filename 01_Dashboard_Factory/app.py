@@ -74,6 +74,11 @@ def _test_connection(c: "ConnDetails"):
 
 def _list_schemas(c: "ConnDetails"):
     if c.conn_type == "kyvos":
+        # Kyvos has no enumerate-all-folders REST endpoint.
+        # Use the user-supplied catalog/folder as the only schema option.
+        if c.database:
+            return [c.database]
+        # Fall back to auth-check only (returns empty list)
         return _kyvos.list_schemas(c.host, c.port, c.username, c.password, c.http_path, c.require_ssl)
     return pg_list_schemas(c.host, c.port, c.database, c.username, c.password, c.sslmode)
 

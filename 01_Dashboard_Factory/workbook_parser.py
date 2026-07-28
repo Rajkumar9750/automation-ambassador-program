@@ -455,10 +455,14 @@ def _collect_object_graph(
     file_conns: set = None,
 ) -> None:
     """Parse tables and joins from Tableau's newer object-graph relationship model."""
-    og_tag = "_.fcp.ObjectModelEncapsulateLegacy.true...object-graph"
+    # Tableau uses either the FCP-prefixed tag (older builds) or the plain tag (newer builds)
+    OG_TAGS = {
+        "_.fcp.ObjectModelEncapsulateLegacy.true...object-graph",
+        "object-graph",
+    }
     og_elem = None
     for el in ds_elem.iter():
-        if el.tag == og_tag:
+        if el.tag in OG_TAGS:
             og_elem = el
             break
     if og_elem is None:

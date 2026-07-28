@@ -9,7 +9,7 @@
 <!-- Cache-bust: if this build token isn't in sessionStorage, force a fresh load -->
 <script>
 (function(){
-  var BUILD = 'df-build-20260727-v4';
+  var BUILD = 'df-build-20260728-v5';
   if (sessionStorage.getItem('build') !== BUILD) {
     sessionStorage.setItem('build', BUILD);
     // location.reload(true) bypasses the disk cache
@@ -2577,19 +2577,19 @@ select {
   <!-- How it Works strip -->
   <div class="hiw-strip">
     <div class="hiw-step">
-      <div class="hiw-icon">📂</div>
+      <div class="hiw-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
       <div class="hiw-title">Upload Workbook</div>
       <div class="hiw-sub">Reference .twbx from Tableau</div>
     </div>
     <div class="hiw-arrow">›</div>
     <div class="hiw-step">
-      <div class="hiw-icon">🔌</div>
+      <div class="hiw-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div>
       <div class="hiw-title">Connect & Map</div>
       <div class="hiw-sub">Link client DB tables</div>
     </div>
     <div class="hiw-arrow">›</div>
     <div class="hiw-step">
-      <div class="hiw-icon">🚀</div>
+      <div class="hiw-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
       <div class="hiw-title">Generate</div>
       <div class="hiw-sub">Download ready .twbx</div>
     </div>
@@ -2671,7 +2671,7 @@ select {
 
   <!-- No workbook yet (fallback notice, hidden once hero is shown) -->
   <div id="no-workbook-notice" style="display:none">
-    <div class="big">☝️</div>
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);margin-bottom:8px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
     <p>Upload a reference workbook above to get started.</p>
   </div>
 
@@ -2713,7 +2713,7 @@ select {
           <input id="db-port" type="number" value="5432" />
         </div>
         <div class="form-row" id="row-db-name">
-          <label>Database Name</label>
+          <label id="lbl-db-name">Database Name</label>
           <input id="db-name" type="text" placeholder="e.g. jll_prod" oninput="autoFillUserFromDb(this.value)" />
         </div>
         <div class="form-row">
@@ -2769,7 +2769,7 @@ select {
     <!-- Data Model Diagram -->
     <div class="dm-card" id="dm-card" style="display:none">
       <div class="dm-card-header" onclick="toggleDmCard()">
-        <span style="font-size:18px">🗂</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
         <span class="dm-card-title">Reference Data Model</span>
         <span class="dm-card-toggle open" id="dm-card-toggle">▼</span>
       </div>
@@ -2779,13 +2779,16 @@ select {
       </div>
     </div>
 
+    <!-- Joins & Relationships — between diagram and table mapping -->
+    <div id="all-joins-placeholder"></div>
+
     <div class="card">
       <h2>Table Mapping</h2>
       <p class="subtitle">Map each table from the reference workbook to the corresponding table in the client's database.</p>
 
       <div style="display:flex; gap:10px; margin-bottom:18px; align-items:center;">
         <button class="btn btn-teal" onclick="autoDetectMappings()">
-          🔍 Auto-Detect Matching Tables
+          Auto-Detect Matching Tables
         </button>
         <span id="autodetect-status" style="font-size:13px; color:var(--muted)"></span>
       </div>
@@ -2807,8 +2810,8 @@ select {
     <!-- Calculated Fields panel -->
     <div class="calc-panel" id="calc-panel" style="display:none">
       <div class="calc-panel-header" onclick="toggleCalcPanel()">
-        <span class="calc-panel-title">⚡ Calculated Fields (<span id="calc-count">0</span>)</span>
-        <span class="calc-badge-modified" id="calc-mod-badge" style="display:none">✏️ <span id="calc-mod-count">0</span> modified</span>
+        <span class="calc-panel-title">Calculated Fields (<span id="calc-count">0</span>)</span>
+        <span class="calc-badge-modified" id="calc-mod-badge" style="display:none"><span id="calc-mod-count">0</span> modified</span>
         <span class="calc-toggle" id="calc-toggle">▼</span>
       </div>
       <div class="calc-body" id="calc-body" style="display:none">
@@ -2857,12 +2860,13 @@ select {
         <p>Ready to open in Tableau Desktop</p>
         <a id="download-link" href="#" style="text-decoration:none">
           <button class="btn btn-teal btn-lg" style="margin-top:20px; min-width:220px; justify-content:center; font-size:15px;">
-            📥 Download Workbook
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Workbook
           </button>
         </a>
         <p id="download-note" style="margin-top:10px"></p>
         <div style="margin-top:18px; padding:12px 16px; background:#fff5f5; border:1.5px solid #fca5a5; border-radius:9px; text-align:left; display:flex; gap:10px; align-items:flex-start;">
-          <span style="font-size:16px; flex-shrink:0; margin-top:1px;">⚠️</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <p style="font-size:12.5px; color:#b91c1c; line-height:1.6; margin:0; font-weight:500;">
             <strong>Important:</strong> After opening the workbook in Tableau Desktop, navigate to the <strong>Data Source</strong> tab and click on any sheet to trigger the data extract. This step is required to load the latest client data into the workbook.
           </p>
@@ -2870,14 +2874,14 @@ select {
       </div>
 
       <div id="repair-report" class="repair-report" style="display:none">
-        <div class="repair-report-title">🔧 Generation Report</div>
+        <div class="repair-report-title">Generation Report</div>
         <div id="repair-items"></div>
       </div>
     </div>
 
     <div class="nav-bar">
       <button class="btn btn-secondary" onclick="goStep(2)">&larr; Back</button>
-      <button class="btn btn-secondary" onclick="resetAll()">🔄 Start Over</button>
+      <button class="btn btn-secondary" onclick="resetAll()">Start Over</button>
     </div>
   </div>
 
@@ -2920,11 +2924,11 @@ const S = {
 // TOAST NOTIFICATIONS
 // ═══════════════════════════════════════════════════════
 function showToast(message, type = 'success', durationMs = 3500) {
-  const icons = { success: '✅', error: '❌', warn: '⚠️', info: 'ℹ️' };
+  const icons = { success: '✓', error: '✕', warn: '!', info: 'i' };
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<span class="toast-icon">${icons[type] || '✅'}</span><span class="toast-msg">${message}</span>`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || '✓'}</span><span class="toast-msg">${message}</span>`;
   container.appendChild(toast);
   const remove = () => {
     toast.classList.add('toast-out');
@@ -2952,7 +2956,7 @@ function updateMappingProgress() {
 
   fill.style.width = pctVal + '%';
   pct.textContent  = `${mapped} / ${total}`;
-  text.textContent = mapped === total ? '🎉 All tables mapped!' : 'Tables mapped';
+  text.textContent = mapped === total ? 'All tables mapped' : 'Tables mapped';
   wrap.classList.add('visible');
 }
 
@@ -3093,21 +3097,21 @@ function setUploadState(state, filename, errMsg) {
   spinner.style.display = 'none';
 
   if (state === 'loading') {
-    icon.textContent     = '📂';
+    icon.innerHTML       = `<svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--teal)"><circle cx="28" cy="28" r="27" fill="rgba(23,232,143,.12)" stroke="rgba(23,232,143,.35)" stroke-width="1.5"/><path d="M28 36V22M22 28l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 38h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
     heading.textContent  = filename;
     heading.className    = 'uh';
     sub.textContent      = 'Parsing workbook…';
     spinner.style.display = 'block';
   } else if (state === 'loaded') {
     drop.classList.add('loaded');
-    icon.textContent    = '✅';
+    icon.innerHTML      = `<svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="27" fill="rgba(23,232,143,.15)" stroke="rgba(23,232,143,.45)" stroke-width="1.5"/><path d="M17 28l8 8 14-14" stroke="#17e88f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
     heading.textContent = filename;
     heading.className   = 'uf';
     sub.textContent     = errMsg;   // reused for info text
     badge.textContent   = 'Loaded';
     badge.style.display = 'block';
   } else if (state === 'error') {
-    icon.textContent    = '❌';
+    icon.innerHTML      = `<svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="28" cy="28" r="27" fill="rgba(239,68,68,.10)" stroke="rgba(239,68,68,.30)" stroke-width="1.5"/><path d="M20 20l16 16M36 20L20 36" stroke="#ef4444" stroke-width="2.3" stroke-linecap="round"/></svg>`;
     heading.textContent = filename;
     heading.className   = 'uh';
     sub.textContent     = errMsg || 'Upload failed';
@@ -3116,10 +3120,16 @@ function setUploadState(state, filename, errMsg) {
 }
 
 function onWorkbookReady(data) {
-  S.sessionId   = data.session_id;
-  S.parsedInfo  = data.parsed_info;
+  S.sessionId    = data.session_id;
+  S.parsedInfo   = data.parsed_info;
   S.workbookName = data.original_filename || 'Dashboard';
-  S.dmData      = null;   // force fresh data-model fetch for this workbook
+  // Reset all workbook-specific state so previous session doesn't bleed into new workbook
+  S.dmData        = null;
+  S.removedTables = new Set();
+  S.joinOverrides = {};
+  S.calcOverrides = {};
+  S.mappings      = [];
+  S.connTested    = false;
 
   const dsList  = (data.parsed_info.datasources || []);
   const totalTables = dsList.reduce((n, ds) => n + (ds.tables || []).length, 0);
@@ -3159,7 +3169,7 @@ function goStep(n) {
   }
   S.step = n;
 
-  if (n === 2) { buildMappingUI(); buildCalcFieldsPanel(); fetchAndRenderDataModel(); }
+  if (n === 2) { buildCalcFieldsPanel(); enterStep2(); }
   if (n === 3) buildSummary();
   window.scrollTo(0, 0);
 }
@@ -3176,9 +3186,19 @@ function setConnType(type) {
   document.getElementById('btn-type-postgres').classList.toggle('active', !isKyvos);
   document.getElementById('btn-type-kyvos').classList.toggle('active',  isKyvos);
   document.getElementById('row-ssl').style.display         = isKyvos ? 'none' : '';
-  document.getElementById('row-db-name').style.display     = isKyvos ? 'none' : '';
+  document.getElementById('row-db-name').style.display     = '';   // always show
   document.getElementById('row-http-path').style.display   = isKyvos ? '' : 'none';
   document.getElementById('row-require-ssl').style.display = isKyvos ? '' : 'none';
+  // Relabel the database field for Kyvos
+  const lbl = document.getElementById('lbl-db-name');
+  const inp = document.getElementById('db-name');
+  if (isKyvos) {
+    lbl.textContent    = 'Catalog / Folder';
+    inp.placeholder    = 'e.g. bicdemo';
+  } else {
+    lbl.textContent    = 'Database Name';
+    inp.placeholder    = 'e.g. jll_prod';
+  }
   // Swap default port
   const portEl = document.getElementById('db-port');
   if (isKyvos  && (portEl.value === '5432' || portEl.value === '')) portEl.value = '443';
@@ -3194,8 +3214,8 @@ async function testConnection() {
   const isKyvos = conn.conn_type === 'kyvos';
   if (!conn.host || !conn.username || (!isKyvos && !conn.database)) {
     const msg = isKyvos
-      ? '⚠️ Fill in server, username, and password first'
-      : '⚠️ Fill in host, database, and username first';
+      ? 'Fill in server, username, and password first'
+      : 'Fill in host, database, and username first';
     showConnStatus(`<span class="alert alert-warn" style="display:inline-flex">${msg}</span>`);
     return;
   }
@@ -3207,19 +3227,19 @@ async function testConnection() {
   try {
     const res = await postJSON('/api/db/test', conn);
     if (res.success) {
-      showConnStatus(`<span class="alert alert-success" style="display:inline-flex">✅ ${escHtml(res.message)}</span>`);
+      showConnStatus(`<span class="alert alert-success" style="display:inline-flex">${escHtml(res.message)}</span>`);
       showToast('Connection successful!', 'success');
       S.conn       = conn;
       S.connTested = true;
       document.getElementById('btn-step1-next').disabled = false;
     } else {
-      showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(res.message)}</span>`);
+      showConnStatus(`<span class="alert alert-error" style="display:inline-flex">${escHtml(res.message)}</span>`);
       showToast(res.message, 'error', 5000);
       S.connTested = false;
       document.getElementById('btn-step1-next').disabled = true;
     }
   } catch (e) {
-    showConnStatus(`<span class="alert alert-error" style="display:inline-flex">❌ ${escHtml(e.message)}</span>`);
+    showConnStatus(`<span class="alert alert-error" style="display:inline-flex">${escHtml(e.message)}</span>`);
     showToast(e.message, 'error', 5000);
   } finally {
     btn.disabled = false;
@@ -3281,6 +3301,19 @@ function getConnForm() {
 // ═══════════════════════════════════════════════════════
 // STEP 2 — TABLE MAPPING
 // ═══════════════════════════════════════════════════════
+// Fetch data model FIRST, then build the mapping UI so join/relationship
+// sections have data available synchronously.
+async function enterStep2() {
+  if (S.sessionId && !S.dmData) {
+    try {
+      const res = await fetch(`/api/data-model/${S.sessionId}`);
+      if (res.ok) S.dmData = await res.json();
+    } catch (_) {}
+  }
+  buildMappingUI();            // S.dmData is now set — renderJoinSections works
+  fetchAndRenderDataModel();   // also renders the dm-card (uses cached S.dmData)
+}
+
 function allReferenceTables() {
   const rows = [];
   (S.parsedInfo.datasources || []).forEach(ds => {
@@ -3334,7 +3367,7 @@ function buildMappingUI() {
 
   let html = '';
   Object.entries(byDs).forEach(([dsName, { caption, rows }]) => {
-    html += `<div class="section-title">📊 ${escHtml(caption)}</div>`;
+    html += `<div class="section-title">${escHtml(caption)}</div>`;
     const roles = dsJoinRoles[dsName] || {};
     rows.forEach((r, idx) => {
       const rowId = `${dsName}_${idx}`;
@@ -3349,7 +3382,7 @@ function buildMappingUI() {
         html += `
           <div class="mapping-row" id="row-${escHtml(rowId)}" style="background:#fffbeb;border-color:#fcd34d;grid-template-columns:1fr auto">
             <div class="ref-col">
-              <div style="font-size:11px;color:#92400e">📎 File / Excel — kept as-is in generated workbook</div>
+              <div style="font-size:11px;color:#92400e">File / Excel — kept as-is in generated workbook</div>
               <strong style="color:#78350f">${escHtml(r.ref_table)}</strong>
             </div>
             <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">
@@ -3362,7 +3395,7 @@ function buildMappingUI() {
             <div class="mapping-row" style="grid-template-columns:1fr 24px 1fr auto">
               <div class="ref-col">
                 <div style="font-size:11px;color:var(--muted)">Custom SQL${pillHtml}</div>
-                <strong style="color:#7d5a00">⚙ ${escHtml(r.ref_table)}</strong>
+                <strong style="color:#7d5a00">${escHtml(r.ref_table)}</strong>
               </div>
               <div class="arrow">→</div>
               <div>
@@ -3374,12 +3407,12 @@ function buildMappingUI() {
               </div>
               <div style="display:flex;align-items:flex-end;gap:6px">
                 <button class="btn btn-secondary" style="font-size:12px;padding:7px 12px"
-                  onclick="toggleSqlEditor('${escHtml(rowId)}')">✏️ Edit SQL</button>
+                  onclick="toggleSqlEditor('${escHtml(rowId)}')">Edit SQL</button>
               </div>
             </div>
             <div class="sql-editor-wrap" id="sqledit-${escHtml(rowId)}">
               <div class="sql-editor-header">
-                <span>✏️ Custom SQL Editor</span>
+                <span>Custom SQL Editor</span>
                 <button class="btn btn-teal" style="padding:4px 14px;font-size:12px;font-weight:700"
                   onclick="validateSql('${escHtml(rowId)}')">▶ Validate SQL</button>
               </div>
@@ -3415,13 +3448,10 @@ function buildMappingUI() {
 
   });
 
-  // Placeholder where join sections will be appended after dmData loads
-  html += `<div id="all-joins-placeholder"></div>`;
-
   container.innerHTML = html;
 
-  // Render join sections immediately if dmData is already loaded
-  buildJoinSections();
+  // Join sections live in the static #all-joins-placeholder above the mapping card
+  // — populated by enterStep2() which fetches before building this UI
 
   S.mappings = refs.filter(r => !r.is_file).map(r => ({
     ...r,
@@ -3436,64 +3466,55 @@ function buildMappingUI() {
 // ═══════════════════════════════════════════════════════
 
 /**
- * Render the Joins & Relationships section beneath each datasource's table rows.
- * Called from buildMappingUI() (if S.dmData already cached) and from
- * fetchAndRenderDataModel() after the async fetch resolves.
+ * Render join + relationship rows into #all-joins-placeholder.
+ * datasources — the array from the data-model API response (passed directly,
+ * NOT read from S.dmData, to avoid all caching/timing bugs).
  */
-function buildJoinSections() {
+function renderJoinSections(datasources) {
   const placeholder = document.getElementById('all-joins-placeholder');
   if (!placeholder) return;
-
-  if (!S.dmData) {
-    placeholder.innerHTML = '';
-    return;
-  }
+  if (!datasources || !datasources.length) { placeholder.innerHTML = ''; return; }
 
   let allHtml = '';
-  let globalIdx = 0;
+  let idx = 0;
 
-  (S.dmData.datasources || []).forEach(dmDs => {
-    const joins = (dmDs.joins || []).filter(
-      j => !S.removedTables.has(j.left_table) && !S.removedTables.has(j.right_table)
-    );
+  datasources.forEach(ds => {
+    const joins = ds.joins || [];
     if (!joins.length) return;
 
     const joinCount = joins.filter(j => j.join_type !== 'relationship').length;
     const relCount  = joins.filter(j => j.join_type === 'relationship').length;
+    const dsLabel   = escHtml(ds.caption || ds.name || '');
 
     const countBadges = [
       joinCount ? `<span class="badge-join">⟺ ${joinCount} Join${joinCount > 1 ? 's' : ''}</span>` : '',
       relCount  ? `<span class="badge-rel">◈ ${relCount} Relationship${relCount > 1 ? 's' : ''}</span>` : '',
     ].filter(Boolean).join('');
 
-    const dsLabel = escHtml(dmDs.caption || dmDs.name || '');
-
     let rowsHtml = '';
     joins.forEach(j => {
       const isRel   = j.join_type === 'relationship';
-      const edId    = `map-js-${globalIdx++}`;
+      const edId    = `jrs-${idx++}`;
       const overKey = [j.left_table, j.right_table].sort().join('::');
-      const ov      = S.joinOverrides[overKey];
+      const ov      = (S.joinOverrides || {})[overKey];
       const hasOv   = !!ov;
 
       const typeBadge = isRel
         ? `<span class="badge-rel">◈ Relationship</span>`
         : `<span class="badge-join">⟺ ${(j.join_type || 'left').toUpperCase()}</span>`;
-
       const chipCls = isRel ? 'rel-style' : 'join-style';
-      const ltShort = j.left_table.length > 22 ? j.left_table.slice(0,22)+'…' : j.left_table;
-      const rtShort = j.right_table.length > 22 ? j.right_table.slice(0,22)+'…' : j.right_table;
+      const lt = j.left_table  || '';
+      const rt = j.right_table || '';
+      const ltShort = lt.length > 22 ? lt.slice(0,22)+'…' : lt;
+      const rtShort = rt.length > 22 ? rt.slice(0,22)+'…' : rt;
 
-      let keysLabel = 'No keys defined';
-      let keysCls   = 'no-keys';
+      let keysLabel = 'No keys defined', keysCls = 'no-keys';
       if (hasOv && ov.left_expr && ov.right_expr) {
-        const lc = _extractCol(ov.left_expr, j.left_table) || ov.left_expr;
-        const rc = _extractCol(ov.right_expr, j.right_table) || ov.right_expr;
-        keysLabel = `${lc} = ${rc}`;
+        keysLabel = `${_extractCol(ov.left_expr, lt) || ov.left_expr} = ${_extractCol(ov.right_expr, rt) || ov.right_expr}`;
         keysCls   = 'overridden';
       } else if (j.conditions && j.conditions.length) {
-        const c0 = j.conditions[0];
-        keysLabel = `${c0.left_col || '?'} = ${c0.right_col || '?'}`;
+        const c = j.conditions[0];
+        keysLabel = `${c.left_col || '?'} = ${c.right_col || '?'}`;
         if (j.conditions.length > 1) keysLabel += ` +${j.conditions.length - 1}`;
         keysCls = '';
       }
@@ -3502,23 +3523,23 @@ function buildJoinSections() {
         <div class="join-row">
           ${typeBadge}
           <div class="join-pair">
-            <span class="join-table-chip ${chipCls}" title="${escHtml(j.left_table)}">${escHtml(ltShort)}</span>
+            <span class="join-table-chip ${chipCls}" title="${escHtml(lt)}">${escHtml(ltShort)}</span>
             <span class="join-connector">${isRel ? '◈' : '⟺'}</span>
-            <span class="join-table-chip ${chipCls}" title="${escHtml(j.right_table)}">${escHtml(rtShort)}</span>
+            <span class="join-table-chip ${chipCls}" title="${escHtml(rt)}">${escHtml(rtShort)}</span>
           </div>
           <span class="join-keys-display ${keysCls}" title="${escHtml(keysLabel)}">${escHtml(keysLabel)}</span>
           <button class="join-edit-btn${hasOv ? ' has-override' : ''}"
-            onclick="openJoinEditorFromMapping('${escHtml(edId)}','${escHtml(j.left_table)}','${escHtml(j.right_table)}',this)">
-            ✏️ Edit Keys
+            onclick="openJoinEditorFromMapping('${escHtml(edId)}','${escHtml(lt)}','${escHtml(rt)}',this)">
+            Edit Keys
           </button>
         </div>`;
     });
 
     allHtml += `
-      <div class="section-title" style="margin-top:20px">📊 ${dsLabel} — Joins &amp; Relationships</div>
+      <div class="section-title" style="margin-top:20px">${dsLabel} — Joins &amp; Relationships</div>
       <div class="join-section">
         <div class="join-section-header" onclick="toggleJoinSection(this)">
-          <span style="font-size:14px">🔗</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           <span class="join-section-title">Joins &amp; Relationships</span>
           <span class="join-section-counts">${countBadges}</span>
           <span class="join-section-toggle open">▼</span>
@@ -3528,6 +3549,11 @@ function buildJoinSections() {
   });
 
   placeholder.innerHTML = allHtml;
+}
+
+// Keep old name as alias so any stray callers still work
+function buildJoinSections() {
+  if (S.dmData) renderJoinSections(S.dmData.datasources || []);
 }
 
 function toggleJoinSection(headerEl) {
@@ -3640,12 +3666,12 @@ async function validateSql(rowId) {
 
   const sql = textarea.value.trim();
   if (!sql) {
-    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">⚠️ SQL is empty.</div>';
+    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">SQL is empty.</div>';
     resultEl.style.display = 'block';
     return;
   }
   if (!S.connTested) {
-    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">⚠️ No connection — test the connection in Step 1 first.</div>';
+    resultEl.innerHTML = '<div class="alert alert-warn" style="margin:0;border-radius:0">No connection — test the connection in Step 1 first.</div>';
     resultEl.style.display = 'block';
     return;
   }
@@ -3659,10 +3685,10 @@ async function validateSql(rowId) {
       const cols = res.columns.length
         ? `<div style="margin-top:5px;font-size:12px;color:#a6e3a1">Columns (${res.column_count}): ${res.columns.map(c => `<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">${escHtml(c)}</code>`).join(' ')}</div>`
         : '';
-      resultEl.innerHTML = `<div style="padding:10px 14px;background:#1e2e20;border-top:2px solid #a6e3a1"><span style="color:#a6e3a1;font-weight:700;font-size:13px">✅ SQL is valid</span>${cols}</div>`;
+      resultEl.innerHTML = `<div style="padding:10px 14px;background:#1e2e20;border-top:2px solid #a6e3a1"><span style="color:#a6e3a1;font-weight:700;font-size:13px">SQL is valid</span>${cols}</div>`;
     } else {
       const errText = escHtml(res.error || 'Unknown error');
-      resultEl.innerHTML = `<div style="padding:10px 14px;background:#2e1e1e;border-top:2px solid #f38ba8"><span style="color:#f38ba8;font-weight:700;font-size:13px">❌ SQL Error</span><pre style="margin-top:5px;font-size:12px;color:#fab387;white-space:pre-wrap;word-break:break-all">${errText}</pre></div>`;
+      resultEl.innerHTML = `<div style="padding:10px 14px;background:#2e1e1e;border-top:2px solid #f38ba8"><span style="color:#f38ba8;font-weight:700;font-size:13px">SQL Error</span><pre style="margin-top:5px;font-size:12px;color:#fab387;white-space:pre-wrap;word-break:break-all">${errText}</pre></div>`;
       const posMatch = (res.error || '').match(/Position:\s*(\d+)/i);
       if (posMatch) {
         textarea.focus();
@@ -3670,7 +3696,7 @@ async function validateSql(rowId) {
       }
     }
   } catch (e) {
-    resultEl.innerHTML = `<div class="alert alert-error" style="margin:0;border-radius:0">❌ ${escHtml(e.message)}</div>`;
+    resultEl.innerHTML = `<div class="alert alert-error" style="margin:0;border-radius:0">${escHtml(e.message)}</div>`;
   }
 }
 
@@ -3726,7 +3752,7 @@ async function autoDetectMappings() {
   });
 
   status.textContent = matched > 0
-    ? `✅ Auto-matched ${matched} of ${refs.length} tables`
+    ? `Auto-matched ${matched} of ${refs.length} tables`
     : 'No matches found — map manually below';
 }
 
@@ -3789,7 +3815,7 @@ function renderCalcList(fields) {
         <div class="calc-field-card-header">
           <span class="calc-field-name">${escHtml(f.caption || f.name.replace(/^\[|\]$/g,''))}</span>
           <span class="calc-role-badge">${escHtml(f.role || f.datatype)}</span>
-          ${isModded ? '<span class="calc-mod-badge">✏️ Modified</span>' : ''}
+          ${isModded ? '<span class="calc-mod-badge">Modified</span>' : ''}
           <button class="btn-sm" onclick="openCalcEditor(decodeURIComponent('${safeKey}'))">Edit</button>
         </div>
         <div class="calc-formula-preview" id="cfp-${safeKey}">${escHtml(preview)}</div>
@@ -3889,7 +3915,7 @@ function buildSummary() {
     <li><span class="lbl">New Database</span><code>${escHtml(S.conn.database)}</code></li>
     <li><span class="lbl">New Username</span><code>${escHtml(S.conn.username)}</code></li>
     <li><span class="lbl">Tables Mapped</span>${mapped.length} of ${total}
-      ${mapped.length < total ? `<span class="alert alert-warn" style="display:inline-flex;padding:2px 8px;font-size:12px;margin-top:0">⚠️ ${total - mapped.length} unmapped</span>` : '&nbsp;✅'}
+      ${mapped.length < total ? `<span class="alert alert-warn" style="display:inline-flex;padding:2px 8px;font-size:12px;margin-top:0">${total - mapped.length} unmapped</span>` : ''}
     </li>
     ${mapped.map(m => `
       <li style="font-size:13px">
@@ -3921,7 +3947,7 @@ function buildTableMappingsPayload(mapped) {
 async function generateDashboard(skipPreflight) {
   const mapped = S.mappings.filter(m => m.new_schema && m.new_table);
   if (mapped.length === 0) {
-    document.getElementById('gen-status').innerHTML = '<div class="alert alert-error">❌ Please map at least one table before generating.</div>';
+    document.getElementById('gen-status').innerHTML = '<div class="alert alert-error">Please map at least one table before generating.</div>';
     return;
   }
 
@@ -3934,7 +3960,7 @@ async function generateDashboard(skipPreflight) {
   // ── Pre-flight checks ────────────────────────────────────────
   if (!skipPreflight) {
     btn.innerHTML = '<span class="spinner" style="border-top-color:var(--green);border-color:rgba(0,0,0,.12)"></span> Running pre-flight checks…';
-    document.getElementById('gen-status').innerHTML = '<div class="alert alert-info">🔍 Validating tables and SQL against the new database…</div>';
+    document.getElementById('gen-status').innerHTML = '<div class="alert alert-info">Validating tables and SQL against the new database…</div>';
 
     try {
       const pfRes = await postJSON('/api/preflight', {
@@ -3945,15 +3971,15 @@ async function generateDashboard(skipPreflight) {
       if (!pfRes.ok) {
         renderPreflightIssues(pfRes.issues);
         btn.disabled  = false;
-        btn.innerHTML = '🚀 Generate Dashboard';
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Dashboard';
         return;
       }
 
       document.getElementById('gen-status').innerHTML =
-        '<div class="alert alert-success" style="color:#166534;background:#dcfce7;border-color:#bbf7d0">✅ All pre-flight checks passed. Building workbook…</div>';
+        '<div class="alert alert-success" style="color:#166534;background:#dcfce7;border-color:#bbf7d0">All pre-flight checks passed. Building workbook…</div>';
     } catch (e) {
       document.getElementById('gen-status').innerHTML =
-        `<div class="alert alert-warn">⚠️ Pre-flight check failed (${escHtml(e.message)}). Proceeding with generation…</div>`;
+        `<div class="alert alert-warn">Pre-flight check failed (${escHtml(e.message)}). Proceeding with generation…</div>`;
     }
   } else {
     document.getElementById('gen-status').innerHTML = '<div class="alert alert-info">⏳ Building your workbook…</div>';
@@ -3991,10 +4017,10 @@ async function generateDashboard(skipPreflight) {
     document.getElementById('download-box').style.display = 'block';
     renderRepairReport(log);
   } catch (e) {
-    document.getElementById('gen-status').innerHTML = `<div class="alert alert-error">❌ ${escHtml(e.message)}</div>`;
+    document.getElementById('gen-status').innerHTML = `<div class="alert alert-error">${escHtml(e.message)}</div>`;
   } finally {
     btn.disabled  = false;
-    btn.innerHTML = '🚀 Generate Dashboard';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Dashboard';
   }
 }
 
@@ -4021,7 +4047,7 @@ function renderPreflightIssues(issues) {
 
   document.getElementById('gen-status').innerHTML = `
     <div class="pf-panel">
-      <div class="pf-panel-title">⚠️ Pre-flight found ${issues.length} issue${issues.length > 1 ? 's' : ''} — extract will fail without fixing these</div>
+      <div class="pf-panel-title">Pre-flight found ${issues.length} issue${issues.length > 1 ? 's' : ''} — extract will fail without fixing these</div>
       <div class="pf-issues-list">${rows}</div>
       <div class="pf-actions">
         <button class="btn btn-secondary" onclick="goStep(2)">← Fix Issues</button>
@@ -4039,15 +4065,15 @@ function renderRepairReport(log) {
     return;
   }
 
-  const iconMap = { fixed: '✅', warning: '⚠️', error: '❌' };
+  const iconMap = { fixed: '✓', warning: '!', error: '✕' };
 
   const otherItems = log;
 
   function renderItem(item) {
     const sev  = item.severity || 'warning';
-    const icon = iconMap[sev] || '⚠️';
+    const icon = iconMap[sev] || '!';
     const cls = (item.type === 'extract' && sev === 'fixed') ? 'extract-ok' : escHtml(sev);
-    const extractIcon = (item.type === 'extract' && sev === 'fixed') ? '📦' : icon;
+    const extractIcon = icon;
 
     // Special render for removed calculated fields — show formula table
     const removedFields = item.affected_fields || item.stripped_fields || [];
@@ -4064,7 +4090,7 @@ function renderRepairReport(log) {
       return `
         <div class="repair-item warning" style="flex-direction:column;gap:10px">
           <div style="display:flex;gap:10px;align-items:flex-start">
-            <div class="repair-icon">⚠️</div>
+            <div class="repair-icon">!</div>
             <div class="repair-body">
               <div class="repair-title">${escHtml(item.title || item.type)}</div>
               ${item.description ? `<div class="repair-desc">${escHtml(item.description)}</div>` : ''}
@@ -4161,9 +4187,14 @@ async function fetchAndRenderDataModel() {
   const content = document.getElementById('dm-content');
   if (!card) return;
 
-  // If we already have data, just re-render (remove/join edits don't change the model)
+  // If we already have data, re-render both the model and the join sections
   if (S.dmData) {
-    renderDataModel(S.dmData.datasources || [], content);
+    const cached = S.dmData.datasources || [];
+    card.style.display    = 'block';
+    loading.style.display = 'none';
+    renderDataModel(cached, content);
+    if (!content.innerHTML.trim()) card.style.display = 'none';
+    renderJoinSections(cached);
     return;
   }
 
@@ -4177,12 +4208,29 @@ async function fetchAndRenderDataModel() {
     const data = await res.json();
     S.dmData = data;
     loading.style.display = 'none';
-    renderDataModel(S.dmData.datasources || [], content);
+    const dsList = S.dmData.datasources || [];
+    renderDataModel(dsList, content);
     if (!content.innerHTML.trim()) card.style.display = 'none';
-    // Populate join/relationship rows in the Table Mapping tab now that data is ready
-    buildJoinSections();
+    // Pass datasources directly — no reliance on S.dmData timing or S.removedTables
+    renderJoinSections(dsList);
   } catch (e) {
     card.style.display = 'none';
+  }
+}
+
+async function fetchAndRenderJoinSections() {
+  if (!S.sessionId) return;
+  const placeholder = document.getElementById('all-joins-placeholder');
+  if (!placeholder) return;
+  placeholder.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Loading join sections…</div>';
+  try {
+    const res = await fetch(`/api/data-model/${S.sessionId}`);
+    if (!res.ok) { placeholder.innerHTML = ''; return; }
+    const data = await res.json();
+    S.dmData = data;
+    renderJoinSections(data.datasources || []);
+  } catch (e) {
+    placeholder.innerHTML = '';
   }
 }
 
@@ -4464,6 +4512,94 @@ async function openJoinEditor(editorId, leftTable, rightTable) {
   replaceWithSelect('jr-' + editorId, rightCols);
 }
 
+// Simplified relationship key editor — same dialog as openJoinEditor but
+// with the join-type tabs hidden (relationships don't change type).
+async function openRelEditDialog(edId, leftTable, rightTable, btnEl) {
+  const gd = document.getElementById('global-join-dialog');
+  if (!gd) return;
+
+  // Toggle: clicking the same edit button again closes the dialog
+  if (gd.classList.contains('open') && gd.dataset.edId === edId) {
+    closeAllJoinDialogs(); return;
+  }
+
+  const j = _findJoinForPair(leftTable, rightTable);
+  const overKey     = [leftTable, rightTable].sort().join('::');
+  const ov          = S.joinOverrides[overKey];
+  const hasOverride = !!ov;
+
+  const origLC = j && j.conditions && j.conditions[0] ? j.conditions[0].left_col  : '';
+  const origRC = j && j.conditions && j.conditions[0] ? j.conditions[0].right_col : '';
+
+  const leftIsCalc  = ov && ov.left_expr  && !_isColRef(ov.left_expr,  leftTable);
+  const rightIsCalc = ov && ov.right_expr && !_isColRef(ov.right_expr, rightTable);
+
+  const initLC    = leftIsCalc  ? '' : (ov ? _extractCol(ov.left_expr,  leftTable)  : origLC);
+  const initRC    = rightIsCalc ? '' : (ov ? _extractCol(ov.right_expr, rightTable) : origRC);
+  const calcInitL = leftIsCalc  ? (ov?.left_expr  || '') : '';
+  const calcInitR = rightIsCalc ? (ov?.right_expr || '') : '';
+
+  const ltEsc = escHtml(leftTable);
+  const rtEsc = escHtml(rightTable);
+
+  gd.innerHTML = _buildJoinDialogHtml(
+    edId, 'left', ltEsc, rtEsc,
+    initLC, initRC, calcInitL, calcInitR,
+    leftIsCalc, rightIsCalc, hasOverride
+  );
+
+  // Relationship-specific: retitle and hide the join-type tabs
+  const titleEl = gd.querySelector('.jd-title');
+  if (titleEl) titleEl.textContent = 'Relationship Keys';
+  const tabsEl = gd.querySelector('.jd-type-tabs');
+  if (tabsEl) tabsEl.style.display = 'none';
+
+  gd.dataset.edId     = edId;
+  gd.dataset.lt       = leftTable;
+  gd.dataset.rt       = rightTable;
+  gd.dataset.joinType = 'relationship';
+
+  // Position anchored to button (create invisible anchor if needed)
+  let anchor = document.getElementById('jvenn-' + edId);
+  if (!anchor && btnEl) {
+    anchor = document.createElement('span');
+    anchor.id = 'jvenn-' + edId;
+    anchor.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+    btnEl.parentNode.insertBefore(anchor, btnEl);
+  }
+  if (anchor) {
+    const rect = anchor.getBoundingClientRect();
+    const dW = 460, vW = window.innerWidth, vH = window.innerHeight;
+    let left = rect.left + rect.width / 2 - dW / 2;
+    left = Math.max(12, Math.min(left, vW - dW - 12));
+    let top = rect.bottom + 10;
+    if (top + 520 > vH && rect.top > 530) top = rect.top - 520;
+    gd.style.top  = `${Math.max(12, top)}px`;
+    gd.style.left = `${left}px`;
+  }
+
+  gd.classList.add('open');
+  document.getElementById('jd-backdrop')?.classList.add('open');
+
+  const [leftCols, rightCols] = await Promise.all([
+    getTableColumns(leftTable),
+    getTableColumns(rightTable),
+  ]);
+
+  const replaceWithSelect = (inputId, cols) => {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    if (cols.length) {
+      const curVal = el.value;
+      el.replaceWith(_makeSelect(inputId, cols, curVal));
+    } else if (el.tagName === 'INPUT') {
+      el.placeholder = 'column name';
+    }
+  };
+  replaceWithSelect('jl-' + edId, leftCols);
+  replaceWithSelect('jr-' + edId, rightCols);
+}
+
 function saveJoinEdit(editorId, leftTable, rightTable) {
   const lMode = document.querySelector(`input[name="lmode-${editorId}"]:checked`)?.value || 'col';
   const rMode = document.querySelector(`input[name="rmode-${editorId}"]:checked`)?.value || 'col';
@@ -4507,8 +4643,11 @@ function resetJoinEdit(editorId, leftTable, rightTable) {
   const key = [leftTable, rightTable].sort().join('::');
   delete S.joinOverrides[key];
   closeAllJoinDialogs();
-  if (S.dmData) renderDataModel(S.dmData.datasources || [], document.getElementById('dm-content'));
-  buildJoinSections();
+  if (S.dmData) {
+    const ds = S.dmData.datasources || [];
+    renderDataModel(ds, document.getElementById('dm-content'));
+    renderJoinSections(ds);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4631,7 +4770,7 @@ function _renderRelationshipDsHtml(ds) {
 
   return `
     <div class="dm-ds-block">
-      <div class="dm-ds-name">📊 ${escHtml(ds.caption)}</div>
+      <div class="dm-ds-name">${escHtml(ds.caption)}</div>
       <div class="dm-rel-layout">
         <div class="dm-rel-parent-box">
           ${vennIcon}
@@ -4639,18 +4778,44 @@ function _renderRelationshipDsHtml(ds) {
         </div>
         <svg width="${svgW}" height="${totalH}" style="flex-shrink:0">${paths}</svg>
         <div class="dm-rel-children">
-          ${allTableNames.map(n => {
+          ${allTableNames.map((n, ci) => {
             const tblObj = tables.find(t => t.name === n) || {};
             const tbl = nameToTable[n] || n;
             const isRemoved = S.removedTables.has(tbl);
             const isFile = tblObj.is_file || false;
-            const icon = isFile ? '📎 ' : '';
+            const icon = '';
             const removeLbl = isRemoved ? '↩' : '×';
             const removeTip = isRemoved ? 'Restore table' : 'Remove from data model';
             const fileStyle = isFile ? 'background:#fffbeb;border-color:#fcd34d;' : '';
-            return `<div class="dm-rel-child-box${isRemoved ? ' removed' : ''}" title="${escHtml(n)}" style="${fileStyle}">
-              <span class="dm-rel-child-label">${icon}${escHtml(n)}</span>
-              <button class="dm-rel-child-rm" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tbl)}')">${removeLbl}</button>
+
+            // Relationship key display + edit button
+            const relJ = joins.find(j => j.left_table === n || j.right_table === n);
+            const lt   = relJ ? relJ.left_table  : '';
+            const rt   = relJ ? relJ.right_table : '';
+            const overKey = relJ ? [lt, rt].sort().join('::') : null;
+            const ov      = overKey ? (S.joinOverrides[overKey] || null) : null;
+            const hasOv   = !!ov;
+            let keyLabel = '';
+            if (ov && ov.left_expr && ov.right_expr) {
+              keyLabel = `${_extractCol(ov.left_expr, lt) || ov.left_expr} = ${_extractCol(ov.right_expr, rt) || ov.right_expr}`;
+            } else if (relJ && relJ.conditions && relJ.conditions[0]) {
+              const c = relJ.conditions[0];
+              keyLabel = `${c.left_col || '?'} = ${c.right_col || '?'}`;
+            }
+            const relEdId = `prl-${ci}-${Math.random().toString(36).slice(2,6)}`;
+            const keyFooter = relJ ? `
+              <div style="padding:3px 8px 5px;border-top:1px dashed #e5e7eb;display:flex;align-items:center;gap:6px;min-width:0">
+                <span class="join-keys-display${hasOv?' overridden':''}" style="font-size:10px;flex:1;padding:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(keyLabel||'No keys defined')}">${escHtml(keyLabel||'No keys defined')}</span>
+                <button class="join-edit-btn${hasOv?' has-override':''}" style="font-size:10px;padding:1px 6px;min-width:0;flex-shrink:0"
+                  onclick="openRelEditDialog('${escHtml(relEdId)}','${escHtml(lt)}','${escHtml(rt)}',this)">Edit</button>
+              </div>` : '';
+
+            return `<div class="dm-rel-child-box${isRemoved ? ' removed' : ''}" title="${escHtml(n)}" style="${fileStyle}flex-direction:column;align-items:stretch;">
+              <div style="display:flex;align-items:center;">
+                <span class="dm-rel-child-label">${icon}${escHtml(n)}</span>
+                <button class="dm-rel-child-rm" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tbl)}')">${removeLbl}</button>
+              </div>
+              ${keyFooter}
             </div>`;
           }).join('')}
         </div>
@@ -4724,11 +4889,12 @@ function _joinConnectorHtml(j, joinIdx, isExtra) {
           </div>
           <span>
             <strong>${ltEsc}</strong>
-            ${displayLabel ? ` <span style="color:var(--muted)">on</span> <code style="font-size:11px;${hasOverride?'color:var(--green);font-weight:700':''}">${displayLabel}${hasOverride?' ✎':''}</code>` : ''}
+            ${displayLabel ? ` <span style="color:var(--muted)">on</span> <code style="font-size:11px;${hasOverride?'color:var(--green);font-weight:700':''}">${displayLabel}${hasOverride?' *':''}</code>` : ''}
             ↔ <strong>${rtEsc}</strong>
           </span>
         </div>
       </div>`;
+
   }
 
   return `
@@ -4740,7 +4906,7 @@ function _joinConnectorHtml(j, joinIdx, isExtra) {
       </div>
       <span class="${vennLabelCls}" id="jvlabel-${edId}">${joinLabel}</span>
       ${displayLabel
-        ? `<div class="dm-join-keys"${hasOverride?' style="color:var(--green);font-weight:700"':''}>${displayLabel}${hasOverride?' ✎':''}</div>`
+        ? `<div class="dm-join-keys"${hasOverride?' style="color:var(--green);font-weight:700"':''}>${displayLabel}${hasOverride?' *':''}</div>`
         : ''}
     </div>`;
 }
@@ -4754,18 +4920,32 @@ function renderDataModel(datasources, container) {
   datasources.forEach(ds => {
     if (!ds.tables || !ds.tables.length) return;
 
-    // ── Relationship datasources → fan layout (Image 2) ──────────────
-    const allRel = (ds.joins || []).length > 0 &&
-                   (ds.joins || []).every(j => j.join_type === 'relationship');
+    const allJoins     = ds.joins || [];
+    const classicJoins = allJoins.filter(j => j.join_type !== 'relationship');
+    const relJoins     = allJoins.filter(j => j.join_type === 'relationship');
+
+    // ── Pure relationship datasource → fan layout ──────────────────
+    const allRel = allJoins.length > 0 && classicJoins.length === 0;
     if (allRel) { html += _renderRelationshipDsHtml(ds); return; }
 
-    // Collect join key columns per table for the key-row display
+    // ── Determine which tables/joins go in the box diagram ──────────
+    // For mixed datasources: box shows only tables involved in classic joins;
+    // relationship joins are rendered as a flat section below.
+    const hasMixed = classicJoins.length > 0 && relJoins.length > 0;
+    const boxJoins = classicJoins.length > 0 ? classicJoins : allJoins;
+    let boxTables = ds.tables;
+    if (hasMixed) {
+      const boxTableNames = new Set();
+      classicJoins.forEach(j => { boxTableNames.add(j.left_table); boxTableNames.add(j.right_table); });
+      boxTables = ds.tables.filter(t => boxTableNames.has(t.name));
+    }
+
+    // Collect join key columns per table for the key-row display (classic joins only)
     const tableKeys = {};
-    ds.tables.forEach(t => { tableKeys[t.name] = []; });
-    (ds.joins || []).forEach(j => {
+    boxTables.forEach(t => { tableKeys[t.name] = []; });
+    boxJoins.forEach(j => {
       const overKey = [j.left_table, j.right_table].sort().join('::');
       const ov = S.joinOverrides[overKey];
-      // Derive column names from override expressions or original conditions
       const getCol = (expr, tbl) => _isColRef(expr, tbl) ? _extractCol(expr, tbl) : _exprShort(expr);
       const lcol = ov ? getCol(ov.left_expr,  j.left_table)  : (j.conditions && j.conditions[0] ? j.conditions[0].left_col  : '');
       const rcol = ov ? getCol(ov.right_expr, j.right_table) : (j.conditions && j.conditions[0] ? j.conditions[0].right_col : '');
@@ -4773,44 +4953,44 @@ function renderDataModel(datasources, container) {
       if (rcol && tableKeys[j.right_table] !== undefined && !tableKeys[j.right_table].includes(rcol)) tableKeys[j.right_table].push(rcol);
     });
 
-    // Build join lookup: sorted pair → join object
+    // Build join lookup: sorted pair → join object (box joins only)
     const joinMap = {};
-    (ds.joins || []).forEach(j => {
+    boxJoins.forEach(j => {
       const key = [j.left_table, j.right_table].sort().join('::');
       joinMap[key] = j;
     });
 
-    // Determine connectors between consecutive table pairs
+    // Determine connectors between consecutive box table pairs
     const sequentialKeys = new Set();
     const connectors = [];
-    for (let i = 0; i < ds.tables.length - 1; i++) {
-      const a = ds.tables[i].name, b = ds.tables[i + 1].name;
+    for (let i = 0; i < boxTables.length - 1; i++) {
+      const a = boxTables[i].name, b = boxTables[i + 1].name;
       const key = [a, b].sort().join('::');
       const j = joinMap[key] || null;
       connectors.push(j);
       if (j) sequentialKeys.add(key);
     }
 
-    // Extra (non-sequential) joins
-    const extraJoins = (ds.joins || []).filter(j => {
+    // Extra (non-sequential) classic joins
+    const extraJoins = boxJoins.filter(j => {
       return !sequentialKeys.has([j.left_table, j.right_table].sort().join('::'));
     });
 
-    // Render table boxes and connectors
+    // Render table boxes and connectors (classic join tables only)
     let rowHtml = '';
-    ds.tables.forEach((t, i) => {
+    boxTables.forEach((t, i) => {
       const tblName  = t.table || t.name;
       const isRemoved = S.removedTables.has(tblName);
       const removeLbl = isRemoved ? '↩ Restore' : '×';
       const removeTip = isRemoved ? 'Restore table to data model' : 'Remove from data model';
 
       const keys = tableKeys[t.name] || [];
-      const keysHtml = keys.map(k => `<div class="dm-key-row">🔑 ${escHtml(k)}</div>`).join('');
+      const keysHtml = keys.map(k => `<div class="dm-key-row">${escHtml(k)}</div>`).join('');
       let headHtml;
       if (t.is_custom_sql) {
         headHtml = `<div class="dm-table-head">
           <span class="dm-t-sql-label">Custom SQL</span>
-          <span class="dm-t-name">⚙ ${escHtml(t.name)}</span>
+          <span class="dm-t-name">${escHtml(t.name)}</span>
           <button class="dm-remove-btn" title="${removeTip}" onclick="toggleRemoveTable('${escHtml(tblName)}')">${removeLbl}</button>
         </div>`;
       } else {
@@ -4825,7 +5005,7 @@ function renderDataModel(datasources, container) {
         ${keysHtml ? `<div class="dm-table-body">${keysHtml}</div>` : ''}
       </div>`;
 
-      if (i < ds.tables.length - 1) {
+      if (i < boxTables.length - 1) {
         const j = connectors[i];
         if (j) {
           rowHtml += _joinConnectorHtml(j, joinIdx++, false);
@@ -4835,7 +5015,7 @@ function renderDataModel(datasources, container) {
       }
     });
 
-    // Extra joins block
+    // Extra joins block (classic only)
     let extraHtml = '';
     if (extraJoins.length) {
       extraHtml = `<div class="dm-extra-joins">`;
@@ -4843,14 +5023,57 @@ function renderDataModel(datasources, container) {
       extraHtml += `</div>`;
     }
 
-    const singleNote = (!ds.joins || ds.joins.length === 0)
+    // ── Relationship section (mixed datasources: flat row list below box) ──
+    let relSectionHtml = '';
+    if (relJoins.length > 0) {
+      let relRowsHtml = '';
+      relJoins.forEach(j => {
+        const edId = `dmr-${joinIdx++}`;
+        const lt = j.left_table || '';
+        const rt = j.right_table || '';
+        const ltShort = lt.length > 22 ? lt.slice(0,22)+'…' : lt;
+        const rtShort = rt.length > 22 ? rt.slice(0,22)+'…' : rt;
+        const overKey = [lt, rt].sort().join('::');
+        const ov = S.joinOverrides[overKey];
+        const hasOv = !!ov;
+        let keysLabel = 'No keys defined', keysCls = 'no-keys';
+        if (hasOv && ov.left_expr && ov.right_expr) {
+          keysLabel = `${_extractCol(ov.left_expr, lt) || ov.left_expr} = ${_extractCol(ov.right_expr, rt) || ov.right_expr}`;
+          keysCls = 'overridden';
+        } else if (j.conditions && j.conditions.length) {
+          const c = j.conditions[0];
+          keysLabel = `${c.left_col || '?'} = ${c.right_col || '?'}`;
+          if (j.conditions.length > 1) keysLabel += ` +${j.conditions.length - 1}`;
+          keysCls = '';
+        }
+        relRowsHtml += `
+          <div class="join-row">
+            <span class="badge-rel">◈ REL</span>
+            <div class="join-pair">
+              <span class="join-table-chip rel-style" title="${escHtml(lt)}">${escHtml(ltShort)}</span>
+              <span class="join-connector">◈</span>
+              <span class="join-table-chip rel-style" title="${escHtml(rt)}">${escHtml(rtShort)}</span>
+            </div>
+            <span class="join-keys-display ${keysCls}" title="${escHtml(keysLabel)}">${escHtml(keysLabel)}</span>
+            <button class="join-edit-btn${hasOv ? ' has-override' : ''}"
+              onclick="openRelEditDialog('${escHtml(edId)}','${escHtml(lt)}','${escHtml(rt)}',this)">Edit Keys</button>
+          </div>`;
+      });
+      relSectionHtml = `
+        <div style="margin-top:10px;padding:8px 12px;border-top:1px dashed #d1d5db">
+          <div style="font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;letter-spacing:.04em">◈ RELATIONSHIPS</div>
+          ${relRowsHtml}
+        </div>`;
+    }
+
+    const singleNote = (allJoins.length === 0)
       ? `<div class="dm-single-note">Single table — no joins defined.</div>` : '';
 
     html += `
       <div class="dm-ds-block">
-        <div class="dm-ds-name">📊 ${escHtml(ds.caption)}</div>
-        <div class="dm-canvas-wrap"><div class="dm-row">${rowHtml}</div></div>
-        ${singleNote}${extraHtml}
+        <div class="dm-ds-name">${escHtml(ds.caption)}</div>
+        ${boxTables.length > 0 ? `<div class="dm-canvas-wrap"><div class="dm-row">${rowHtml}</div></div>` : ''}
+        ${singleNote}${extraHtml}${relSectionHtml}
       </div>`;
   });
 
