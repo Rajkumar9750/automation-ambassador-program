@@ -74,7 +74,7 @@ TOOLS = {
         "cmd": [str(BASE / "01_Dashboard_Factory" / "venv" / _SCRIPTS / _PY), "-m", "uvicorn", "app:app", "--host", "127.0.0.1", "--port", "8080"],
         "health_path": "/docs",
         "color": "#4F9CF9",
-        "icon": "🏭",
+        "icon": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
     },
     "dashboard-factory-qa": {
         "name": "Dashboard Factory QA",
@@ -85,7 +85,7 @@ TOOLS = {
         "cmd": [str(BASE / "02_Dashboard_Factory_QA" / ".venv" / _SCRIPTS / _PY), "app.py"],
         "health_path": "/",
         "color": "#A78BFA",
-        "icon": "✅",
+        "icon": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
     },
     "jira-tracker": {
         "name": "Jira Tracker",
@@ -96,7 +96,7 @@ TOOLS = {
         "cmd": [str(BASE / "03_Jira_Tracker" / "venv" / _SCRIPTS / _PY), "-m", "uvicorn", "jira_tracker:app", "--host", "127.0.0.1", "--port", "8082"],
         "health_path": "/docs",
         "color": "#34D399",
-        "icon": "📋",
+        "icon": '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
     },
 }
 

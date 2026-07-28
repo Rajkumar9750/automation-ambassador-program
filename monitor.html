@@ -340,7 +340,7 @@
       border-color: #F59E0B;
       background: rgba(245,158,11,.06);
     }
-    .cf-drop-icon { font-size: 28px; margin-bottom: 8px; }
+    .cf-drop-icon { margin-bottom: 10px; display: flex; justify-content: center; color: var(--muted); }
     .cf-drop-label { font-size: 13px; color: var(--muted); }
     .cf-drop-label strong { color: var(--text); }
     .cf-file-name {
@@ -434,19 +434,19 @@
     <div class="cf-card">
       <div class="card-accent" style="background:#F59E0B"></div>
       <div class="card-header">
-        <div class="card-icon" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3)">🔢</div>
+        <div class="card-icon" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#F59E0B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
         <div class="card-title-area">
           <div class="card-name">Data Dictionary Generator</div>
           <div class="card-desc">Generate a full data dictionary from a .twbx workbook to Excel</div>
         </div>
         <span class="status-badge" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#F59E0B">
-          ⚡ Utility
+          Utility
         </span>
       </div>
 
       <!-- Drop zone -->
       <div class="cf-drop-zone" id="cf-drop-zone" onclick="document.getElementById('cf-file-input').click()">
-        <div class="cf-drop-icon">📂</div>
+        <div class="cf-drop-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="12 18 12 12"/><polyline points="9 15 12 12 15 15"/></svg></div>
         <div class="cf-drop-label">Drop a <strong>.twbx</strong> file here, or click to browse</div>
         <div class="cf-file-name" id="cf-file-name"></div>
       </div>
@@ -469,7 +469,7 @@
           <div class="cf-result-count" id="cf-count">0</div>
           <div class="cf-result-sub">fields extracted</div>
         </div>
-        <a class="btn-download" id="cf-download-btn" href="#" download>⬇ Download Excel</a>
+        <a class="btn-download" id="cf-download-btn" href="#" download><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Excel</a>
       </div>
     </div>
 
@@ -477,13 +477,13 @@
     <div class="cf-card">
       <div class="card-accent" style="background:#34D399"></div>
       <div class="card-header">
-        <div class="card-icon" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3)">🗓️</div>
+        <div class="card-icon" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#34D399"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
         <div class="card-title-area">
           <div class="card-name">Timesheet Report</div>
           <div class="card-desc">Generate monthly or full-year timesheet from Jira comment activity</div>
         </div>
         <span class="status-badge" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.35);color:#34D399">
-          ⚡ Utility
+          Utility
         </span>
       </div>
 
@@ -492,7 +492,7 @@
         <span id="ts-creds-label" style="color:var(--muted)">Loading credentials…</span>
         <button onclick="toggleTsCreds()" id="ts-creds-toggle"
           style="font-size:11px;background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;color:var(--muted);cursor:pointer">
-          ✏️ Edit
+          Edit
         </button>
       </div>
 
@@ -558,7 +558,7 @@
         <div style="display:flex;gap:8px;padding-bottom:4px">
           <button id="ts-btn-save" onclick="saveTsCreds()"
             style="padding:6px 16px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid rgba(52,211,153,.5);background:rgba(52,211,153,.1);color:#34D399;cursor:pointer">
-            💾 Save Credentials
+            Save Credentials
           </button>
           <button onclick="toggleTsCreds()"
             style="padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer">
@@ -604,7 +604,8 @@
           style="border-color:rgba(52,211,153,.5);color:#34D399"
           onmouseover="this.style.background='rgba(52,211,153,.12)'"
           onmouseout="this.style.background=''">
-          ⬇ Generate &amp; Download
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Generate &amp; Download
         </button>
         <span id="ts-status" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
       </div>
@@ -1090,7 +1091,7 @@ loadVersion();
         // Auto-open form if nothing saved
         document.getElementById('ts-creds-form').style.display = 'flex';
         credsFormOpen = true;
-        document.getElementById('ts-creds-toggle').textContent = '✕ Close';
+        document.getElementById('ts-creds-toggle').textContent = 'Close';
       }
     } catch(e) { /* monitor not ready yet */ }
   }
@@ -1104,7 +1105,7 @@ loadVersion();
   window.toggleTsCreds = function() {
     credsFormOpen = !credsFormOpen;
     document.getElementById('ts-creds-form').style.display = credsFormOpen ? 'flex' : 'none';
-    document.getElementById('ts-creds-toggle').textContent = credsFormOpen ? '✕ Close' : '✏️ Edit';
+    document.getElementById('ts-creds-toggle').textContent = credsFormOpen ? 'Close' : 'Edit';
   };
 
   window.saveTsCreds = async function() {
@@ -1126,7 +1127,7 @@ loadVersion();
     } catch(e) {
       toast('Failed to save: ' + e.message, 'error');
     } finally {
-      btn.textContent = '💾 Save Credentials'; btn.disabled = false;
+      btn.textContent = 'Save Credentials'; btn.disabled = false;
     }
   };
 
