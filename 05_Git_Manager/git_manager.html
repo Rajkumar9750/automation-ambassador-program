@@ -476,7 +476,18 @@
 
     <!-- Commit / push box -->
     <div id="commit-box">
-      <textarea id="commit-msg" placeholder="Commit message…" rows="3"></textarea>
+      <div style="position:relative">
+        <textarea id="commit-msg" placeholder="Commit message…" rows="3"></textarea>
+        <button id="suggest-btn" onclick="suggestCommit()" title="Auto-generate commit message" style="
+          position:absolute; top:6px; right:6px;
+          background:#21262d; border:1px solid var(--border); color:var(--muted);
+          border-radius:5px; padding:3px 8px; font-size:11px; cursor:pointer;
+          transition: color 0.15s, background 0.15s;
+        " onmouseover="this.style.color='var(--text)';this.style.background='#30363d'"
+           onmouseout="this.style.color='var(--muted)';this.style.background='#21262d'">
+          &#10024; Auto-fill
+        </button>
+      </div>
       <div class="push-row">
         <button id="stage-all-btn" onclick="stageAll()">Stage All</button>
         <button id="push-btn" onclick="commitAndPush()">Commit &amp; Push</button>
@@ -574,6 +585,22 @@ function switchTab(name) {
 
 // ── Status / Files ────────────────────────────────────────────────────────────
 
+async function suggestCommit() {
+  const btn = document.getElementById('suggest-btn');
+  const prev = btn.textContent;
+  btn.textContent = '…';
+  btn.disabled = true;
+  try {
+    const data = await get('/api/suggest-commit');
+    if (data.message) {
+      document.getElementById('commit-msg').value = data.message;
+    }
+  } catch(e) { /* silent */ } finally {
+    btn.textContent = prev;
+    btn.disabled = false;
+  }
+}
+
 async function loadStatus() {
   try {
     const data = await get('/api/status');
@@ -582,6 +609,11 @@ async function loadStatus() {
     document.getElementById('remote-label').textContent = data.remote || '';
     renderFiles(data);
     setStatus('');
+    // Auto-fill commit message if textarea is empty and there are changes
+    const hasChanges = data.staged.length || data.unstaged.length || data.untracked.length;
+    if (hasChanges && !document.getElementById('commit-msg').value.trim()) {
+      suggestCommit();
+    }
   } catch(e) {
     setStatus('Failed to load status: ' + e.message, 'err');
   }

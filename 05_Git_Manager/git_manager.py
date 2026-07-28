@@ -114,6 +114,82 @@ async def change_log():
     return {"entries": _load_log()}
 
 
+@app.get("/api/suggest-commit")
+async def suggest_commit():
+    porcelain, _, _ = _run(["git", "status", "--porcelain=v1"])
+    if not porcelain.strip():
+        return {"message": ""}
+
+    added, modified, deleted, renamed = [], [], [], []
+    for line in porcelain.splitlines():
+        if not line:
+            continue
+        x, y = line[0], line[1]
+        path = line[3:].split(" -> ")[-1]   # handle renames
+        status = x if x not in (" ", "?") else y
+
+        # bucket by action
+        if status in ("A", "?"):
+            added.append(path)
+        elif status == "M":
+            modified.append(path)
+        elif status == "D":
+            deleted.append(path)
+        elif status == "R":
+            renamed.append(path)
+
+    # Determine primary action verb
+    counts = {"Add": len(added), "Update": len(modified), "Remove": len(deleted), "Rename": len(renamed)}
+    action = max(counts, key=counts.get)
+    if counts[action] == 0:
+        return {"message": ""}
+
+    all_files = added + modified + deleted + renamed
+
+    # Extract meaningful component names from paths
+    def label(path: str) -> str:
+        parts = path.replace("\\", "/").split("/")
+        # Use folder name if file is inside a subfolder, else filename without ext
+        if len(parts) > 1:
+            folder = parts[0].replace("_", " ").title()
+            # Strip leading numbers like "05 " -> "Git Manager"
+            import re
+            folder = re.sub(r"^\d+\s*", "", folder)
+            return folder
+        name = parts[-1].rsplit(".", 1)[0].replace("_", " ").replace("-", " ").title()
+        return name
+
+    components = list(dict.fromkeys(label(f) for f in all_files))  # deduplicated, order-preserved
+
+    if len(components) == 1:
+        subject = components[0]
+    elif len(components) == 2:
+        subject = " and ".join(components)
+    else:
+        subject = ", ".join(components[:2]) + f" and {len(components)-2} more"
+
+    # Annotate with what kind of files changed
+    exts = {f.rsplit(".", 1)[-1].lower() for f in all_files if "." in f}
+    type_hints = {
+        "py": "backend", "html": "UI", "css": "styles", "js": "UI",
+        "json": "config", "yaml": "config", "yml": "config", "md": "docs",
+        "sh": "scripts", "txt": "config",
+    }
+    file_types = [type_hints[e] for e in exts if e in type_hints]
+    unique_types = list(dict.fromkeys(file_types))
+
+    if unique_types and len(all_files) <= 4:
+        message = f"{action} {subject} {unique_types[0]}"
+    else:
+        message = f"{action} {subject}"
+
+    # Append brief file count context if many files
+    if len(all_files) > 4:
+        message += f" ({len(all_files)} files)"
+
+    return {"message": message}
+
+
 # ── Write actions ────────────────────────────────────────────────────────────
 
 class PathsRequest(BaseModel):
