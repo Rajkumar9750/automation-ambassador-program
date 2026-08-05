@@ -8,38 +8,83 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { scroll-padding-top: 70px; }
+    html { scroll-padding-top: 64px; }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f0f2f5;
-      color: #1c2536;
+      background: #f0f2f1;
+      color: #0d1b16;
       min-height: 100vh;
     }
 
-    /* ── Top Bar ─────────────────────────── */
-    .topbar {
-      background: #002147;
-      height: 56px;
-      padding: 0 36px;
+    /* ── Animated Header ─────────────────── */
+    header {
+      background: linear-gradient(100deg, #0d2b1f 0%, #163d2c 40%, #0f3325 70%, #0a2318 100%);
+      height: 64px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      padding: 0 28px;
+      gap: 0;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: 0 1px 0 rgba(23,232,143,.12), 0 4px 24px rgba(0,0,0,.45);
+      overflow: hidden;
     }
 
-    .topbar-brand {
+    /* shimmer sweep */
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 30%, rgba(23,232,143,.06) 50%, transparent 70%);
+      background-size: 800px 100%;
+      animation: header-shimmer 6s linear infinite;
+      pointer-events: none;
+    }
+
+    /* teal bottom accent */
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, rgba(23,232,143,.0) 10%, rgba(23,232,143,.7) 40%, rgba(23,232,143,.9) 50%, rgba(23,232,143,.7) 60%, rgba(23,232,143,.0) 90%, transparent 100%);
+    }
+
+    @keyframes header-shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+
+    @keyframes logo-pulse {
+      0%,  100% { box-shadow: 0 0 0 0   rgba(23,232,143,.45), 0 0 14px rgba(23,232,143,.25); }
+      50%        { box-shadow: 0 0 0 6px rgba(23,232,143,.0),  0 0 22px rgba(23,232,143,.45); }
+    }
+
+    .header-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(23,232,143,.12);
+      border: 1.5px solid rgba(23,232,143,.35);
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      flex-shrink: 0;
+      animation: logo-pulse 3s ease-in-out infinite;
+      margin-right: 14px;
     }
 
-    .topbar-brand svg { opacity: 0.85; flex-shrink: 0; }
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
 
-    .topbar-brand h1 {
+    .header-titles h1 {
       font-size: 0.95rem;
       font-weight: 700;
       color: #fff;
@@ -47,35 +92,35 @@
       white-space: nowrap;
     }
 
-    .topbar-brand .pill {
-      background: rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.6);
+    .header-sub {
       font-size: 0.68rem;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 20px;
-      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
     .topbar-user {
       display: none;
       align-items: center;
       gap: 9px;
+      margin-left: 20px;
     }
 
     .topbar-user.visible { display: flex; }
 
     .avatar {
-      width: 30px; height: 30px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.15);
-      color: #fff;
+      background: rgba(23,232,143,.18);
+      color: #17e88f;
       font-size: 0.72rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid rgba(255,255,255,0.2);
+      border: 1.5px solid rgba(23,232,143,.35);
     }
 
     .topbar-user span {
@@ -89,15 +134,22 @@
 
     /* ── Panels ─────────────────────────── */
     .panel {
-      background: #fff;
+      background: #ffffff;
       border-radius: 12px;
-      border: 1px solid #e4e8f0;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8e5;
+      box-shadow: 0 2px 8px rgba(0,63,45,.08);
       margin-bottom: 16px;
       overflow: hidden;
     }
 
     .panel-body { padding: 22px 28px; }
+
+    /* ── Card headings ──────────────────── */
+    .card h2 {
+      border-left: 3px solid #17e88f;
+      color: #003f2d;
+      padding-left: 10px;
+    }
 
     /* ── Credentials ────────────────────── */
     .cred-grid {
@@ -127,7 +179,8 @@
     }
 
     .check-icon {
-      width: 18px; height: 18px;
+      width: 18px;
+      height: 18px;
       background: #16a34a;
       border-radius: 50%;
       display: flex;
@@ -181,19 +234,19 @@
     input, select {
       height: 40px;
       padding: 0 13px;
-      border: 1.5px solid #e2e8f0;
+      border: 1.5px solid #e2e8e5;
       border-radius: 8px;
       font-size: 0.875rem;
       font-family: inherit;
-      color: #1c2536;
+      color: #0d1b16;
       background: #fff;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
     input:focus, select:focus {
-      border-color: #002147;
-      box-shadow: 0 0 0 3px rgba(0,33,71,0.07);
+      border-color: #003f2d;
+      box-shadow: 0 0 0 3px rgba(0,63,45,.10);
     }
 
     input[type="email"], input[type="password"] { min-width: 220px; }
@@ -218,32 +271,43 @@
       flex-shrink: 0;
     }
 
-    .btn-primary { background: #002147; color: #fff; }
-    .btn-primary:hover:not(:disabled) { background: #003166; }
+    .btn-primary { background: #003f2d; color: #fff; box-shadow: 0 2px 8px rgba(0,63,45,.25); }
+    .btn-primary:hover:not(:disabled) { background: #005240; }
     .btn-primary:active { transform: translateY(1px); }
     .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    .btn-teal { background: #17e88f; color: #003f2d; font-weight: 700; box-shadow: 0 2px 8px rgba(23,232,143,.28); }
+    .btn-teal:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 4px 14px rgba(23,232,143,.38); }
+    .btn-teal:active { transform: translateY(1px); }
+    .btn-teal:disabled { opacity: .42; cursor: not-allowed; }
+
     .btn-outline {
       background: #fff;
-      color: #002147;
-      border: 1.5px solid #002147;
+      color: #003f2d;
+      border: 1.5px solid #003f2d;
     }
-    .btn-outline:hover:not(:disabled) { background: #f0f4ff; }
+    .btn-outline:hover:not(:disabled) { background: #f0f5f3; }
     .btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* ── Spinner ────────────────────────── */
     .spinner {
-      width: 14px; height: 14px;
+      width: 14px;
+      height: 14px;
       border: 2px solid rgba(255,255,255,0.25);
-      border-top-color: rgba(255,255,255,0.9);
+      border-top-color: rgba(23,232,143,.9);
       border-radius: 50%;
       animation: spin 0.65s linear infinite;
       flex-shrink: 0;
     }
 
+    .btn-teal .spinner {
+      border-color: rgba(0,63,45,.2);
+      border-top-color: rgba(0,63,45,.8);
+    }
+
     .spinner-dark {
-      border-color: rgba(0,33,71,0.15);
-      border-top-color: #002147;
+      border-color: rgba(0,63,45,.15);
+      border-top-color: #003f2d;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -277,7 +341,7 @@
       padding: 0;
     }
 
-    .info-toggle:hover { color: #002147; }
+    .info-toggle:hover { color: #003f2d; }
     .arrow { display: inline-block; transition: transform 0.2s; font-size: 0.6rem; }
     .info-toggle.open .arrow { transform: rotate(90deg); }
 
@@ -285,7 +349,7 @@
       display: none;
       margin-top: 16px;
       padding-top: 20px;
-      border-top: 1px solid #f1f5f9;
+      border-top: 1px solid #e2e8e5;
     }
 
     .info-panel.open { display: block; }
@@ -295,7 +359,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: #cbd5e1;
+      color: #003f2d;
       margin-bottom: 12px;
     }
 
@@ -310,16 +374,16 @@
       background: #f8fafc;
       border-radius: 8px;
       padding: 14px 16px;
-      border-left: 3px solid #002147;
+      border-left: 3px solid #003f2d;
     }
 
     .logic-step .step-num { font-size: 0.62rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-    .logic-step .step-title { font-size: 0.82rem; font-weight: 700; color: #1c2536; margin-bottom: 4px; }
+    .logic-step .step-title { font-size: 0.82rem; font-weight: 700; color: #003f2d; margin-bottom: 4px; }
     .logic-step .step-desc { font-size: 0.76rem; color: #64748b; line-height: 1.55; }
 
     .logic-tbl { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 16px; }
-    .logic-tbl th { background: #f8fafc; padding: 8px 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e8ecf2; }
-    .logic-tbl td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; vertical-align: top; }
+    .logic-tbl th { background: #f8fafc; padding: 8px 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e2e8e5; }
+    .logic-tbl td { padding: 9px 12px; border-bottom: 1px solid #e2e8e5; color: #374151; vertical-align: top; }
     .logic-tbl tr:last-child td { border-bottom: none; }
     .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; }
     .tag-g { background: #dbeafe; color: #1d4ed8; }
@@ -346,7 +410,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 28px 12px;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid #e2e8e5;
       flex-wrap: wrap;
       gap: 12px;
     }
@@ -354,7 +418,7 @@
     .results-title-block .month-label {
       font-size: 1.45rem;
       font-weight: 800;
-      color: #002147;
+      color: #003f2d;
       letter-spacing: -0.025em;
       line-height: 1;
     }
@@ -378,13 +442,13 @@
     }
 
     .stat-block + .stat-block {
-      border-left: 1px solid #e8ecf2;
+      border-left: 1px solid #e2e8e5;
     }
 
     .stat-block .num {
       font-size: 1.7rem;
       font-weight: 800;
-      color: #002147;
+      color: #003f2d;
       line-height: 1;
       letter-spacing: -0.04em;
     }
@@ -401,7 +465,7 @@
     .results-divider {
       width: 1px;
       height: 52px;
-      background: #e8ecf2;
+      background: #e2e8e5;
       margin: 0 20px;
     }
 
@@ -426,14 +490,14 @@
 
     thead th {
       padding: 12px 20px;
-      background: #f8fafc;
+      background: #003f2d;
       text-align: left;
       font-size: 0.67rem;
       font-weight: 700;
-      color: #94a3b8;
+      color: rgba(255,255,255,0.65);
       text-transform: uppercase;
       letter-spacing: 0.09em;
-      border-bottom: 1px solid #e8ecf2;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       white-space: nowrap;
     }
 
@@ -475,7 +539,7 @@
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 0.78rem;
       font-weight: 700;
-      color: #0047AB;
+      color: #003f2d;
       white-space: nowrap;
       text-decoration: none;
     }
@@ -483,12 +547,12 @@
     .ticket-id:hover {
       text-decoration: underline;
       text-underline-offset: 2px;
-      color: #002147;
+      color: #005240;
     }
 
     .summary-cell {
       font-size: 0.84rem;
-      color: #1c2536;
+      color: #0d1b16;
       line-height: 1.5;
       white-space: normal;
       word-break: break-word;
@@ -507,10 +571,10 @@
     .badge-GISS { background: #dbeafe; color: #1e40af; }
     .badge-BACS { background: #dcfce7; color: #166534; }
 
-    .reporter-cell { font-size: 0.82rem; color: #64748b; }
-    .code-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.74rem; color: #64748b; }
+    .reporter-cell { font-size: 0.82rem; color: #5a6b66; }
+    .code-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.74rem; color: #5a6b66; }
     .date-cell { font-size: 0.82rem; color: #475569; white-space: nowrap; }
-    .dur-cell  { font-weight: 700; color: #002147; font-size: 0.9rem; text-align: right; }
+    .dur-cell  { font-weight: 700; color: #003f2d; font-size: 0.9rem; text-align: right; }
 
     .dash { color: #d1d5db; }
 
@@ -526,7 +590,8 @@
     .in-progress::before {
       content: '';
       display: inline-block;
-      width: 7px; height: 7px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #f59e0b;
       flex-shrink: 0;
@@ -543,24 +608,30 @@
 </head>
 <body>
 
-<!-- Top Bar -->
-<div class="topbar">
-  <div class="topbar-brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<!-- Header -->
+<header>
+  <div class="header-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17e88f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="4" width="18" height="18" rx="2"/>
       <line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/>
       <line x1="3" y1="10" x2="21" y2="10"/>
       <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
     </svg>
-    <h1>Timesheet Generator</h1>
-    <span class="pill">GISS · BACS</span>
   </div>
+  <div class="header-titles">
+    <h1>Timesheet Generator</h1>
+    <span class="header-sub">GISS · BACS</span>
+  </div>
+  <div style="flex:1"></div>
+  <svg width="60" height="20" viewBox="0 0 81 20.13" xmlns="http://www.w3.org/2000/svg" aria-label="CBRE">
+    <path fill="#ffffff" d="M33.57,15.41H26.89V12.05h6.86a1.66,1.66,0,0,1,1.49,1.64,1.73,1.73,0,0,1-1.67,1.72m-6.68-11h7A1.64,1.64,0,0,1,35.3,6a1.72,1.72,0,0,1-1.43,1.68h-7Zm9.94,5.37c2.56-.85,3-3,3-4.75,0-2.68-1.89-5-7.48-5H21.94V20.09h10.4C38,20.09,40,17.21,40,14.32a4.91,4.91,0,0,0-3.19-4.58M63.37,0V20.13H81V15.54H68.28V12H79.75V7.63H68.28V4.39H81V0ZM55.79,6.26a1.65,1.65,0,0,1-1.57,1.38H47.34V4.43h6.88a1.57,1.57,0,0,1,1.57,1.4ZM53.12,0H42.47v20.1h4.89V12h5.39a2.8,2.8,0,0,1,2.74,2.85v5.27h4.79V13.62a4.21,4.21,0,0,0-2.9-3.89,4.5,4.5,0,0,0,3-4.44C60.34.94,56.6,0,53.12,0M18.76,15.27c-.07,0-6.69.13-9-.09a5.16,5.16,0,0,1-5-5.31,5.14,5.14,0,0,1,4.82-5.2c1.39-.19,9-.1,9.09-.1h.16L18.9,0h-.16L10.11,0A12.73,12.73,0,0,0,5.93.84,10.25,10.25,0,0,0,2,4a10,10,0,0,0-2,6,12.15,12.15,0,0,0,.16,2A9.8,9.8,0,0,0,5.65,19a14.72,14.72,0,0,0,5.46,1.11l1.63,0h6.17V15.27Z"/>
+  </svg>
   <div class="topbar-user" id="topbarUser">
     <div class="avatar" id="topbarAvatar"></div>
     <span id="topbarName"></span>
   </div>
-</div>
+</header>
 
 <div class="page">
 
@@ -611,7 +682,7 @@
           <label>Year</label>
           <input type="number" id="year" min="2020" max="2035">
         </div>
-        <button class="btn btn-primary" id="generateBtn" onclick="generate()">
+        <button class="btn btn-teal" id="generateBtn" onclick="generate()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           Generate Timesheet
         </button>
@@ -707,10 +778,10 @@
     </div><!-- /fullControls -->
 
     <!-- Collapsed mini bar shown after first generate -->
-    <div id="miniControls" class="hidden" style="padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f1f5f9">
+    <div id="miniControls" class="hidden" style="padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #e2e8e5">
       <select id="monthMini"></select>
       <input type="number" id="yearMini" min="2020" max="2035" style="width:90px">
-      <button class="btn btn-primary" id="generateBtnMini" onclick="generate()" style="height:36px;font-size:0.82rem;padding:0 16px">
+      <button class="btn btn-teal" id="generateBtnMini" onclick="generate()" style="height:36px;font-size:0.82rem;padding:0 16px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Regenerate
       </button>
