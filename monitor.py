@@ -1,6 +1,6 @@
 """
 Automation Ambassador Program – Centralized Tool Monitor
-Manages: Dashboard Factory (8080), Dashboard Factory QA (5555), Jira Tracker (8082)
+Manages: Dashboard Factory (8080), Dashboard Factory QA (5555), Timesheet Tool (5000)
 Run via:  Launch Monitor.command   OR   ./venv/bin/uvicorn monitor:app --port 9000
 """
 

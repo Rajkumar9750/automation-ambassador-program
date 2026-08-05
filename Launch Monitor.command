@@ -9,10 +9,7 @@ PORT=9000
 # Remove macOS quarantine from the whole folder (one-time, silent)
 xattr -rd com.apple.quarantine . 2>/dev/null || true
 # Ensure all scripts are executable
-chmod +x setup.sh start.sh \
-  01_Dashboard_Factory/start.sh \
-  02_Dashboard_Factory_QA/start.sh \
-  03_Jira_Tracker/start.sh 2>/dev/null || true
+chmod +x setup.sh 2>/dev/null || true
 
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
@@ -29,7 +26,7 @@ fi
 
 echo "  Dashboard Factory    → http://localhost:8080"
 echo "  Dashboard Factory QA → http://localhost:5555"
-echo "  Jira Tracker         → http://localhost:8082"
+echo "  Timesheet Tool       → http://localhost:5000"
 echo "  Monitor              → http://localhost:${PORT}"
 echo ""
 echo "Press Ctrl+C to stop."

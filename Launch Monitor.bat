@@ -18,7 +18,7 @@ if not exist "venv\Scripts\python.exe" (
 
 echo   Dashboard Factory    -^> http://localhost:8080
 echo   Dashboard Factory QA -^> http://localhost:5555
-echo   Jira Tracker         -^> http://localhost:8082
+echo   Timesheet Tool       -^> http://localhost:5000
 echo   Monitor              -^> http://localhost:%PORT%
 echo.
 echo Press Ctrl+C to stop.

@@ -13,9 +13,8 @@ One launcher starts a browser dashboard where you control all tools from a singl
 - [Monitor Dashboard](#monitor-dashboard)
 - [Tool — Dashboard Factory](#tool--dashboard-factory)
 - [Tool — Dashboard Factory QA](#tool--dashboard-factory-qa)
-- [Tool — Jira Tracker](#tool--jira-tracker)
-- [Utility — Calculated Fields Extractor](#utility--calculated-fields-extractor)
-- [Utility — Timesheet Report](#utility--timesheet-report)
+- [Tool — Timesheet Tool](#tool--timesheet-tool)
+- [Utility — Data Dictionary Generator](#utility--data-dictionary-generator)
 - [Getting Updates](#getting-updates)
 - [For Maintainers](#for-maintainers)
 - [Troubleshooting](#troubleshooting)
@@ -27,9 +26,9 @@ One launcher starts a browser dashboard where you control all tools from a singl
 | Tool | Port | Description |
 |---|---|---|
 | **Monitor** | 9000 | Central dashboard — start, stop and monitor all tools |
-| **Dashboard Factory** | 8080 | Generate Tableau workbooks from a Postgres database |
+| **Dashboard Factory** | 8080 | Generate Tableau workbooks from a Postgres or Kyvos database |
 | **Dashboard Factory QA** | 5555 | Auto-fix formatting & run QA compliance checks on Tableau workbooks |
-| **Jira Tracker** | 8082 | View your Jira tickets and export timesheet reports to Excel |
+| **Timesheet Tool** | 5000 | Generate Excel timesheets from your Jira comment activity |
 
 ---
 
@@ -127,13 +126,13 @@ Click **▾ Hide logs** to collapse the log panel.
 
 **URL:** http://localhost:8080
 
-Generates Tableau `.twbx` workbooks from a Postgres database.
+Generates Tableau `.twbx` workbooks from a Postgres or Kyvos database.
 
 ### How to use
 1. Start **Dashboard Factory** from the Monitor and click **Open**
-2. Enter your Postgres connection details (host, port, database, username, password)
-3. Select the tables and fields you want in the workbook
-4. Configure the layout and dashboard settings
+2. Upload a reference `.twbx` workbook
+3. Enter your database connection details
+4. Map the old tables to the new ones
 5. Click **Generate** — the `.twbx` file downloads automatically
 
 ---
@@ -154,57 +153,52 @@ Checks Tableau workbooks for formatting issues and compliance, then applies auto
 
 ---
 
-## Tool — Jira Tracker
+## Tool — Timesheet Tool
 
-**URL:** http://localhost:8082
+**URL:** http://localhost:5000
 
-View your Jira tickets across active, completed, overdue, and all views. Filter by project, sort by different fields, and drill into ticket activity.
+Generates a formatted Excel timesheet based on your Jira comment activity.
 
-### Connecting to Jira
-
-**First time only:**
-1. Start **Jira Tracker** from the Monitor and click **Open**
-2. Select your Jira type:
-   - **Cloud** — your Jira URL ends in `.atlassian.net`
-   - **Server / Data Center** — self-hosted Jira instance
-3. Enter your **Jira Base URL** (e.g. `https://yourcompany.atlassian.net`)
-4. Enter your **Email**
-5. Enter your **API Token** (see below)
-6. Click **Connect**
+### Connecting to Jira (first time only)
+1. Start **Timesheet Tool** from the Monitor and click **Open**
+2. Enter your **Jira Base URL** (e.g. `https://yourcompany.atlassian.net`)
+3. Enter your **Email** and **API Token**
+4. Click **Connect**
 
 ### Getting a Jira API Token
 
 **Jira Cloud:**
 1. Go to [id.atlassian.com](https://id.atlassian.com) → **Security** → **API tokens**
-2. Click **Create API token**
-3. Give it a name (e.g. `Automation Ambassador`) → **Create**
-4. Copy the token — **you cannot see it again after closing the dialog**
+2. Click **Create API token**, give it a name → **Create**
+3. Copy the token — **you cannot see it again after closing the dialog**
 
 **Jira Server / Data Center:**
-1. Log into your Jira instance → click your profile picture → **Profile**
+1. Log into Jira → click your profile picture → **Profile**
 2. Go to **Personal Access Tokens** in the left sidebar
-3. Click **Create token**, set a name and expiry → **Create**
-4. Copy the token
+3. Click **Create token**, set a name → **Create** and copy it
 
-> Your credentials are stored locally on your machine only. They are never uploaded to GitHub or shared with anyone.
+> Your credentials are stored locally on your machine only. Never uploaded to GitHub.
 
-### Ticket Views
+### Generating a Timesheet
+1. Select the **Month** and **Year**
+2. Click **Generate**
+3. The Excel file downloads automatically
 
-| View | Shows |
+### What the Timesheet Contains
+
+Each row is a ticket you commented on during the selected month.
+
+| Column | Description |
 |---|---|
-| **Active** | To Do + In Progress tickets |
-| **Completed** | Resolved / Done tickets |
-| **Overdue** | Tickets past their due date |
-| **All Mine** | Every ticket assigned to or reported by you |
-
-### Filters & Sorting
-- **Project** — filter to a specific Jira project
-- **Sort** — Due Date, Last Updated, Priority, or Created date
-- **Past assignments** — include tickets previously assigned to you
-- **Include reported by me** — include tickets you created/reported
-
-### Ticket Details
-Click any ticket row to expand its **Activity** and **Details** panel, showing comments, status changes, and full field values.
+| Ticket # | Jira ticket key (e.g. BACS-123), hyperlinked to Jira |
+| Category | Issue type (Bug, Task, Story, etc.) |
+| Summary | Ticket title |
+| Reporter | Who raised the ticket |
+| Project Code | Looked up based on Jira project |
+| Activity Code | Looked up based on Jira project |
+| Due Date | Ticket due date |
+| Start Date | First date you commented in the period |
+| End Date | Last date you commented in the period |
 
 ---
 
@@ -212,7 +206,7 @@ Click any ticket row to expand its **Activity** and **Details** panel, showing c
 
 Located directly on the Monitor page at **http://localhost:9000**.
 
-Generates a full data dictionary from a Tableau workbook and exports it to a formatted Excel file — no need to open Tableau.
+Generates a full data dictionary from a Tableau workbook and exports it to a formatted Excel file.
 
 ### How to use
 1. Go to the Monitor at http://localhost:9000
@@ -222,52 +216,6 @@ Generates a full data dictionary from a Tableau workbook and exports it to a for
 5. Click **⬇ Download Excel** to save the report
 
 The Excel file includes: Field Name, Original Name, Datasource, Formula, Field Type, Data Type, Hidden, # of Times Used, and Worksheets Used On.
-
----
-
-## Utility — Timesheet Report
-
-Located directly on the Monitor page at **http://localhost:9000**.
-
-Generates a formatted Excel timesheet based on your Jira comment activity. The client name is read from each ticket's summary (text before the `|`), and the Project Code and Activity Code are looked up automatically from the client list.
-
-### Setting Up Credentials (first time only)
-1. Scroll to the **Timesheet Report** card on the Monitor
-2. Click **Edit**
-3. Enter your Jira URL, email, API token, and server type
-4. Click **💾 Save Credentials**
-
-Credentials are saved locally and reused for every future report — you only enter them once.
-
-### Generating a Monthly Timesheet
-1. Select **Month** under Scope
-2. Choose the month and year
-3. Click **Generate**
-4. The Excel file downloads as `Timesheet_MonthName_YYYY.xlsx`
-
-### Generating a Full-Year Consolidated Timesheet
-1. Select **Year** under Scope
-2. Choose the year
-3. Click **Generate**
-4. The Excel file downloads as `Timesheet_Consolidated_YYYY.xlsx`
-   - Contains an **All Months** tab with all tickets across the year
-   - Plus individual tabs for each month that had activity
-
-### What the Timesheet Contains
-
-Each row is a ticket you commented on during the selected period.
-
-| Column | Description |
-|---|---|
-| Ticket # | Jira ticket key (e.g. BACS-123), hyperlinked to Jira |
-| Category | Issue type (Bug, Task, Story, etc.) |
-| Summary | Ticket title |
-| Reporter | Who raised the ticket |
-| Project Code | Looked up from client name in the ticket summary |
-| Activity Code | Looked up based on Jira project (e.g. ONGOING_SUPPORT) |
-| Due Date | Ticket due date |
-| Start Date | First date you commented on this ticket in the period |
-| End Date | Last date you commented on this ticket in the period |
 
 ---
 
@@ -299,18 +247,6 @@ git push
 
 Teammates pull the update with `git pull`.
 
-### Updating the Client List (Detail.xlsx)
-
-The `Detail.xlsx` file in the project root maps client names to Project Codes and Activity Codes used in the Timesheet Report. To update it:
-
-1. Replace `Detail.xlsx` in the project folder with the new version
-2. Commit and push:
-```bash
-git add Detail.xlsx
-git commit -m "Update client list"
-git push
-```
-
 ---
 
 ## Troubleshooting
@@ -336,11 +272,6 @@ Another instance of that tool is already running. Stop it from the Monitor, or r
 ### Python not found after setup completes
 Close the terminal, open a new one, and run `bash setup.sh` again. PATH changes take effect in new terminal sessions.
 
-### Timesheet shows empty Project Code / Activity Code
-The client name in the ticket summary must match a client name in `Detail.xlsx`.
-The tool reads the text before the `|` in the ticket summary (e.g. `Adobe | Issue title` → looks up `Adobe`).
-If the client is missing from `Detail.xlsx`, ask a maintainer to add it.
-
 ### Jira credentials rejected (401 error)
 - Make sure you are using an **API token**, not your Jira password
 - For Jira Cloud, the token must come from [id.atlassian.com](https://id.atlassian.com)
@@ -351,5 +282,4 @@ If the client is missing from `Detail.xlsx`, ask a maintainer to add it.
 ## Security Notes
 
 - `monitor_config.json` — stores your Jira credentials locally. Excluded from Git via `.gitignore`. Never shared.
-- `Detail.xlsx` — contains client and project code data. Included in the repo. Do not put sensitive data in this file.
 - All virtual environments (`venv/`, `.venv/`) — excluded from Git. Recreated locally by setup.
