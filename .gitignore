@@ -5,6 +5,10 @@ venv/
 02_Dashboard_Factory_QA/.venv/
 03_Jira_Tracker/venv/
 04_Anthology_Developer/venv/
+06_Timesheet_Tool/venv/
+
+# Logs
+*.log
 
 # Python cache
 __pycache__/

@@ -77,28 +77,34 @@ echo.
 :: 2. Create / update virtual environments
 :: -------------------------------------------------------
 
-echo [1/4] Setting up Monitor...
+echo [1/5] Setting up Monitor...
 call :make_venv "venv" "%PYTHON%"
 venv\Scripts\pip install -q --upgrade pip 2>nul
 venv\Scripts\pip install -q -r requirements.txt
 echo   Done.
 
-echo [2/4] Setting up Dashboard Factory...
+echo [2/5] Setting up Dashboard Factory...
 call :make_venv "01_Dashboard_Factory\venv" "%PYTHON%"
 01_Dashboard_Factory\venv\Scripts\pip install -q --upgrade pip 2>nul
 01_Dashboard_Factory\venv\Scripts\pip install -q -r 01_Dashboard_Factory\requirements.txt
 echo   Done.
 
-echo [3/4] Setting up Dashboard Factory QA...
+echo [3/5] Setting up Dashboard Factory QA...
 call :make_venv "02_Dashboard_Factory_QA\.venv" "%PYTHON%"
 02_Dashboard_Factory_QA\.venv\Scripts\pip install -q --upgrade pip 2>nul
 02_Dashboard_Factory_QA\.venv\Scripts\pip install -q -r 02_Dashboard_Factory_QA\requirements.txt
 echo   Done.
 
-echo [4/4] Setting up Jira Tracker...
+echo [4/5] Setting up Jira Tracker...
 call :make_venv "03_Jira_Tracker\venv" "%PYTHON%"
 03_Jira_Tracker\venv\Scripts\pip install -q --upgrade pip 2>nul
 03_Jira_Tracker\venv\Scripts\pip install -q -r 03_Jira_Tracker\requirements.txt
+echo   Done.
+
+echo [5/5] Setting up Timesheet Tool...
+call :make_venv "06_Timesheet_Tool\venv" "%PYTHON%"
+06_Timesheet_Tool\venv\Scripts\pip install -q --upgrade pip 2>nul
+06_Timesheet_Tool\venv\Scripts\pip install -q -r 06_Timesheet_Tool\requirements.txt
 echo   Done.
 
 echo.

@@ -1,0 +1,55 @@
+import os
+import requests
+from flask import Flask, render_template, request, jsonify, send_file
+from timesheet import check_env, fetch_tickets, export_to_excel, get_current_user, JIRA_BASE_URL
+
+app = Flask(__name__)
+
+
+def get_auth(data):
+    return (data["email"], data["apiToken"])
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.route("/api/connect", methods=["POST"])
+def connect():
+    data = request.get_json()
+    auth = get_auth(data)
+    try:
+        user = get_current_user(JIRA_BASE_URL, auth)
+        return jsonify({
+            "ok": True,
+            "name": user.get("displayName"),
+            "email": user.get("emailAddress"),
+        })
+    except requests.HTTPError as e:
+        return jsonify({"ok": False, "error": f"Invalid credentials ({e.response.status_code})"}), 200
+
+
+@app.route("/api/generate", methods=["POST"])
+def generate():
+    data  = request.get_json()
+    auth  = get_auth(data)
+    month = int(data["month"])
+    year  = int(data["year"])
+    rows, errors = fetch_tickets(month, year, JIRA_BASE_URL, auth)
+    return jsonify({"rows": rows, "errors": errors, "jiraBaseUrl": JIRA_BASE_URL})
+
+
+@app.route("/api/export", methods=["POST"])
+def export():
+    data  = request.get_json()
+    month = int(data["month"])
+    year  = int(data["year"])
+    rows  = data["rows"]
+    filepath = export_to_excel(rows, month, year)
+    return send_file(filepath, as_attachment=True, download_name=os.path.basename(filepath))
+
+
+if __name__ == "__main__":
+    check_env()
+    app.run(debug=True, port=5000)

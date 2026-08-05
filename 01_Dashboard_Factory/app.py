@@ -142,6 +142,12 @@ class GenerateRequest(BaseModel):
     removed_tables: Optional[List[str]] = None
     join_overrides: Optional[List[JoinConditionOverride]] = None
 
+
+class ExtractRequest(BaseModel):
+    session_id: str
+    filename: str
+    connection: ConnDetails
+
 # ---------------------------------------------------------------------------
 # HTML routes
 # ---------------------------------------------------------------------------
@@ -576,19 +582,46 @@ async def generate(req: GenerateRequest):
             client_col_types=client_col_types,
         )
 
+        # Patch INT()/FLOAT() formulas that directly cast TEXT columns.
+        # In some client DBs those columns contain "N-Word" values ("2-Poor")
+        # rather than pure numerics ("2"), causing PostgreSQL CAST errors when
+        # Tableau pushes the formula to the live connection.
+        text_cols = {
+            col
+            for table_cols in client_col_types.values()
+            for col, pg_type in table_cols.items()
+            if pg_type.lower() in (
+                "text", "character varying", "varchar", "character", "name"
+            )
+        }
+        if text_cols:
+            try:
+                with zipfile.ZipFile(output_path) as z:
+                    twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
+                    twb_raw = z.read(twb_name).decode("utf-8", errors="replace")
+                    all_items = {n: z.read(n) for n in z.namelist()}
+                fixed = _fix_text_cast_formulas(twb_raw, text_cols)
+                if fixed != twb_raw:
+                    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as z:
+                        for name, data in all_items.items():
+                            if name == twb_name:
+                                z.writestr(name, fixed.encode("utf-8"))
+                            else:
+                                z.writestr(name, data)
+            except Exception as _fe:
+                repair_log.append({
+                    "type": "formula_fix", "severity": "warning",
+                    "title": "Formula auto-fix skipped",
+                    "description": str(_fe),
+                    "fix": "INT()/FLOAT() on text columns may still fail on non-numeric values.",
+                })
+
         return repair_log
 
     try:
         repair_log = await loop.run_in_executor(None, _blocking_generate)
     except Exception as e:
         raise HTTPException(500, detail=f"Generation failed: {e}")
-
-    # Persist mappings so the extract endpoint can re-run generate_twbx
-    session = SESSIONS[req.session_id]
-    session["last_table_mappings"]   = [m.dict() for m in req.table_mappings]
-    session["last_calc_overrides"]   = [c.dict() for c in req.calc_overrides] if req.calc_overrides else []
-    session["last_removed_tables"]   = req.removed_tables or []
-    session["last_join_overrides"]   = [j.dict() for j in req.join_overrides] if req.join_overrides else []
 
     return {
         "download_url": f"/api/download/{output_filename}",
@@ -606,42 +639,175 @@ async def download(filename: str):
 
 
 # ---------------------------------------------------------------------------
-# Extract endpoint — embeds .hyper files into the generated workbook
+# Static files placeholder — actual mount is below
 # ---------------------------------------------------------------------------
-
-class ExtractRequest(BaseModel):
-    session_id: str
-    filename: str
-    connection: ConnDetails
-
 
 def _sanitise_extract_block(extract_block: str) -> str:
     """
-    Prepare the injected <extract> block for a multi-table hyper file.
+    Prepare a reference <extract> block for injection into a generated workbook.
 
-    Two issues from copying the reference block verbatim:
-    1. schema='Extract' tablename='Extract' on the <connection class='hyper'> tells
-       Tableau to look for a single Extract.Extract table.  Our hyper has multiple
-       named tables, so Tableau can't find that table and falls back to live,
-       triggering a new extract.  Strip both attributes.
-    2. dbname must start with './' so Tableau resolves it relative to the temp dir
-       where the .twbx is unpacked.
+    <properties context='extract'> blocks inside the <extract> element contain
+    SQL/formula definitions tied to the ORIGINAL schema.  Tableau validates these
+    against the new connection when loading the workbook; mismatches cause error
+    2F8B7E6C ("Invalid field formula").  We build the hyper ourselves so Tableau
+    never needs to materialise those formulas — stripping them is safe.
+
+    The outer <extract> wrapper, <connection class='hyper'> (hyper file path),
+    <relation> table references, and <cols> mappings are all kept so Tableau can
+    still locate and use the hyper file we provide.
     """
     import re
 
-    def _fix_hyper_conn(m: "re.Match") -> str:
-        tag = m.group(0)
-        tag = re.sub(r"\s+schema='[^']*'", "", tag)
-        tag = re.sub(r"\s+tablename='[^']*'", "", tag)
-        # Ensure dbname starts with ./
-        tag = re.sub(
-            r"(dbname=')(?!\./)",
-            r"\1./",
-            tag,
+    # Strip only the <text> SQL inside <properties context='extract'> — the SQL
+    # contains the extract-creation query which Tableau validates against the live
+    # DB even when a valid hyper is present, causing 2F8B7E6C on schema mismatch.
+    # Keep the <relation> structural references so Tableau knows which hyper table
+    # corresponds to each extract entry (needed to locate/read the hyper file).
+    # After stripping <text>, collapse empty <relation>...</relation> to self-closing.
+    prev = None
+    while prev != extract_block:
+        prev = extract_block
+        extract_block = re.sub(
+            r"(<properties\b[^>]*context='extract'[^>]*>)(.*?)(</properties>)",
+            lambda m: (
+                m.group(1)
+                + re.sub(r"<text\b[^>]*>.*?</text>", "", m.group(2), flags=re.DOTALL)
+                + m.group(3)
+            ),
+            extract_block,
+            flags=re.DOTALL,
         )
-        return tag
 
-    return re.sub(r"<connection\b[^>]*class='hyper'[^>]*>", _fix_hyper_conn, extract_block)
+    # Collapse <relation ...></relation> → <relation .../> for clean XML
+    extract_block = re.sub(
+        r"<relation\b([^>]*)>\s*</relation>",
+        r"<relation\1/>",
+        extract_block,
+    )
+
+    return extract_block
+
+
+def _fix_text_cast_formulas(twb: str, text_columns: set) -> str:
+    """
+    Patch calculated field formulas that apply INT() or FLOAT() directly to
+    physical TEXT columns.
+
+    In the reference workbook (bicdemo) those columns held pure numeric strings
+    ("2", "3").  In some client DBs (e.g. adidas) the same columns contain
+    "N-Word" strings ("2-Poor", "3-Fair").  When Tableau validates the formula
+    against the live PostgreSQL connection it pushes CAST(col AS float8) which
+    throws "invalid input syntax for type double precision".
+
+    Safe replacement: REGEXP_EXTRACT([col], '^(\\d+)') pulls the leading digits
+    from any value ("2" → "2", "2-Poor" → "2", NULL → NULL) before the cast.
+    """
+    import re, html
+
+    # Build set of lowercased column names for case-insensitive matching
+    text_col_lower = {c.lower() for c in text_columns}
+
+    # formula= attribute values are HTML-encoded in the TWB XML
+    def _patch_formula(formula_encoded: str) -> str:
+        formula = html.unescape(formula_encoded)
+        changed = False
+
+        def _replace_cast(m: "re.Match") -> str:
+            nonlocal changed
+            fn   = m.group(1)          # INT or FLOAT
+            col  = m.group(2)          # column name as it appears in formula
+            if col.lower() not in text_col_lower:
+                return m.group(0)
+            changed = True
+            safe = f"REGEXP_EXTRACT([{col}], '^(\\d+)')"
+            if fn.upper() == "INT":
+                return f"INT(FLOAT({safe}))"
+            return f"FLOAT({safe})"
+
+        patched = re.sub(
+            r"\b(INT|FLOAT)\s*\(\s*\[([^\]]+)\]\s*\)",
+            _replace_cast,
+            formula,
+            flags=re.IGNORECASE,
+        )
+        if not changed:
+            return formula_encoded
+        # Re-encode HTML entities.  Single quotes MUST become &apos; because
+        # the formula= attribute is delimited by single quotes in the TWB XML —
+        # leaving a literal ' inside the value breaks the XML parser (D2E8DA72).
+        return (patched
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&apos;"))
+
+    return re.sub(
+        r"(formula=')([^']*)'",
+        lambda m: m.group(1) + _patch_formula(m.group(2)) + "'",
+        twb,
+    )
+
+
+def _sync_extract_table_names(extract_block: str, gen_twb: str) -> str:
+    """
+    Replace old-schema extract table names in the block with the names that
+    generate_twbx() already wrote into the generated TWB's object-graph.
+
+    generate_twbx() remaps table references throughout the workbook (e.g.
+    bicdemo → adidas) — including [Extract].[...] refs inside object-graph
+    <properties context='extract'> blocks.  The extract block we inject still
+    carries old-schema names.  _parse_datasource_extracts() scans the entire
+    datasource for [Extract].[...] refs and therefore finds BOTH the old names
+    (from the inject) and the new names (from the object-graph), creating
+    duplicate hyper tables.  This function re-aligns the inject with the
+    object-graph so only one set of names exists.
+    """
+    import re
+
+    # Collect every [Extract].[tablename] reference present in the generated TWB.
+    # These were already updated to the new schema by generate_twbx().
+    gen_extract_refs = set(re.findall(r"\[Extract\]\.\[([^\]]+)\]", gen_twb))
+
+    # Build: base_table_name → updated_full_name
+    # e.g. "fm_fact_workorder_vw" → "fm_fact_workorder_vw (adidas.fm_fact_workorder_vw)_HASH"
+    updated_names: Dict[str, str] = {}
+    for name in gen_extract_refs:
+        base_m = re.match(r"^(.+?)\s+\(", name)
+        base = base_m.group(1) if base_m else None
+        if base:
+            updated_names[base] = name
+
+    if not updated_names:
+        return extract_block
+
+    def _replace_name(m: "re.Match") -> str:
+        old_name = m.group(1)
+        base_m = re.match(r"^(.+?)\s+\(", old_name)
+        if not base_m:
+            return m.group(0)
+        base = base_m.group(1)
+        new_name = updated_names.get(base)
+        if new_name and new_name != old_name:
+            return m.group(0).replace(old_name, new_name)
+        return m.group(0)
+
+    # Replace in relation name= and table=[Extract].[...] attributes
+    extract_block = re.sub(
+        r"name='([^']*)'\s+table='\[Extract\]\.\[[^\]]*\]'",
+        _replace_name,
+        extract_block,
+    )
+    extract_block = re.sub(
+        r"table='\[Extract\]\.\[([^\]]*)\]'",
+        lambda m: m.group(0).replace(
+            m.group(1),
+            updated_names.get(re.match(r"^(.+?)\s+\(", m.group(1)).group(1), m.group(1))
+            if re.match(r"^(.+?)\s+\(", m.group(1)) else m.group(1)
+        ),
+        extract_block,
+    )
+    return extract_block
 
 
 def _inject_extract_blocks(gen_twb: str, ref_twb: str) -> str:
@@ -667,13 +833,17 @@ def _inject_extract_blocks(gen_twb: str, ref_twb: str) -> str:
         block = ref_twb[ds_start:ds_end + len("</datasource>")]
         ext_m = re.search(r"<extract\b.*?</extract>", block, re.DOTALL)
         if ext_m:
-            ref_extracts[ds_name] = _sanitise_extract_block(ext_m.group(0))
+            sanitised = _sanitise_extract_block(ext_m.group(0))
+            ref_extracts[ds_name] = sanitised
 
     if not ref_extracts:
         return gen_twb
 
     result = gen_twb
     for ds_name, extract_block in ref_extracts.items():
+        # Align extract table names with what generate_twbx() wrote in this TWB
+        extract_block = _sync_extract_table_names(extract_block, result)
+
         # Find the datasource block in the generated TWB
         ds_pat = re.compile(
             r"<datasource\b[^>]*name='" + re.escape(ds_name) + r"'[^>]*>.*?</datasource>",
@@ -710,6 +880,30 @@ async def build_extract(req: ExtractRequest):
     def _blocking_extract():
         from extract_builder import build_extracts
 
+        import re as _re
+
+        # Read generated TWB (new connection/tables, no extract blocks)
+        with zipfile.ZipFile(generated_path) as z:
+            twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
+            gen_twb = z.read(twb_name).decode("utf-8", errors="replace")
+            gen_items = {name: z.read(name) for name in z.namelist()}
+
+        # NOTE: do NOT strip or empty <properties context='extract'> from gen_twb.
+        # In the generated workbook those blocks contain only table references
+        # (e.g. <relation name='...' table='[Extract].[...]' type='table'/>), not
+        # formula SQL.  Tableau needs them to know which tables the extract holds.
+        # Emptying them causes Tableau to try to re-create the extract from scratch,
+        # which triggers 2F8B7E6C when it validates formulas against the live DB.
+
+        # Read reference TWB (has <extract> blocks with hyper paths)
+        with zipfile.ZipFile(session["workbook_path"]) as z:
+            ref_twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
+            ref_twb = z.read(ref_twb_name).decode("utf-8", errors="replace")
+
+        # Inject sanitised extract blocks (strips <properties context='extract'>
+        # formula hints that cause 2F8B7E6C on schema mismatch)
+        hybrid_twb = _inject_extract_blocks(gen_twb, ref_twb)
+
         pg_params = {
             "host":     req.connection.host,
             "port":     req.connection.port,
@@ -723,50 +917,46 @@ async def build_extract(req: ExtractRequest):
         extract_filename = f"{base}_extract.twbx"
         extract_path = os.path.join(OUTPUT_DIR, extract_filename)
 
-        # Re-run generate_twbx with preserve_extract=True so the <extract> block
-        # stays in its original position (where Tableau placed it) rather than being
-        # re-injected by regex. The old .hyper files are kept in the ZIP as placeholders;
-        # build_extracts() will overwrite them in-place with fresh data.
-        from workbook_generator import generate_twbx as _gen
-
-        # Rebuild the same mappings used in the original generate call.
-        # We read them from the already-generated .twbx TWB + session data.
-        with zipfile.ZipFile(generated_path) as z:
-            twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
-            gen_twb_content = z.read(twb_name).decode("utf-8", errors="replace")
-
-        # generate_twbx writes to a file; use a temp path then rebuild hypers on top
-        with tempfile.TemporaryDirectory() as tmp_gen:
-            interim_path = os.path.join(tmp_gen, "interim.twbx")
-            _gen(
-                source_twbx=session["workbook_path"],
-                client_name=req.session_id,          # placeholder, not used in output
-                new_connection=pg_params,
-                table_mappings=session.get("last_table_mappings", []),
-                output_path=interim_path,
-                calc_overrides=session.get("last_calc_overrides", []),
-                type_fixes=[],
-                removed_tables=session.get("last_removed_tables", []),
-                join_overrides=session.get("last_join_overrides", []),
-                preserve_extract=True,
-            )
-
-            # Now read the interim TWB (has extract block preserved) and build hypers
-            with zipfile.ZipFile(interim_path) as z:
-                twb_name = next(f for f in z.namelist() if f.endswith(".twb"))
-                interim_twb = z.read(twb_name).decode("utf-8", errors="replace")
-                all_items = {name: z.read(name) for name in z.namelist()}
-
-            extracts_dir = os.path.join(tmp_gen, "extracts")
+        with tempfile.TemporaryDirectory() as tmp:
+            extracts_dir = os.path.join(tmp, "extracts")
             os.makedirs(extracts_dir, exist_ok=True)
-            modified_twb, repair_log = build_extracts(interim_twb, pg_params, extracts_dir)
 
-            # Collect hyper paths referenced in TWB so we use the exact dbname paths
+            modified_twb, repair_log = build_extracts(hybrid_twb, pg_params, extracts_dir)
+
+            # Collect TEXT columns from every hyper we just built.
+            # Formulas that apply INT()/FLOAT() directly to these columns will fail
+            # on clients whose data has "N-Word" values (e.g. "2-Poor").
+            import tableauhyperapi as _hyper
+            text_columns: set = set()
+            for hf in os.listdir(extracts_dir):
+                if not hf.endswith(".hyper"):
+                    continue
+                hpath = os.path.join(extracts_dir, hf)
+                try:
+                    with _hyper.HyperProcess(
+                        _hyper.Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU
+                    ) as hp:
+                        with _hyper.Connection(hp.endpoint, hpath) as conn:
+                            for schema in conn.catalog.get_schema_names():
+                                for tbl in conn.catalog.get_table_names(schema):
+                                    td = conn.catalog.get_table_definition(tbl)
+                                    for col in td.columns:
+                                        if col.type == _hyper.SqlType.text():
+                                            text_columns.add(
+                                                str(col.name).strip('"')
+                                            )
+                except Exception:
+                    pass   # best-effort — skip if hyper unreadable
+
+            if text_columns:
+                modified_twb = _fix_text_cast_formulas(modified_twb, text_columns)
+
+            # Use exact dbname paths from the TWB so Tableau locates the files
             import re as _re
             hyper_refs = _re.findall(r"dbname='([^']*\.hyper)'", modified_twb)
 
             with zipfile.ZipFile(extract_path, "w", zipfile.ZIP_DEFLATED) as dst:
-                for name, data in all_items.items():
+                for name, data in gen_items.items():
                     if name.endswith(".twb"):
                         dst.writestr(name, modified_twb.encode("utf-8"))
                     elif name.endswith(".hyper"):
@@ -778,7 +968,6 @@ async def build_extract(req: ExtractRequest):
                     if not hyper_file.endswith(".hyper"):
                         continue
                     src_path = os.path.join(extracts_dir, hyper_file)
-                    # Use exact dbname path from TWB so Tableau can locate the file
                     zip_path = next(
                         (r for r in hyper_refs if r.endswith(hyper_file)),
                         f"Data/Extracts/{hyper_file}",

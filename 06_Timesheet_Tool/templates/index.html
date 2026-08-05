@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timesheet Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-padding-top: 70px; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f2f5;
+      color: #1c2536;
+      min-height: 100vh;
+    }
+
+    /* ── Top Bar ─────────────────────────── */
+    .topbar {
+      background: #002147;
+      height: 56px;
+      padding: 0 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-brand svg { opacity: 0.85; flex-shrink: 0; }
+
+    .topbar-brand h1 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .topbar-brand .pill {
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+
+    .topbar-user {
+      display: none;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .topbar-user.visible { display: flex; }
+
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.2);
+    }
+
+    .topbar-user span {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+
+    /* ── Page Content ───────────────────── */
+    .page { max-width: 1680px; margin: 0 auto; padding: 28px 36px 48px; }
+
+    /* ── Panels ─────────────────────────── */
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e4e8f0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .panel-body { padding: 22px 28px; }
+
+    /* ── Credentials ────────────────────── */
+    .cred-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .connected-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 11px 18px;
+    }
+
+    .connected-row .check-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      color: #166534;
+      font-weight: 500;
+    }
+
+    .check-icon {
+      width: 18px; height: 18px;
+      background: #16a34a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .btn-signout {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .btn-signout:hover { color: #ef4444; }
+
+    /* ── Controls Row ───────────────────── */
+    .controls-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 5px;
+    }
+
+    label a {
+      font-weight: 400;
+      color: #3b82f6;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.68rem;
+    }
+
+    input, select {
+      height: 40px;
+      padding: 0 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: #1c2536;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus {
+      border-color: #002147;
+      box-shadow: 0 0 0 3px rgba(0,33,71,0.07);
+    }
+
+    input[type="email"], input[type="password"] { min-width: 220px; }
+    input[type="number"] { width: 100px; }
+    select { min-width: 160px; }
+
+    /* ── Buttons ────────────────────────── */
+    .btn {
+      height: 40px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-primary { background: #002147; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #003166; }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-outline {
+      background: #fff;
+      color: #002147;
+      border: 1.5px solid #002147;
+    }
+    .btn-outline:hover:not(:disabled) { background: #f0f4ff; }
+    .btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Spinner ────────────────────────── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .spinner-dark {
+      border-color: rgba(0,33,71,0.15);
+      border-top-color: #002147;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error ──────────────────────────── */
+    .error-box {
+      margin-top: 12px;
+      padding: 10px 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #991b1b;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    /* ── How it works ───────────────────── */
+    .info-toggle {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+      padding: 0;
+    }
+
+    .info-toggle:hover { color: #002147; }
+    .arrow { display: inline-block; transition: transform 0.2s; font-size: 0.6rem; }
+    .info-toggle.open .arrow { transform: rotate(90deg); }
+
+    .info-panel {
+      display: none;
+      margin-top: 16px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .info-panel.open { display: block; }
+
+    .info-panel h3 {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .logic-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .logic-step {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 14px 16px;
+      border-left: 3px solid #002147;
+    }
+
+    .logic-step .step-num { font-size: 0.62rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .logic-step .step-title { font-size: 0.82rem; font-weight: 700; color: #1c2536; margin-bottom: 4px; }
+    .logic-step .step-desc { font-size: 0.76rem; color: #64748b; line-height: 1.55; }
+
+    .logic-tbl { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 16px; }
+    .logic-tbl th { background: #f8fafc; padding: 8px 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e8ecf2; }
+    .logic-tbl td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #374151; vertical-align: top; }
+    .logic-tbl tr:last-child td { border-bottom: none; }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; }
+    .tag-g { background: #dbeafe; color: #1d4ed8; }
+    .tag-b { background: #dcfce7; color: #15803d; }
+
+    /* ── Empty State ────────────────────── */
+    .empty-state {
+      padding: 80px 24px;
+      text-align: center;
+      color: #cbd5e1;
+    }
+
+    .empty-state svg { margin-bottom: 16px; opacity: 0.4; }
+
+    .empty-state p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.7;
+    }
+
+    /* ── Results ────────────────────────── */
+    .results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .results-title-block .month-label {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #002147;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+
+    .results-title-block .sub {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .results-right {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .stat-block {
+      text-align: center;
+      padding: 0 28px;
+    }
+
+    .stat-block + .stat-block {
+      border-left: 1px solid #e8ecf2;
+    }
+
+    .stat-block .num {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #002147;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .stat-block .lbl {
+      font-size: 0.63rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-top: 3px;
+    }
+
+    .results-divider {
+      width: 1px;
+      height: 52px;
+      background: #e8ecf2;
+      margin: 0 20px;
+    }
+
+    /* ── Table ──────────────────────────── */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 #f8fafc;
+    }
+
+    .table-scroll::-webkit-scrollbar { height: 7px; }
+    .table-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .table-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    table {
+      border-collapse: collapse;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    thead th {
+      padding: 12px 20px;
+      background: #f8fafc;
+      text-align: left;
+      font-size: 0.67rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      border-bottom: 1px solid #e8ecf2;
+      white-space: nowrap;
+    }
+
+    thead th:first-child  { padding-left: 28px; }
+    thead th:last-child   { padding-right: 28px; text-align: right; }
+
+    tbody tr {
+      transition: opacity 0.1s;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { opacity: 0.88; }
+
+    tbody td {
+      padding: 11px 20px;
+      font-size: 0.84rem;
+      color: #374151;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    tbody td:first-child { padding-left: 28px; }
+    tbody td:last-child  { padding-right: 28px; }
+
+    /* Fixed column widths — table is wider than viewport and scrolls */
+    .col-id       { width: 120px;  min-width: 120px; }
+    .col-summary  { width: 320px;  min-width: 320px; white-space: normal; }
+    .col-cat      { width: 80px;   min-width: 80px; }
+    .col-reporter { width: 170px;  min-width: 170px; }
+    .col-proj     { width: 150px;  min-width: 150px; }
+    .col-act      { width: 160px;  min-width: 160px; }
+    .col-due      { width: 115px;  min-width: 115px; }
+    .col-start    { width: 115px;  min-width: 115px; }
+    .col-end      { width: 120px;  min-width: 120px; }
+    .col-dur      { width: 80px;   min-width: 80px; }
+
+    .ticket-id {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0047AB;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .ticket-id:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      color: #002147;
+    }
+
+    .summary-cell {
+      font-size: 0.84rem;
+      color: #1c2536;
+      line-height: 1.5;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .badge-GISS { background: #dbeafe; color: #1e40af; }
+    .badge-BACS { background: #dcfce7; color: #166534; }
+
+    .reporter-cell { font-size: 0.82rem; color: #64748b; }
+    .code-cell { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.74rem; color: #64748b; }
+    .date-cell { font-size: 0.82rem; color: #475569; white-space: nowrap; }
+    .dur-cell  { font-weight: 700; color: #002147; font-size: 0.9rem; text-align: right; }
+
+    .dash { color: #d1d5db; }
+
+    .in-progress {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #b45309;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .in-progress::before {
+      content: '';
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #f59e0b;
+      flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+    </svg>
+    <h1>Timesheet Generator</h1>
+    <span class="pill">GISS · BACS</span>
+  </div>
+  <div class="topbar-user" id="topbarUser">
+    <div class="avatar" id="topbarAvatar"></div>
+    <span id="topbarName"></span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Credentials -->
+  <div class="panel" id="credPanel">
+    <div class="panel-body">
+      <div id="credForm">
+        <div class="cred-grid">
+          <div>
+            <label>Jira Email</label>
+            <input type="email" id="credEmail" placeholder="you@cbre.com" style="width:100%">
+          </div>
+          <div>
+            <label>API Token &nbsp;<a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank">Get yours ↗</a></label>
+            <input type="password" id="credToken" placeholder="Paste your Jira API token" style="width:100%">
+          </div>
+          <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect to Jira</button>
+        </div>
+        <div id="credError" class="error-box hidden"></div>
+      </div>
+      <div id="connectedRow" class="connected-row hidden">
+        <div class="check-text">
+          <div class="check-icon">✓</div>
+          Signed in as <strong id="connectedName" style="margin-left:4px"></strong>
+        </div>
+        <button class="btn-signout" onclick="disconnect()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Controls -->
+  <div class="panel" id="mainPanel" style="opacity:0.35;pointer-events:none">
+    <!-- Full controls (shown before first generate) -->
+    <div class="panel-body" id="fullControls">
+      <div class="controls-row">
+        <div>
+          <label>Month</label>
+          <select id="month">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div>
+          <label>Year</label>
+          <input type="number" id="year" min="2020" max="2035">
+        </div>
+        <button class="btn btn-primary" id="generateBtn" onclick="generate()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Generate Timesheet
+        </button>
+      </div>
+      <div id="errorBox" class="error-box hidden"></div>
+
+      <button class="info-toggle" id="infoToggle" onclick="toggleInfo()">
+        <span class="arrow">▶</span> How does this tool calculate my timesheet?
+      </button>
+
+      <div class="info-panel" id="infoPanel">
+
+        <h3>How it works</h3>
+        <div class="logic-steps">
+          <div class="logic-step">
+            <div class="step-num">Step 1 · Window</div>
+            <div class="step-title">Date range checked</div>
+            <div class="step-desc">Last 3 days of the previous month through end of the selected month — catches tickets started on e.g. June 30 for July.</div>
+          </div>
+          <div class="logic-step">
+            <div class="step-num">Step 2 · Search</div>
+            <div class="step-title">Tickets fetched</div>
+            <div class="step-desc">Jira tickets where you were ever the assignee and the ticket entered <strong>Implementation</strong> (GISS) or <strong>CS Implementation</strong> (BACS) in the window.</div>
+          </div>
+          <div class="logic-step">
+            <div class="step-num">Step 3 · Start Date</div>
+            <div class="step-title">When work began</div>
+            <div class="step-desc">Last time the ticket entered the start status where you were the <strong>author</strong>, the <strong>assignee</strong>, or it was <strong>already in that status when assigned to you</strong>.</div>
+          </div>
+          <div class="logic-step">
+            <div class="step-num">Step 4 · End Date</div>
+            <div class="step-title">When work ended</div>
+            <div class="step-desc">First time the ticket <strong>left</strong> the start status after your start date. Shows <strong>In Progress</strong> if it hasn't left yet.</div>
+          </div>
+        </div>
+
+        <h3>Status &amp; Due Date Mapping</h3>
+        <table class="logic-tbl">
+          <thead><tr><th>Category</th><th>Starts when</th><th>Ends when</th><th>Due Date field</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag tag-g">GISS</span></td><td>→ Implementation</td><td>Leaves Implementation</td><td>Jira Due Date</td></tr>
+            <tr><td><span class="tag tag-b">BACS</span></td><td>→ CS Implementation</td><td>Leaves CS Implementation</td><td>Estimated Completion Date</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /fullControls -->
+
+    <!-- Collapsed mini bar shown after first generate -->
+    <div id="miniControls" class="hidden" style="padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f1f5f9">
+      <select id="monthMini"></select>
+      <input type="number" id="yearMini" min="2020" max="2035" style="width:90px">
+      <button class="btn btn-primary" id="generateBtnMini" onclick="generate()" style="height:36px;font-size:0.82rem;padding:0 16px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Regenerate
+      </button>
+      <div id="errorBoxMini" class="error-box hidden" style="margin-top:0;flex:1;padding:6px 12px"></div>
+    </div>
+  </div><!-- /mainPanel -->
+
+  <!-- Empty State -->
+  <div class="panel" id="emptyState">
+    <div class="empty-state">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+        <line x1="8" y1="14" x2="16" y2="14"/>
+        <line x1="8" y1="18" x2="13" y2="18"/>
+      </svg>
+      <p>Connect to Jira, pick a month and year,<br>then click <strong>Generate Timesheet</strong></p>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="panel hidden" id="resultsPanel">
+    <div class="results-bar">
+      <div class="results-title-block">
+        <div class="month-label" id="resultsTitle"></div>
+        <div class="sub" id="resultsSub"></div>
+      </div>
+      <div class="results-right">
+        <div class="stat-block">
+          <div class="num" id="statTickets">—</div>
+          <div class="lbl">Tickets</div>
+        </div>
+        <div class="stat-block">
+          <div class="num" id="statDays">—</div>
+          <div class="lbl">Total Days</div>
+        </div>
+        <div class="results-divider"></div>
+        <button class="btn btn-outline" id="exportBtn" onclick="downloadExcel()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download Excel
+        </button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-id">Ticket ID</th>
+            <th class="col-summary">Summary</th>
+            <th class="col-cat">Cat.</th>
+            <th class="col-reporter">Reporter</th>
+            <th class="col-proj">Project Code</th>
+            <th class="col-act">Activity Code</th>
+            <th class="col-due">Due Date</th>
+            <th class="col-start">Start Date</th>
+            <th class="col-end">End Date</th>
+            <th class="col-dur">Days</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  const now = new Date();
+  document.getElementById('month').value = now.getMonth() + 1;
+  document.getElementById('year').value  = now.getFullYear();
+
+  // Populate mini month select
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const miniMonth = document.getElementById('monthMini');
+  months.forEach((m, i) => { const o = document.createElement('option'); o.value = i+1; o.textContent = m; miniMonth.appendChild(o); });
+  miniMonth.value = now.getMonth() + 1;
+  document.getElementById('yearMini').value = now.getFullYear();
+
+  function syncFromMini() {
+    document.getElementById('month').value = document.getElementById('monthMini').value;
+    document.getElementById('year').value  = document.getElementById('yearMini').value;
+  }
+
+  function syncToMini() {
+    document.getElementById('monthMini').value = document.getElementById('month').value;
+    document.getElementById('yearMini').value  = document.getElementById('year').value;
+  }
+
+  let currentRows = [], currentMonth = null, currentYear = null, jiraBaseUrl = '';
+  let SESSION = { email: '', token: '', name: '' };
+
+  const saved = sessionStorage.getItem('jiraSession');
+  if (saved) {
+    SESSION = JSON.parse(saved);
+    document.getElementById('credEmail').value = SESSION.email;
+    showConnected(SESSION.name);
+  }
+
+  /* ── Auth ────────────────────────────── */
+  async function connect() {
+    const email    = document.getElementById('credEmail').value.trim();
+    const apiToken = document.getElementById('credToken').value.trim();
+    const btn      = document.getElementById('connectBtn');
+    const errBox   = document.getElementById('credError');
+
+    if (!email || !apiToken) {
+      errBox.textContent = 'Please enter your email and API token.';
+      errBox.classList.remove('hidden'); return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>Connecting…';
+    errBox.classList.add('hidden');
+
+    try {
+      const res  = await fetch('/api/connect', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, apiToken }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        SESSION = { email, token: apiToken, name: data.name };
+        sessionStorage.setItem('jiraSession', JSON.stringify(SESSION));
+        showConnected(data.name);
+      } else {
+        errBox.textContent = data.error || 'Connection failed. Check your credentials.';
+        errBox.classList.remove('hidden');
+      }
+    } catch {
+      errBox.textContent = 'Could not reach the server.';
+      errBox.classList.remove('hidden');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Connect to Jira';
+  }
+
+  function showConnected(name) {
+    document.getElementById('credForm').classList.add('hidden');
+    document.getElementById('connectedRow').classList.remove('hidden');
+    document.getElementById('connectedName').textContent = name;
+
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    document.getElementById('topbarAvatar').textContent = initials;
+    document.getElementById('topbarName').textContent   = name;
+    document.getElementById('topbarUser').classList.add('visible');
+
+    document.getElementById('mainPanel').style.opacity       = '1';
+    document.getElementById('mainPanel').style.pointerEvents = 'auto';
+  }
+
+  function disconnect() {
+    sessionStorage.removeItem('jiraSession');
+    SESSION = { email: '', token: '', name: '' };
+    document.getElementById('credForm').classList.remove('hidden');
+    document.getElementById('connectedRow').classList.add('hidden');
+    document.getElementById('credToken').value = '';
+    document.getElementById('topbarUser').classList.remove('visible');
+    document.getElementById('mainPanel').style.opacity       = '0.35';
+    document.getElementById('mainPanel').style.pointerEvents = 'none';
+    document.getElementById('resultsPanel').classList.add('hidden');
+    document.getElementById('emptyState').classList.remove('hidden');
+    document.getElementById('fullControls').classList.remove('hidden');
+    document.getElementById('miniControls').classList.add('hidden');
+  }
+
+  /* ── Generate ────────────────────────── */
+  async function generate() {
+    // Read from whichever controls are visible
+    const miniVisible = !document.getElementById('miniControls').classList.contains('hidden');
+    if (miniVisible) syncFromMini();
+
+    const month  = parseInt(document.getElementById('month').value);
+    const year   = parseInt(document.getElementById('year').value);
+    const btn    = miniVisible ? document.getElementById('generateBtnMini') : document.getElementById('generateBtn');
+    const errBox = miniVisible ? document.getElementById('errorBoxMini')    : document.getElementById('errorBox');
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div>Fetching…';
+    errBox.classList.add('hidden');
+
+    try {
+      const res  = await fetch('/api/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month, year, email: SESSION.email, apiToken: SESSION.token }),
+      });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+
+      if (data.errors?.length) {
+        errBox.textContent = 'Warning: ' + data.errors.join(' | ');
+        errBox.classList.remove('hidden');
+      }
+
+      currentRows = data.rows; currentMonth = month; currentYear = year;
+      jiraBaseUrl = data.jiraBaseUrl || '';
+      renderTable(data.rows, month, year);
+
+      // Collapse controls to mini bar
+      document.getElementById('fullControls').classList.add('hidden');
+      const mini = document.getElementById('miniControls');
+      mini.classList.remove('hidden');
+      syncToMini();
+
+      // Scroll so the results panel sits just below the sticky topbar (56px) + mini controls
+      setTimeout(() => {
+        const panel = document.getElementById('resultsPanel');
+        const top = panel.getBoundingClientRect().top + window.pageYOffset - 64;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }, 50);
+
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = miniVisible
+        ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Regenerate`
+        : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>Generate Timesheet`;
+    }
+  }
+
+  /* ── Render ──────────────────────────── */
+  function renderTable(rows, month, year) {
+    const monthName = new Date(year, month - 1).toLocaleString('default', { month: 'long' });
+    document.getElementById('resultsTitle').textContent = `${monthName} ${year}`;
+    document.getElementById('resultsSub').textContent   = `Generated for ${SESSION.name}`;
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('resultsPanel').classList.remove('hidden');
+
+    const uniqueTickets = new Set(rows.map(r => r.ticketId)).size;
+    const uniqueDays    = countUniqueDays(rows);
+    document.getElementById('statTickets').textContent = uniqueTickets;
+    document.getElementById('statDays').textContent    = uniqueDays;
+
+    const tbody = document.getElementById('tableBody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:56px;color:#94a3b8;font-size:0.88rem">No tickets found for this period.</td></tr>`;
+      return;
+    }
+
+    const colourMap = buildColourMap(rows);
+    tbody.innerHTML = rows.map(r => {
+      const bg  = colourMap[r.ticketId];
+      const rgb = bg.replace('#','');
+      const r2  = parseInt(rgb.slice(0,2),16), g2 = parseInt(rgb.slice(2,4),16), b2 = parseInt(rgb.slice(4,6),16);
+      const lum = (0.299*r2 + 0.587*g2 + 0.114*b2);
+      const accent = `hsl(${Math.round(Math.random()*0)}, 60%, ${lum < 200 ? '40%' : '35%'})`;
+      return `
+      <tr style="background:${bg}">
+        <td style="border-left:3.5px solid ${bg.replace('F','C').replace('E','B')}">
+          <a class="ticket-id" href="${jiraBaseUrl}/browse/${esc(r.ticketId)}" target="_blank" rel="noopener">${esc(r.ticketId)}</a>
+        </td>
+        <td><div class="summary-cell">${esc(r.summary)}</div></td>
+        <td><span class="badge badge-${esc(r.category)}">${esc(r.category)}</span></td>
+        <td class="reporter-cell">${esc(r.reporter)}</td>
+        <td class="code-cell">${val(r.projectCode)}</td>
+        <td class="code-cell">${val(r.activityCode)}</td>
+        <td class="date-cell">${val(r.dueDate)}</td>
+        <td class="date-cell">${esc(r.startDate)}</td>
+        <td>${r.endDate === 'In Progress' ? '<span class="in-progress">In Progress</span>' : `<span class="date-cell">${esc(r.endDate)}</span>`}</td>
+        <td class="dur-cell">${r.duration === 'N/A' ? '<span class="dash">—</span>' : r.duration}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Download ────────────────────────── */
+  async function downloadExcel() {
+    if (!currentRows.length) return;
+    const btn = document.getElementById('exportBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner spinner-dark"></div>Preparing…';
+
+    try {
+      const res = await fetch('/api/export', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows: currentRows, month: currentMonth, year: currentYear }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const a    = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(blob),
+        download: `Timesheet_${currentMonth}_${currentYear}.xlsx`,
+      });
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      alert('Download failed: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download Excel`;
+    }
+  }
+
+  function toggleInfo() {
+    document.getElementById('infoToggle').classList.toggle('open');
+    document.getElementById('infoPanel').classList.toggle('open');
+  }
+
+  const PALETTE = [
+    '#DBEAFE','#DCFCE7','#F3E8FF','#FFEDD5','#FCE7F3',
+    '#CCFBF1','#FEF9C3','#E0E7FF','#FFE4E6','#E0F2FE',
+    '#ECFCCB','#FEF3C7','#EDE9FE','#CFFAFE','#D1FAE5',
+    '#FEE2E2','#FDF2F8','#F0FDF4','#EFF6FF','#FFFBEB',
+  ];
+
+  function buildColourMap(rows) {
+    const map = {};
+    rows.forEach(r => {
+      if (!(r.ticketId in map)) map[r.ticketId] = PALETTE[Object.keys(map).length % PALETTE.length];
+    });
+    return map;
+  }
+
+  function countUniqueDays(rows) {
+    const days = new Set();
+    rows.forEach(r => {
+      if (!r.startDate || r.endDate === 'In Progress') return;
+      let d = new Date(r.startDate + 'T00:00:00');
+      const end = new Date(r.endDate + 'T00:00:00');
+      while (d <= end) {
+        days.add(d.toISOString().split('T')[0]);
+        d.setDate(d.getDate() + 1);
+      }
+    });
+    return days.size;
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function val(s) { return (!s || s === '—') ? '<span class="dash">—</span>' : esc(s); }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
+</script>
+</body>
+</html>
