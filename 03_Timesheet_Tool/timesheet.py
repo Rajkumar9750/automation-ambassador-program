@@ -335,7 +335,7 @@ def export_to_excel(rows, month, year):
                 "startDate", "endDate", "duration"]
 
     # ── Column widths ─────────────────────────────────────────
-    col_widths = [14, 48, 10, 22, 16, 18, 12, 12, 12, 6]
+    col_widths = [14, 70, 10, 22, 16, 18, 12, 12, 12, 6]
     for i, w in enumerate(col_widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
@@ -353,7 +353,6 @@ def export_to_excel(rows, month, year):
         hex_colour = colour_map[row["ticketId"]]
         bg_fill    = PatternFill(start_color=hex_colour, end_color=hex_colour, fill_type="solid")
         b          = row_border(hex_colour)
-        ws.row_dimensions[row_idx].height = 18
 
         for col_idx, key in enumerate(col_keys, 1):
             val   = row[key]
@@ -423,7 +422,7 @@ def export_year_to_excel(month_data: dict, year: int):
                  "Project Code", "Activity Code", "Due Date", "Start Date", "End Date", "Days"]
     COL_KEYS  = ["ticketId", "summary", "category", "reporter",
                  "projectCode", "activityCode", "dueDate", "startDate", "endDate", "duration"]
-    COL_W     = [14, 48, 10, 22, 16, 18, 12, 12, 12, 6]
+    COL_W     = [14, 70, 10, 22, 16, 18, 12, 12, 12, 6]
 
     ALL_COLS  = ["Month"] + COLS
     ALL_KEYS  = ["_month_label"] + COL_KEYS
@@ -438,7 +437,6 @@ def export_year_to_excel(month_data: dict, year: int):
             ws.column_dimensions[get_column_letter(ci)].width = widths[ci - 1]
 
     def _write_row(ws, ri, row, keys, bg_hex, border, month_band_fill=None):
-        ws.row_dimensions[ri].height = 18
         bg_fill = PatternFill(start_color=bg_hex, end_color=bg_hex, fill_type="solid")
         for ci, key in enumerate(keys, 1):
             val  = row.get(key, "")
