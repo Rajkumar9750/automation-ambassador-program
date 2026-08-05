@@ -96,9 +96,9 @@ call :make_venv "02_Dashboard_Factory_QA\.venv" "%PYTHON%"
 echo   Done.
 
 echo [4/4] Setting up Timesheet Tool...
-call :make_venv "06_Timesheet_Tool\venv" "%PYTHON%"
-06_Timesheet_Tool\venv\Scripts\pip install -q --upgrade pip 2>nul
-06_Timesheet_Tool\venv\Scripts\pip install -q -r 06_Timesheet_Tool\requirements.txt
+call :make_venv "03_Timesheet_Tool\venv" "%PYTHON%"
+03_Timesheet_Tool\venv\Scripts\pip install -q --upgrade pip 2>nul
+03_Timesheet_Tool\venv\Scripts\pip install -q -r 03_Timesheet_Tool\requirements.txt
 echo   Done.
 
 echo.
