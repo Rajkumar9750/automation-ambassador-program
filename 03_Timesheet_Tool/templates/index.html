@@ -535,6 +535,73 @@
     .col-end      { width: 120px;  min-width: 120px; }
     .col-dur      { width: 80px;   min-width: 80px; }
 
+    /* ── Legend ─────────────────────────── */
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 28px;
+      border-bottom: 1px solid #e2e8e5;
+      background: #f8faf9;
+    }
+
+    .legend-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #5a6b66;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-right: 4px;
+      flex-shrink: 0;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px 4px 8px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #0d1b16;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      user-select: none;
+      background: transparent;
+    }
+
+    .legend-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(0,0,0,.12);
+      border-color: rgba(0,0,0,0.18);
+    }
+
+    .legend-item.active {
+      border-color: #003f2d;
+      box-shadow: 0 0 0 2px rgba(0,63,45,.18), 0 3px 10px rgba(0,0,0,.1);
+      transform: translateY(-1px);
+    }
+
+    .legend-swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    /* Dimming non-highlighted rows */
+    #tableBody.has-filter tr {
+      opacity: 0.15;
+      transition: opacity 0.18s;
+    }
+    #tableBody.has-filter tr.legend-hi {
+      opacity: 1;
+    }
+
     .ticket-id {
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 0.78rem;
@@ -832,6 +899,8 @@
       </div>
     </div>
 
+    <div class="legend-bar" id="legendBar"></div>
+
     <div class="table-scroll">
       <table>
         <thead>
@@ -1032,6 +1101,11 @@
     }
 
     const colourMap = buildColourMap(rows);
+
+    // Reset any active legend filter from a previous render
+    tbody.classList.remove('has-filter');
+    let activeFilter = null;
+
     tbody.innerHTML = rows.map(r => {
       const bg  = colourMap[r.ticketId];
       const rgb = bg.replace('#','');
@@ -1039,7 +1113,7 @@
       const lum = (0.299*r2 + 0.587*g2 + 0.114*b2);
       const accent = `hsl(${Math.round(Math.random()*0)}, 60%, ${lum < 200 ? '40%' : '35%'})`;
       return `
-      <tr style="background:${bg}">
+      <tr style="background:${bg}" data-ticket="${esc(r.ticketId)}">
         <td style="border-left:3.5px solid ${bg.replace('F','C').replace('E','B')}">
           <a class="ticket-id" href="${jiraBaseUrl}/browse/${esc(r.ticketId)}" target="_blank" rel="noopener">${esc(r.ticketId)}</a>
         </td>
@@ -1054,6 +1128,37 @@
         <td class="dur-cell">${r.duration === 'N/A' ? '<span class="dash">—</span>' : r.duration}</td>
       </tr>`;
     }).join('');
+
+    // Build legend
+    const legendBar = document.getElementById('legendBar');
+    legendBar.innerHTML = '<span class="legend-label">Legend</span>';
+    Object.entries(colourMap).forEach(([ticketId, bg]) => {
+      const btn = document.createElement('button');
+      btn.className = 'legend-item';
+      btn.style.background = bg;
+      btn.dataset.ticket = ticketId;
+      btn.innerHTML = `<span class="legend-swatch" style="background:${bg}"></span>${esc(ticketId)}`;
+      btn.addEventListener('click', () => {
+        if (activeFilter === ticketId) {
+          // deselect — clear filter
+          activeFilter = null;
+          tbody.classList.remove('has-filter');
+          tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
+          legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+        } else {
+          // select
+          activeFilter = ticketId;
+          tbody.classList.add('has-filter');
+          tbody.querySelectorAll('tr').forEach(tr =>
+            tr.classList.toggle('legend-hi', tr.dataset.ticket === ticketId)
+          );
+          legendBar.querySelectorAll('.legend-item').forEach(i =>
+            i.classList.toggle('active', i.dataset.ticket === ticketId)
+          );
+        }
+      });
+      legendBar.appendChild(btn);
+    });
   }
 
   /* ── Download ────────────────────────── */
