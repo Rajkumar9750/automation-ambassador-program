@@ -1230,13 +1230,13 @@
       btn.innerHTML = `<span class="legend-swatch" style="background:${bg}"></span>${esc(ticketId)}`;
       btn.addEventListener('click', () => {
         if (activeFilter === ticketId) {
-          // deselect — clear filter
           activeFilter = null;
           tbody.classList.remove('has-filter');
           tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
           legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+          document.getElementById('statTickets').textContent = uniqueTickets;
+          document.getElementById('statDays').textContent    = uniqueDays;
         } else {
-          // select
           activeFilter = ticketId;
           tbody.classList.add('has-filter');
           tbody.querySelectorAll('tr').forEach(tr =>
@@ -1245,6 +1245,9 @@
           legendBar.querySelectorAll('.legend-item').forEach(i =>
             i.classList.toggle('active', i.dataset.ticket === ticketId)
           );
+          const filtered = rows.filter(r => r.ticketId === ticketId);
+          document.getElementById('statTickets').textContent = 1;
+          document.getElementById('statDays').textContent    = countUniqueDays(filtered);
         }
       });
       legendBar.appendChild(btn);
@@ -1321,6 +1324,8 @@
           tbody.classList.remove('has-filter');
           tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
           legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+          document.getElementById('statTickets').textContent = uniqueTickets;
+          document.getElementById('statDays').textContent    = uniqueDays;
         } else {
           activeFilter = ticketId;
           tbody.classList.add('has-filter');
@@ -1330,6 +1335,9 @@
           legendBar.querySelectorAll('.legend-item').forEach(i =>
             i.classList.toggle('active', i.dataset.ticket === ticketId)
           );
+          const filtered = allRows.filter(r => r.ticketId === ticketId);
+          document.getElementById('statTickets').textContent = 1;
+          document.getElementById('statDays').textContent    = countUniqueDays(filtered);
         }
       });
       legendBar.appendChild(btn);
