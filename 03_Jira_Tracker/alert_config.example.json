@@ -1,0 +1,24 @@
+{
+  "jira": {
+    "base_url": "https://yoursite.atlassian.net",
+    "email": "your.email@company.com",
+    "api_token": "${JIRA_API_TOKEN}",
+    "server_type": "cloud",
+    "projects": [
+      "PROJ1",
+      "PROJ2"
+    ]
+  },
+  "teams": {
+    "webhook_url": "https://your-teams-webhook-url"
+  },
+  "alert": {
+    "due_soon_days": 2,
+    "schedule_time": "09:00",
+    "schedule_interval": "daily",
+    "priority_levels": [
+      "Highest",
+      "High"
+    ]
+  }
+}

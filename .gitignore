@@ -32,6 +32,12 @@ monitor_config.json
 .env
 .env.local
 05_Git_Manager/change_log.json
+03_Jira_Tracker/alert_config.json
+
+# User data & binary reference files
+Detail.xlsx
+Tableau_XML_Reference_Guide.docx
+README.txt
 
 # Word lock files (temp files created when a .docx is open)
 ~$*.docx
