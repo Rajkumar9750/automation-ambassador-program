@@ -593,6 +593,57 @@
       border: 1px solid rgba(0,0,0,0.12);
     }
 
+    /* ── Scope toggle ───────────────────── */
+    .scope-toggle {
+      display: flex;
+      background: #f0f2f1;
+      border-radius: 7px;
+      padding: 3px;
+      gap: 2px;
+      border: 1px solid #e2e8e5;
+    }
+
+    .scope-btn {
+      flex: 1;
+      padding: 5px 14px;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      background: transparent;
+      color: #5a6b66;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .scope-btn.active {
+      background: #fff;
+      color: #003f2d;
+      box-shadow: 0 1px 4px rgba(0,63,45,.12);
+    }
+
+    /* ── Month separator rows ───────────── */
+    tr.month-sep td {
+      background: #003f2d !important;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 7px 28px;
+      border: none;
+    }
+
+    tr.month-sep .sep-count {
+      font-weight: 400;
+      opacity: 0.6;
+      margin-left: 8px;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+    }
+
     /* Dimming non-highlighted rows */
     #tableBody.has-filter tr {
       opacity: 0.15;
@@ -735,6 +786,13 @@
     <div class="panel-body" id="fullControls">
       <div class="controls-row">
         <div>
+          <label>Scope</label>
+          <div class="scope-toggle">
+            <button class="scope-btn active" id="scopeMonth" onclick="setScope('month')">Single Month</button>
+            <button class="scope-btn"        id="scopeYear"  onclick="setScope('year')">Full Year</button>
+          </div>
+        </div>
+        <div id="monthWrap">
           <label>Month</label>
           <select id="month">
             <option value="1">January</option><option value="2">February</option>
@@ -848,6 +906,7 @@
     <div id="miniControls" class="hidden" style="padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #e2e8e5">
       <select id="monthMini"></select>
       <input type="number" id="yearMini" min="2020" max="2035" style="width:90px">
+      <span id="miniYearLabel" class="hidden" style="font-size:0.82rem;font-weight:700;color:#003f2d"></span>
       <button class="btn btn-teal" id="generateBtnMini" onclick="generate()" style="height:36px;font-size:0.82rem;padding:0 16px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Regenerate
@@ -936,6 +995,16 @@
   miniMonth.value = now.getMonth() + 1;
   document.getElementById('yearMini').value = now.getFullYear();
 
+  // ── Scope ─────────────────────────────
+  let tsScope = 'month';
+
+  function setScope(scope) {
+    tsScope = scope;
+    document.getElementById('scopeMonth').classList.toggle('active', scope === 'month');
+    document.getElementById('scopeYear').classList.toggle('active', scope === 'year');
+    document.getElementById('monthWrap').style.display = scope === 'year' ? 'none' : '';
+  }
+
   function syncFromMini() {
     document.getElementById('month').value = document.getElementById('monthMini').value;
     document.getElementById('year').value  = document.getElementById('yearMini').value;
@@ -946,7 +1015,7 @@
     document.getElementById('yearMini').value  = document.getElementById('year').value;
   }
 
-  let currentRows = [], currentMonth = null, currentYear = null, jiraBaseUrl = '';
+  let currentRows = [], currentMonth = null, currentYear = null, currentMonthData = {}, jiraBaseUrl = '';
   let SESSION = { email: '', token: '', name: '' };
 
   const saved = sessionStorage.getItem('jiraSession');
@@ -1027,7 +1096,6 @@
 
   /* ── Generate ────────────────────────── */
   async function generate() {
-    // Read from whichever controls are visible
     const miniVisible = !document.getElementById('miniControls').classList.contains('hidden');
     if (miniVisible) syncFromMini();
 
@@ -1035,35 +1103,57 @@
     const year   = parseInt(document.getElementById('year').value);
     const btn    = miniVisible ? document.getElementById('generateBtnMini') : document.getElementById('generateBtn');
     const errBox = miniVisible ? document.getElementById('errorBoxMini')    : document.getElementById('errorBox');
+    const isYear = tsScope === 'year';
 
     btn.disabled = true;
-    btn.innerHTML = '<div class="spinner"></div>Fetching…';
+    btn.innerHTML = isYear
+      ? '<div class="spinner"></div>Fetching all months…'
+      : '<div class="spinner"></div>Fetching…';
     errBox.classList.add('hidden');
 
     try {
-      const res  = await fetch('/api/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, year, email: SESSION.email, apiToken: SESSION.token }),
-      });
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const data = await res.json();
-
-      if (data.errors?.length) {
-        errBox.textContent = 'Warning: ' + data.errors.join(' | ');
-        errBox.classList.remove('hidden');
+      if (isYear) {
+        const res = await fetch('/api/generate-year', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year, email: SESSION.email, apiToken: SESSION.token }),
+        });
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        const data = await res.json();
+        if (data.errors?.length) {
+          errBox.textContent = 'Warning: ' + data.errors.join(' | ');
+          errBox.classList.remove('hidden');
+        }
+        currentYear      = year;
+        currentMonthData = data.monthData;
+        jiraBaseUrl      = data.jiraBaseUrl || '';
+        currentRows      = Object.values(data.monthData).flat();
+        renderYearTable(data.monthData, year);
+      } else {
+        const res = await fetch('/api/generate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ month, year, email: SESSION.email, apiToken: SESSION.token }),
+        });
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        const data = await res.json();
+        if (data.errors?.length) {
+          errBox.textContent = 'Warning: ' + data.errors.join(' | ');
+          errBox.classList.remove('hidden');
+        }
+        currentRows = data.rows; currentMonth = month; currentYear = year;
+        jiraBaseUrl = data.jiraBaseUrl || '';
+        renderTable(data.rows, month, year);
       }
 
-      currentRows = data.rows; currentMonth = month; currentYear = year;
-      jiraBaseUrl = data.jiraBaseUrl || '';
-      renderTable(data.rows, month, year);
-
-      // Collapse controls to mini bar
+      // Collapse to mini bar
       document.getElementById('fullControls').classList.add('hidden');
       const mini = document.getElementById('miniControls');
       mini.classList.remove('hidden');
+      // show/hide month in mini bar based on scope
+      document.getElementById('monthMini').style.display = isYear ? 'none' : '';
+      document.getElementById('miniYearLabel').classList.toggle('hidden', !isYear);
+      if (isYear) document.getElementById('miniYearLabel').textContent = `Full Year ${year}`;
       syncToMini();
 
-      // Scroll so the results panel sits just below the sticky topbar (56px) + mini controls
       setTimeout(() => {
         const panel = document.getElementById('resultsPanel');
         const top = panel.getBoundingClientRect().top + window.pageYOffset - 64;
@@ -1161,6 +1251,90 @@
     });
   }
 
+  /* ── Year render ─────────────────────── */
+  function renderYearTable(monthData, year) {
+    const MONTH_BANDS = [
+      '#E8F5E9','#FFF8E1','#E3F2FD','#FCE4EC','#F3E5F5','#E0F7FA',
+      '#FFF3E0','#E8EAF6','#F1F8E9','#FBE9E7','#E0F2F1','#F9FBE7',
+    ];
+    const allRows = Object.values(monthData).flat();
+    const colourMap = buildColourMap(allRows);
+
+    document.getElementById('resultsTitle').textContent = `Full Year ${year}`;
+    document.getElementById('resultsSub').textContent   = `Generated for ${SESSION.name}`;
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('resultsPanel').classList.remove('hidden');
+
+    const uniqueTickets = new Set(allRows.map(r => r.ticketId)).size;
+    const uniqueDays    = countUniqueDays(allRows);
+    document.getElementById('statTickets').textContent = uniqueTickets;
+    document.getElementById('statDays').textContent    = uniqueDays;
+
+    const tbody = document.getElementById('tableBody');
+    tbody.classList.remove('has-filter');
+    let activeFilter = null;
+
+    const rows = [];
+    Object.keys(monthData).sort((a,b)=>+a-+b).forEach(m => {
+      const mRows = monthData[m];
+      if (!mRows.length) return;
+      const label = new Date(year, +m-1, 1).toLocaleString('default', {month:'long', year:'numeric'});
+      rows.push({_sep: true, label, count: mRows.length});
+      mRows.forEach(r => rows.push({...r, _month: +m}));
+    });
+
+    tbody.innerHTML = rows.map(r => {
+      if (r._sep) {
+        return `<tr class="month-sep"><td colspan="10">${esc(r.label)}<span class="sep-count">${r.count} ticket${r.count!==1?'s':''}</span></td></tr>`;
+      }
+      const bg = colourMap[r.ticketId];
+      return `
+      <tr style="background:${bg}" data-ticket="${esc(r.ticketId)}">
+        <td style="border-left:3.5px solid ${bg.replace('F','C').replace('E','B')}">
+          <a class="ticket-id" href="${jiraBaseUrl}/browse/${esc(r.ticketId)}" target="_blank" rel="noopener">${esc(r.ticketId)}</a>
+        </td>
+        <td><div class="summary-cell">${esc(r.summary)}</div></td>
+        <td><span class="badge badge-${esc(r.category)}">${esc(r.category)}</span></td>
+        <td class="reporter-cell">${esc(r.reporter)}</td>
+        <td class="code-cell">${val(r.projectCode)}</td>
+        <td class="code-cell">${val(r.activityCode)}</td>
+        <td class="date-cell">${val(r.dueDate)}</td>
+        <td class="date-cell">${esc(r.startDate)}</td>
+        <td>${r.endDate==='In Progress'?'<span class="in-progress">In Progress</span>':`<span class="date-cell">${esc(r.endDate)}</span>`}</td>
+        <td class="dur-cell">${r.duration==='N/A'?'<span class="dash">—</span>':r.duration}</td>
+      </tr>`;
+    }).join('');
+
+    // Legend (same as renderTable)
+    const legendBar = document.getElementById('legendBar');
+    legendBar.innerHTML = '<span class="legend-label">Legend</span>';
+    Object.entries(colourMap).forEach(([ticketId, bg]) => {
+      const btn = document.createElement('button');
+      btn.className = 'legend-item';
+      btn.style.background = bg;
+      btn.dataset.ticket = ticketId;
+      btn.innerHTML = `<span class="legend-swatch" style="background:${bg}"></span>${esc(ticketId)}`;
+      btn.addEventListener('click', () => {
+        if (activeFilter === ticketId) {
+          activeFilter = null;
+          tbody.classList.remove('has-filter');
+          tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
+          legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+        } else {
+          activeFilter = ticketId;
+          tbody.classList.add('has-filter');
+          tbody.querySelectorAll('tr').forEach(tr =>
+            tr.classList.toggle('legend-hi', tr.dataset.ticket === ticketId)
+          );
+          legendBar.querySelectorAll('.legend-item').forEach(i =>
+            i.classList.toggle('active', i.dataset.ticket === ticketId)
+          );
+        }
+      });
+      legendBar.appendChild(btn);
+    });
+  }
+
   /* ── Download ────────────────────────── */
   async function downloadExcel() {
     if (!currentRows.length) return;
@@ -1169,15 +1343,23 @@
     btn.innerHTML = '<div class="spinner spinner-dark"></div>Preparing…';
 
     try {
-      const res = await fetch('/api/export', {
+      const isYear = tsScope === 'year';
+      const endpoint = isYear ? '/api/export-year' : '/api/export';
+      const body     = isYear
+        ? { year: currentYear, monthData: currentMonthData }
+        : { rows: currentRows, month: currentMonth, year: currentYear };
+      const res = await fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rows: currentRows, month: currentMonth, year: currentYear }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('Export failed');
-      const blob = await res.blob();
-      const a    = Object.assign(document.createElement('a'), {
+      const blob     = await res.blob();
+      const filename = isYear
+        ? `Timesheet_${currentYear}.xlsx`
+        : `Timesheet_${currentMonth}_${currentYear}.xlsx`;
+      const a = Object.assign(document.createElement('a'), {
         href: URL.createObjectURL(blob),
-        download: `Timesheet_${currentMonth}_${currentYear}.xlsx`,
+        download: filename,
       });
       a.click();
       URL.revokeObjectURL(a.href);

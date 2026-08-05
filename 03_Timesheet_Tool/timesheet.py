@@ -376,6 +376,132 @@ def export_to_excel(rows, month, year):
     return output_path
 
 
+MONTH_BAND_COLORS = [
+    "E8F5E9", "FFF8E1", "E3F2FD", "FCE4EC", "F3E5F5", "E0F7FA",
+    "FFF3E0", "E8EAF6", "F1F8E9", "FBE9E7", "E0F2F1", "F9FBE7",
+]
+
+
+def export_year_to_excel(month_data: dict, year: int):
+    """
+    month_data: {month_int: [row_dicts]}
+    Produces one workbook with:
+      - "All Months" consolidated sheet (month band + ticket colour)
+      - One sheet per month that has data
+    """
+    filename    = f"Timesheet_{year}.xlsx"
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+
+    # Build a global colour map across every row
+    colour_map: dict = {}
+    for rows in month_data.values():
+        for row in rows:
+            tid = row["ticketId"]
+            if tid not in colour_map:
+                colour_map[tid] = TICKET_PALETTE[len(colour_map) % len(TICKET_PALETTE)]
+
+    no_side = Side(style=None)
+
+    def row_border(left_color: str):
+        return Border(
+            left=Side(style="medium", color=left_color),
+            right=no_side, top=no_side,
+            bottom=Side(style="thin", color="E5E7EB"),
+        )
+
+    header_font   = Font(bold=True, color="FFFFFF", size=10, name="Calibri")
+    header_fill   = PatternFill(start_color="003F2D", end_color="003F2D", fill_type="solid")
+    header_align  = Alignment(horizontal="center", vertical="center")
+    header_border = Border(bottom=Side(style="medium", color="FFFFFF"))
+    data_font     = Font(size=10, name="Calibri", color="1C2536")
+    bold_font     = Font(size=10, name="Calibri", color="1C2536", bold=True)
+    link_font     = Font(size=10, name="Calibri", color="003F2D", underline="single", bold=True)
+    center_align  = Alignment(horizontal="center", vertical="center")
+    left_align    = Alignment(horizontal="left",   vertical="center", wrap_text=True)
+
+    COLS      = ["Ticket ID", "Summary", "Category", "Reporter",
+                 "Project Code", "Activity Code", "Due Date", "Start Date", "End Date", "Days"]
+    COL_KEYS  = ["ticketId", "summary", "category", "reporter",
+                 "projectCode", "activityCode", "dueDate", "startDate", "endDate", "duration"]
+    COL_W     = [14, 48, 10, 22, 16, 18, 12, 12, 12, 6]
+
+    ALL_COLS  = ["Month"] + COLS
+    ALL_KEYS  = ["_month_label"] + COL_KEYS
+    ALL_W     = [14] + COL_W
+
+    def _write_header(ws, columns, widths):
+        ws.row_dimensions[1].height = 30
+        for ci, name in enumerate(columns, 1):
+            c = ws.cell(row=1, column=ci, value=name)
+            c.font = header_font; c.fill = header_fill
+            c.alignment = header_align; c.border = header_border
+            ws.column_dimensions[get_column_letter(ci)].width = widths[ci - 1]
+
+    def _write_row(ws, ri, row, keys, bg_hex, border, month_band_fill=None):
+        ws.row_dimensions[ri].height = 18
+        bg_fill = PatternFill(start_color=bg_hex, end_color=bg_hex, fill_type="solid")
+        for ci, key in enumerate(keys, 1):
+            val  = row.get(key, "")
+            cell = ws.cell(row=ri, column=ci, value=val)
+            # First column of All-Months sheet uses the month band colour
+            cell.fill = (month_band_fill if (month_band_fill and ci == 1) else bg_fill)
+            cell.border = border
+            cell.alignment = (
+                center_align if key in ("category", "duration", "startDate",
+                                        "endDate", "dueDate", "_month_label")
+                else left_align
+            )
+            if key == "ticketId":
+                cell.hyperlink = f"{JIRA_BASE_URL}/browse/{val}"
+                cell.font = link_font
+            elif key == "_month_label":
+                cell.font = bold_font
+            else:
+                cell.font = data_font
+
+    wb = Workbook()
+
+    # ── "All Months" consolidated sheet ──────────────────────────
+    ws_all = wb.active
+    ws_all.title = "All Months"
+    _write_header(ws_all, ALL_COLS, ALL_W)
+
+    ri = 2
+    for m in sorted(month_data.keys()):
+        rows = month_data[m]
+        if not rows:
+            continue
+        month_label = datetime(year, m, 1).strftime("%B %Y")
+        band_hex    = MONTH_BAND_COLORS[(m - 1) % 12]
+        band_fill   = PatternFill(start_color=band_hex, end_color=band_hex, fill_type="solid")
+        for row in rows:
+            row_with_label = dict(row, _month_label=month_label)
+            _write_row(ws_all, ri, row_with_label, ALL_KEYS,
+                       colour_map[row["ticketId"]], row_border(colour_map[row["ticketId"]]),
+                       month_band_fill=band_fill)
+            ri += 1
+
+    if ri > 2:
+        ws_all.auto_filter.ref = f"A1:{get_column_letter(len(ALL_COLS))}1"
+    ws_all.freeze_panes = "A2"
+
+    # ── One sheet per month ───────────────────────────────────────
+    for m in sorted(month_data.keys()):
+        rows = month_data[m]
+        if not rows:
+            continue
+        ws_m = wb.create_sheet(title=datetime(year, m, 1).strftime("%b %Y"))
+        _write_header(ws_m, COLS, COL_W)
+        for ri2, row in enumerate(rows, 2):
+            hex_c = colour_map[row["ticketId"]]
+            _write_row(ws_m, ri2, row, COL_KEYS, hex_c, row_border(hex_c))
+        ws_m.auto_filter.ref = f"A1:{get_column_letter(len(COLS))}1"
+        ws_m.freeze_panes = "A2"
+
+    wb.save(output_path)
+    return output_path
+
+
 def main():
     try:
         check_env()
