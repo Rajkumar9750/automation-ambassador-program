@@ -1278,8 +1278,9 @@
     Object.keys(monthData).sort((a,b)=>+a-+b).forEach(m => {
       const mRows = monthData[m];
       if (!mRows.length) return;
-      const label = new Date(year, +m-1, 1).toLocaleString('default', {month:'long', year:'numeric'});
-      rows.push({_sep: true, label, count: mRows.length});
+      const label       = new Date(year, +m-1, 1).toLocaleString('default', {month:'long', year:'numeric'});
+      const uniqueCount = new Set(mRows.map(r => r.ticketId)).size;
+      rows.push({_sep: true, label, count: uniqueCount});
       mRows.forEach(r => rows.push({...r, _month: +m}));
     });
 
