@@ -618,42 +618,89 @@
       </div>
       <div id="errorBox" class="error-box hidden"></div>
 
-      <button class="info-toggle" id="infoToggle" onclick="toggleInfo()">
+      <button class="info-toggle open" id="infoToggle" onclick="toggleInfo()">
         <span class="arrow">▶</span> How does this tool calculate my timesheet?
       </button>
 
-      <div class="info-panel" id="infoPanel">
+      <div class="info-panel open" id="infoPanel">
 
-        <h3>How it works</h3>
+        <h3>How it works — step by step</h3>
         <div class="logic-steps">
           <div class="logic-step">
-            <div class="step-num">Step 1 · Window</div>
+            <div class="step-num">Step 1 · Scope</div>
+            <div class="step-title">Projects covered</div>
+            <div class="step-desc">Only <strong>GISS</strong> and <strong>BACS</strong> Jira projects are searched. Tickets from other projects will not appear.</div>
+          </div>
+          <div class="logic-step">
+            <div class="step-num">Step 2 · Window</div>
             <div class="step-title">Date range checked</div>
-            <div class="step-desc">Last 3 days of the previous month through end of the selected month — catches tickets started on e.g. June 30 for July.</div>
+            <div class="step-desc">Last 3 days of the <em>previous</em> month through the last day of the selected month — so a ticket that entered implementation on Jun 30 appears in the July timesheet.</div>
           </div>
           <div class="logic-step">
-            <div class="step-num">Step 2 · Search</div>
-            <div class="step-title">Tickets fetched</div>
-            <div class="step-desc">Jira tickets where you were ever the assignee and the ticket entered <strong>Implementation</strong> (GISS) or <strong>CS Implementation</strong> (BACS) in the window.</div>
+            <div class="step-num">Step 3 · Filter</div>
+            <div class="step-title">Which tickets qualify</div>
+            <div class="step-desc">A ticket appears only if you were <strong>ever the assignee</strong> and it entered the implementation status during the window. Tickets you only commented on are excluded.</div>
           </div>
           <div class="logic-step">
-            <div class="step-num">Step 3 · Start Date</div>
-            <div class="step-title">When work began</div>
-            <div class="step-desc">Last time the ticket entered the start status where you were the <strong>author</strong>, the <strong>assignee</strong>, or it was <strong>already in that status when assigned to you</strong>.</div>
+            <div class="step-num">Step 4 · Start Date</div>
+            <div class="step-title">When your work began</div>
+            <div class="step-desc">The date the ticket entered the implementation status — provided you were the <strong>author</strong> of that transition, the <strong>assignee at that moment</strong>, or it was <strong>already in that status when you were assigned</strong>.</div>
           </div>
           <div class="logic-step">
-            <div class="step-num">Step 4 · End Date</div>
-            <div class="step-title">When work ended</div>
-            <div class="step-desc">First time the ticket <strong>left</strong> the start status after your start date. Shows <strong>In Progress</strong> if it hasn't left yet.</div>
+            <div class="step-num">Step 5 · End Date</div>
+            <div class="step-title">When your work ended</div>
+            <div class="step-desc">The date the ticket <strong>left</strong> the implementation status, or the date you were <strong>reassigned away</strong> — whichever came first. If neither has happened yet, End Date shows <strong>In Progress</strong>.</div>
+          </div>
+          <div class="logic-step">
+            <div class="step-num">Step 6 · Duration</div>
+            <div class="step-title">Days calculation</div>
+            <div class="step-desc">End Date − Start Date + 1, capped to the selected month boundaries. Shows <strong>N/A</strong> when the ticket is still In Progress (no end date yet).</div>
           </div>
         </div>
 
         <h3>Status &amp; Due Date Mapping</h3>
         <table class="logic-tbl">
-          <thead><tr><th>Category</th><th>Starts when</th><th>Ends when</th><th>Due Date field</th></tr></thead>
+          <thead><tr><th>Project</th><th>Work starts when status →</th><th>Work ends when status leaves</th><th>Due Date field used</th></tr></thead>
           <tbody>
-            <tr><td><span class="tag tag-g">GISS</span></td><td>→ Implementation</td><td>Leaves Implementation</td><td>Jira Due Date</td></tr>
-            <tr><td><span class="tag tag-b">BACS</span></td><td>→ CS Implementation</td><td>Leaves CS Implementation</td><td>Estimated Completion Date</td></tr>
+            <tr>
+              <td><span class="tag tag-g">GISS</span></td>
+              <td>Implementation</td>
+              <td>Implementation</td>
+              <td>Jira Due Date</td>
+            </tr>
+            <tr>
+              <td><span class="tag tag-b">BACS</span></td>
+              <td>CS Implementation</td>
+              <td>CS Implementation</td>
+              <td>Estimated Completion Date</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Common questions</h3>
+        <table class="logic-tbl">
+          <thead><tr><th>What I see</th><th>Why it happens</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="in-progress" style="animation:none">In Progress</span></td>
+              <td>The ticket is still in the implementation status — it hasn't moved to the next stage yet. Duration cannot be calculated until it does.</td>
+            </tr>
+            <tr>
+              <td><span class="dash">— (N/A)</span> for Days</td>
+              <td>End Date is In Progress, so the number of days cannot be determined yet.</td>
+            </tr>
+            <tr>
+              <td>A ticket I worked on is missing</td>
+              <td>Check: (1) is it in GISS or BACS? (2) were you the assignee during implementation? (3) did the status change happen within the date window? All three must be true.</td>
+            </tr>
+            <tr>
+              <td>A ticket appears more than once</td>
+              <td>The ticket bounced back into implementation more than once during the month — each work cycle is listed as a separate row.</td>
+            </tr>
+            <tr>
+              <td>Start Date is in the previous month</td>
+              <td>Work began in the last 3 days of the previous month. Start Date is capped to the 1st of the selected month for the timesheet.</td>
+            </tr>
           </tbody>
         </table>
       </div>
