@@ -116,14 +116,12 @@ make_venv() {
 make_venv "Monitor"              "$BASE/venv"                            "$BASE/requirements.txt"
 make_venv "Dashboard Factory"    "$BASE/01_Dashboard_Factory/venv"       "$BASE/01_Dashboard_Factory/requirements.txt"
 make_venv "Dashboard Factory QA" "$BASE/02_Dashboard_Factory_QA/.venv"   "$BASE/02_Dashboard_Factory_QA/requirements.txt"
-make_venv "Jira Tracker"         "$BASE/03_Jira_Tracker/venv"            "$BASE/03_Jira_Tracker/requirements.txt"
 make_venv "Timesheet Tool"       "$BASE/06_Timesheet_Tool/venv"          "$BASE/06_Timesheet_Tool/requirements.txt"
 
 # Make all launch scripts executable
 chmod +x "$BASE/Launch Monitor.command" 2>/dev/null || true
 chmod +x "$BASE/01_Dashboard_Factory/start.sh" 2>/dev/null || true
 chmod +x "$BASE/02_Dashboard_Factory_QA/start.sh" 2>/dev/null || true
-chmod +x "$BASE/03_Jira_Tracker/start.sh" 2>/dev/null || true
 
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   Setup complete!                                ║"
