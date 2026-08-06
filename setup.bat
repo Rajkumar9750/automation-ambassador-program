@@ -118,8 +118,10 @@ exit /b 0
 :: Helper: create venv, recreating if wrong Python version
 :: -------------------------------------------------------
 :make_venv
-set VPATH=%~1
-set VPY=%~2
+set "VPATH=%~1"
+set "VPY=%~2"
+
+rem Already present with correct version — skip creation
 if exist "%VPATH%\Scripts\python.exe" (
     for /f "tokens=2 delims= " %%v in ('"%VPATH%\Scripts\python.exe" --version 2^>^&1') do (
         for /f "tokens=1,2 delims=." %%a in ("%%v") do (
@@ -129,21 +131,23 @@ if exist "%VPATH%\Scripts\python.exe" (
     echo   Wrong Python version in %VPATH% — recreating...
     rmdir /s /q "%VPATH%" 2>nul
 )
-%VPY% -m venv "%VPATH%"
-if not exist "%VPATH%\Scripts\python.exe" (
-    echo   venv failed, trying virtualenv...
-    %VPY% -m pip install --quiet virtualenv
-    %VPY% -m virtualenv "%VPATH%"
-)
-if not exist "%VPATH%\Scripts\python.exe" (
-    echo.
-    echo   ERROR: Could not create venv at %VPATH%
-    echo   Python used: %VPY%
-    echo   Try re-running install.ps1 to fix Python installation.
-    echo.
-    exit /b 1
-)
-exit /b 0
+
+rem Embeddable Python never has the venv module — always use virtualenv
+%VPY% -m pip install --quiet virtualenv
+%VPY% -m virtualenv "%VPATH%"
+
+rem Accept any of: python.exe, python3.exe, python3.11.exe, or pyvenv.cfg
+if exist "%VPATH%\Scripts\python.exe"    exit /b 0
+if exist "%VPATH%\Scripts\python3.exe"   exit /b 0
+if exist "%VPATH%\Scripts\python3.11.exe" exit /b 0
+if exist "%VPATH%\pyvenv.cfg"            exit /b 0
+
+echo.
+echo   ERROR: Could not create venv at %VPATH%
+echo   Python used: %VPY%
+echo   Try re-running install.ps1 to fix Python installation.
+echo.
+exit /b 1
 
 :: -------------------------------------------------------
 :: Helper: find a working Python 3.9-3.11
