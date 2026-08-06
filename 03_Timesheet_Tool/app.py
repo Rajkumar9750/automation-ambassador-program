@@ -1,8 +1,20 @@
 import io
 import os
 import requests
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, make_response
 from timesheet import check_env, fetch_tickets, export_to_excel, export_year_to_excel, get_current_user, JIRA_BASE_URL
+
+XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+def _excel_response(buf, filename):
+    data = buf.getvalue()
+    resp = make_response(data)
+    resp.headers["Content-Type"] = XLSX_MIME
+    resp.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    resp.headers["Content-Length"] = len(data)
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    return resp
 
 app = Flask(__name__)
 
@@ -48,8 +60,7 @@ def export():
     year  = int(data["year"])
     rows  = data["rows"]
     buf, filename = export_to_excel(rows, month, year)
-    return send_file(buf, as_attachment=True, download_name=filename,
-                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return _excel_response(buf, filename)
 
 
 @app.route("/api/generate-year", methods=["POST"])
@@ -76,8 +87,7 @@ def export_year():
     year       = int(data["year"])
     month_data = {int(k): v for k, v in data["monthData"].items()}
     buf, filename = export_year_to_excel(month_data, year)
-    return send_file(buf, as_attachment=True, download_name=filename,
-                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    return _excel_response(buf, filename)
 
 
 if __name__ == "__main__":

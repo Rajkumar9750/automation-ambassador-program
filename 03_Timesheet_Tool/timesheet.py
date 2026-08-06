@@ -377,11 +377,6 @@ def export_to_excel(rows, month, year):
     buf = _io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    # Also save to disk for CLI usage
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-    with open(output_path, "wb") as f:
-        f.write(buf.getvalue())
-    buf.seek(0)
     return buf, filename
 
 
@@ -626,10 +621,6 @@ def export_year_to_excel(month_data: dict, year: int):
     buf = _io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-    with open(output_path, "wb") as f:
-        f.write(buf.getvalue())
-    buf.seek(0)
     return buf, filename
 
 
@@ -663,9 +654,12 @@ def main():
         print("No tickets found for the selected month.")
         return
 
-    _, filename = export_to_excel(rows, month, year)
+    buf, filename = export_to_excel(rows, month, year)
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    with open(output_path, "wb") as f:
+        f.write(buf.getvalue())
     total_days = sum(r["duration"] for r in rows if isinstance(r["duration"], int))
-    print(f"\n  Saved: {filename}")
+    print(f"\n  Saved: {output_path}")
     print(f"  Tickets: {len(rows)}  |  Total days: {total_days}")
 
 
