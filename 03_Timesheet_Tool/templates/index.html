@@ -556,6 +556,28 @@
       flex-shrink: 0;
     }
 
+    /* Year mode: one row per month */
+    .legend-month-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      padding: 5px 0;
+      border-bottom: 1px solid #e2e8e5;
+    }
+    .legend-month-group:last-child { border-bottom: none; }
+
+    .legend-month-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #003f2d;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      min-width: 110px;
+      flex-shrink: 0;
+    }
+
     .legend-item {
       display: inline-flex;
       align-items: center;
@@ -591,6 +613,35 @@
       border-radius: 3px;
       flex-shrink: 0;
       border: 1px solid rgba(0,0,0,0.12);
+    }
+
+    /* ── Legend month groups (full year) ── */
+    .legend-month-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      width: 100%;
+      padding: 4px 0;
+    }
+
+    .legend-month-group + .legend-month-group {
+      border-top: 1px solid #e2e8e5;
+      padding-top: 10px;
+    }
+
+    .legend-month-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #003f2d;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      min-width: 100px;
+      flex-shrink: 0;
+      background: rgba(0,63,45,.06);
+      border: 1px solid rgba(0,63,45,.12);
+      border-radius: 4px;
+      padding: 3px 8px;
     }
 
     /* ── Scope toggle ───────────────────── */
@@ -1311,36 +1362,58 @@
 
     // Legend (same as renderTable)
     const legendBar = document.getElementById('legendBar');
-    legendBar.innerHTML = '<span class="legend-label">Legend</span>';
-    Object.entries(colourMap).forEach(([ticketId, bg]) => {
-      const btn = document.createElement('button');
-      btn.className = 'legend-item';
-      btn.style.background = bg;
-      btn.dataset.ticket = ticketId;
-      btn.innerHTML = `<span class="legend-swatch" style="background:${bg}"></span>${esc(ticketId)}`;
-      btn.addEventListener('click', () => {
-        if (activeFilter === ticketId) {
-          activeFilter = null;
-          tbody.classList.remove('has-filter');
-          tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
-          legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
-          document.getElementById('statTickets').textContent = uniqueTickets;
-          document.getElementById('statDays').textContent    = uniqueDays;
-        } else {
-          activeFilter = ticketId;
-          tbody.classList.add('has-filter');
-          tbody.querySelectorAll('tr').forEach(tr =>
-            tr.classList.toggle('legend-hi', tr.dataset.ticket === ticketId)
-          );
-          legendBar.querySelectorAll('.legend-item').forEach(i =>
-            i.classList.toggle('active', i.dataset.ticket === ticketId)
-          );
-          const filtered = allRows.filter(r => r.ticketId === ticketId);
-          document.getElementById('statTickets').textContent = 1;
-          document.getElementById('statDays').textContent    = countUniqueDays(filtered);
-        }
+    // Group legend by month
+    legendBar.innerHTML = '';
+    Object.keys(monthData).sort((a,b) => +a - +b).forEach(m => {
+      const mRows = monthData[m];
+      if (!mRows || !mRows.length) return;
+      const label = new Date(year, +m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      const group = document.createElement('div');
+      group.className = 'legend-month-group';
+
+      const monthSpan = document.createElement('span');
+      monthSpan.className = 'legend-month-label';
+      monthSpan.textContent = label;
+      group.appendChild(monthSpan);
+
+      const seen = new Set();
+      mRows.forEach(row => {
+        const ticketId = row.ticketId;
+        if (seen.has(ticketId)) return;
+        seen.add(ticketId);
+        const bg = colourMap[ticketId];
+        const btn = document.createElement('button');
+        btn.className = 'legend-item';
+        btn.style.background = bg;
+        btn.dataset.ticket = ticketId;
+        btn.innerHTML = `<span class="legend-swatch" style="background:${bg}"></span>${esc(ticketId)}`;
+        btn.addEventListener('click', () => {
+          if (activeFilter === ticketId) {
+            activeFilter = null;
+            tbody.classList.remove('has-filter');
+            tbody.querySelectorAll('tr').forEach(tr => tr.classList.remove('legend-hi'));
+            legendBar.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('statTickets').textContent = uniqueTickets;
+            document.getElementById('statDays').textContent    = uniqueDays;
+          } else {
+            activeFilter = ticketId;
+            tbody.classList.add('has-filter');
+            tbody.querySelectorAll('tr').forEach(tr =>
+              tr.classList.toggle('legend-hi', tr.dataset.ticket === ticketId)
+            );
+            legendBar.querySelectorAll('.legend-item').forEach(i =>
+              i.classList.toggle('active', i.dataset.ticket === ticketId)
+            );
+            const filtered = allRows.filter(r => r.ticketId === ticketId);
+            document.getElementById('statTickets').textContent = 1;
+            document.getElementById('statDays').textContent    = countUniqueDays(filtered);
+          }
+        });
+        group.appendChild(btn);
       });
-      legendBar.appendChild(btn);
+
+      legendBar.appendChild(group);
     });
   }
 
