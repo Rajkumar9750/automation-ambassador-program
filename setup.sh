@@ -123,6 +123,13 @@ chmod +x "$BASE/Launch Monitor.command" 2>/dev/null || true
 chmod +x "$BASE/01_Dashboard_Factory/start.sh" 2>/dev/null || true
 chmod +x "$BASE/02_Dashboard_Factory_QA/start.sh" 2>/dev/null || true
 
+# Create Timesheet Tool .env if missing
+ENV_FILE="$BASE/03_Timesheet_Tool/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "JIRA_BASE_URL=https://cbremb.atlassian.net" > "$ENV_FILE"
+  echo "  Created 03_Timesheet_Tool/.env"
+fi
+
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   Setup complete!                                ║"
 echo "║   Double-click 'Launch Monitor.command' to go.  ║"
