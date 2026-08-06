@@ -371,8 +371,117 @@ def export_to_excel(rows, month, year):
     ws.auto_filter.ref = f"A1:{get_column_letter(len(columns))}1"
     ws.freeze_panes   = "A2"
 
+    # ── Daily View tab ────────────────────────────────────────
+    _build_daily_sheet(wb, rows, month, year, colour_map, JIRA_BASE_URL)
+
     wb.save(output_path)
     return output_path
+
+
+def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
+    import datetime as dt
+    from calendar import monthrange
+
+    last_day = monthrange(year, month)[1]
+    first    = dt.date(year, month, 1)
+    last     = dt.date(year, month, last_day)
+
+    # Expand each ticket's date range into individual days within the month
+    day_map: dict = {}  # date -> list of row dicts
+    for row in rows:
+        try:
+            start = dt.date.fromisoformat(row["startDate"])
+        except Exception:
+            continue
+        end_raw = row["endDate"]
+        try:
+            end = dt.date.fromisoformat(end_raw)
+        except Exception:
+            end = last  # "In Progress"
+
+        start = max(start, first)
+        end   = min(end,   last)
+        d = start
+        while d <= end:
+            day_map.setdefault(d, []).append(row)
+            d += dt.timedelta(days=1)
+
+    ws = wb.create_sheet(title="Daily View")
+
+    header_font   = Font(bold=True, color="FFFFFF", size=10, name="Calibri")
+    header_fill   = PatternFill(start_color="002147", end_color="002147", fill_type="solid")
+    header_align  = Alignment(horizontal="center", vertical="center")
+    header_border = Border(bottom=Side(style="medium", color="FFFFFF"))
+    data_font     = Font(size=10, name="Calibri", color="1C2536")
+    bold_font     = Font(size=10, name="Calibri", color="1C2536", bold=True)
+    link_font     = Font(size=10, name="Calibri", color="0047AB", underline="single", bold=True)
+    center_align  = Alignment(horizontal="center", vertical="center")
+    left_align    = Alignment(horizontal="left",   vertical="center", wrap_text=True)
+    no_side       = Side(style=None)
+
+    def cell_border(hex_color):
+        return Border(
+            left=Side(style="medium", color=hex_color),
+            right=no_side, top=no_side,
+            bottom=Side(style="thin", color="E5E7EB"),
+        )
+
+    COLUMNS = ["Date", "Ticket ID", "Project Code", "Activity Code", "Summary"]
+    WIDTHS  = [14,     14,          16,              18,              70]
+
+    ws.row_dimensions[1].height = 28
+    for ci, (name, w) in enumerate(zip(COLUMNS, WIDTHS), 1):
+        c = ws.cell(row=1, column=ci, value=name)
+        c.font = header_font; c.fill = header_fill
+        c.alignment = header_align; c.border = header_border
+        ws.column_dimensions[get_column_letter(ci)].width = w
+
+    # Alternating day bands — two shades so adjacent days are visually distinct
+    DAY_BANDS = ["EFF6FF", "F0FDF4"]
+    ri = 2
+    for day in sorted(day_map.keys()):
+        tickets   = day_map[day]
+        band_hex  = DAY_BANDS[day.day % 2]
+        band_fill = PatternFill(start_color=band_hex, end_color=band_hex, fill_type="solid")
+        date_str  = day.strftime("%a, %d %b")
+
+        for i, row in enumerate(tickets):
+            tk_hex  = colour_map[row["ticketId"]]
+            tk_fill = PatternFill(start_color=tk_hex, end_color=tk_hex, fill_type="solid")
+            b       = cell_border(tk_hex)
+
+            # Date cell — show only on first ticket of the day, use day band color
+            date_cell = ws.cell(row=ri, column=1, value=date_str if i == 0 else "")
+            date_cell.font = bold_font; date_cell.fill = band_fill
+            date_cell.alignment = center_align; date_cell.border = b
+
+            # Ticket ID (hyperlink)
+            tc = ws.cell(row=ri, column=2, value=row["ticketId"])
+            tc.hyperlink = f"{jira_base_url}/browse/{row['ticketId']}"
+            tc.font = link_font; tc.fill = tk_fill
+            tc.alignment = center_align; tc.border = b
+
+            # Project Code
+            pc = ws.cell(row=ri, column=3, value=row.get("projectCode", ""))
+            pc.font = data_font; pc.fill = tk_fill
+            pc.alignment = center_align; pc.border = b
+
+            # Activity Code
+            ac = ws.cell(row=ri, column=4, value=row.get("activityCode", ""))
+            ac.font = data_font; ac.fill = tk_fill
+            ac.alignment = center_align; ac.border = b
+
+            # Summary
+            sc = ws.cell(row=ri, column=5, value=row.get("summary", ""))
+            sc.font = data_font; sc.fill = tk_fill
+            sc.alignment = left_align; sc.border = b
+
+            ws.row_dimensions[ri].height = 18
+            ri += 1
+
+    ws.freeze_panes = "A2"
+    if ri > 2:
+        ws.auto_filter.ref = f"A1:E{ri - 1}"
 
 
 MONTH_BAND_COLORS = [
