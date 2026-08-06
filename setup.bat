@@ -130,21 +130,17 @@ if exist "%VPATH%\Scripts\python.exe" (
     rmdir /s /q "%VPATH%" 2>nul
 )
 %VPY% -m venv "%VPATH%"
-if %errorlevel% neq 0 (
+if not exist "%VPATH%\Scripts\python.exe" (
     echo   venv failed, trying virtualenv...
     %VPY% -m pip install --quiet virtualenv
     %VPY% -m virtualenv "%VPATH%"
-    if %errorlevel% neq 0 (
-        echo.
-        echo   ERROR: Could not create venv at %VPATH%
-        echo   Python used: %VPY%
-        echo   Try re-running install.ps1 to fix Python installation.
-        echo.
-        exit /b 1
-    )
 )
 if not exist "%VPATH%\Scripts\python.exe" (
-    echo   ERROR: venv was created but python.exe is missing at %VPATH%\Scripts\python.exe
+    echo.
+    echo   ERROR: Could not create venv at %VPATH%
+    echo   Python used: %VPY%
+    echo   Try re-running install.ps1 to fix Python installation.
+    echo.
     exit /b 1
 )
 exit /b 0
