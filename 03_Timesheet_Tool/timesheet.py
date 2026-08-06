@@ -387,18 +387,16 @@ def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
     last     = dt.date(year, month, last_day)
 
     # Expand each ticket's date range into individual days within the month
-    day_map: dict = {}  # date -> list of row dicts
+    day_map: dict = {}
     for row in rows:
         try:
             start = dt.date.fromisoformat(row["startDate"])
         except Exception:
             continue
-        end_raw = row["endDate"]
         try:
-            end = dt.date.fromisoformat(end_raw)
+            end = dt.date.fromisoformat(row["endDate"])
         except Exception:
-            end = last  # "In Progress"
-
+            end = last
         start = max(start, first)
         end   = min(end,   last)
         d = start
@@ -408,26 +406,24 @@ def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
 
     ws = wb.create_sheet(title="Daily View")
 
+    # ── Styles ───────────────────────────────────────────────
+    thin   = Side(style="thin",   color="D1D5DB")
+    medium = Side(style="medium", color="9CA3AF")
+    full_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
     header_font   = Font(bold=True, color="FFFFFF", size=10, name="Calibri")
     header_fill   = PatternFill(start_color="002147", end_color="002147", fill_type="solid")
     header_align  = Alignment(horizontal="center", vertical="center")
-    header_border = Border(bottom=Side(style="medium", color="FFFFFF"))
+    header_border = Border(left=thin, right=thin, top=thin, bottom=Side(style="medium", color="FFFFFF"))
     data_font     = Font(size=10, name="Calibri", color="1C2536")
     bold_font     = Font(size=10, name="Calibri", color="1C2536", bold=True)
     link_font     = Font(size=10, name="Calibri", color="0047AB", underline="single", bold=True)
     center_align  = Alignment(horizontal="center", vertical="center")
     left_align    = Alignment(horizontal="left",   vertical="center", wrap_text=True)
-    no_side       = Side(style=None)
-
-    def cell_border(hex_color):
-        return Border(
-            left=Side(style="medium", color=hex_color),
-            right=no_side, top=no_side,
-            bottom=Side(style="thin", color="E5E7EB"),
-        )
+    date_align    = Alignment(horizontal="center", vertical="center", wrap_text=False)
 
     COLUMNS = ["Date", "Ticket ID", "Project Code", "Activity Code", "Summary"]
-    WIDTHS  = [14,     14,          16,              18,              70]
+    WIDTHS  = [14,      14,          16,              18,              70]
 
     ws.row_dimensions[1].height = 28
     for ci, (name, w) in enumerate(zip(COLUMNS, WIDTHS), 1):
@@ -436,48 +432,54 @@ def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
         c.alignment = header_align; c.border = header_border
         ws.column_dimensions[get_column_letter(ci)].width = w
 
-    # Alternating day bands — two shades so adjacent days are visually distinct
-    DAY_BANDS = ["EFF6FF", "F0FDF4"]
+    DAY_BANDS = ["EFF6FF", "F0FDF4"]  # alternating blue/green tint per day
     ri = 2
+
     for day in sorted(day_map.keys()):
         tickets   = day_map[day]
+        n         = len(tickets)
         band_hex  = DAY_BANDS[day.day % 2]
         band_fill = PatternFill(start_color=band_hex, end_color=band_hex, fill_type="solid")
         date_str  = day.strftime("%a, %d %b")
+        row_start = ri
 
         for i, row in enumerate(tickets):
             tk_hex  = colour_map[row["ticketId"]]
             tk_fill = PatternFill(start_color=tk_hex, end_color=tk_hex, fill_type="solid")
-            b       = cell_border(tk_hex)
 
-            # Date cell — show only on first ticket of the day, use day band color
-            date_cell = ws.cell(row=ri, column=1, value=date_str if i == 0 else "")
-            date_cell.font = bold_font; date_cell.fill = band_fill
-            date_cell.alignment = center_align; date_cell.border = b
-
-            # Ticket ID (hyperlink)
+            # Ticket ID
             tc = ws.cell(row=ri, column=2, value=row["ticketId"])
             tc.hyperlink = f"{jira_base_url}/browse/{row['ticketId']}"
             tc.font = link_font; tc.fill = tk_fill
-            tc.alignment = center_align; tc.border = b
+            tc.alignment = center_align; tc.border = full_border
 
             # Project Code
             pc = ws.cell(row=ri, column=3, value=row.get("projectCode", ""))
             pc.font = data_font; pc.fill = tk_fill
-            pc.alignment = center_align; pc.border = b
+            pc.alignment = center_align; pc.border = full_border
 
             # Activity Code
             ac = ws.cell(row=ri, column=4, value=row.get("activityCode", ""))
             ac.font = data_font; ac.fill = tk_fill
-            ac.alignment = center_align; ac.border = b
+            ac.alignment = center_align; ac.border = full_border
 
             # Summary
             sc = ws.cell(row=ri, column=5, value=row.get("summary", ""))
             sc.font = data_font; sc.fill = tk_fill
-            sc.alignment = left_align; sc.border = b
+            sc.alignment = left_align; sc.border = full_border
 
             ws.row_dimensions[ri].height = 18
             ri += 1
+
+        # Merge the date cell across all ticket rows for this day
+        if n > 1:
+            ws.merge_cells(start_row=row_start, start_column=1,
+                           end_row=ri - 1,      end_column=1)
+        date_cell = ws.cell(row=row_start, column=1, value=date_str)
+        date_cell.font      = bold_font
+        date_cell.fill      = band_fill
+        date_cell.alignment = date_align
+        date_cell.border    = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     ws.freeze_panes = "A2"
     if ri > 2:
