@@ -1,3 +1,4 @@
+import io
 import os
 import requests
 from flask import Flask, render_template, request, jsonify, send_file
@@ -46,8 +47,9 @@ def export():
     month = int(data["month"])
     year  = int(data["year"])
     rows  = data["rows"]
-    filepath = export_to_excel(rows, month, year)
-    return send_file(filepath, as_attachment=True, download_name=os.path.basename(filepath))
+    buf, filename = export_to_excel(rows, month, year)
+    return send_file(buf, as_attachment=True, download_name=filename,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 @app.route("/api/generate-year", methods=["POST"])
@@ -73,8 +75,9 @@ def export_year():
     data       = request.get_json()
     year       = int(data["year"])
     month_data = {int(k): v for k, v in data["monthData"].items()}
-    filepath   = export_year_to_excel(month_data, year)
-    return send_file(filepath, as_attachment=True, download_name=os.path.basename(filepath))
+    buf, filename = export_year_to_excel(month_data, year)
+    return send_file(buf, as_attachment=True, download_name=filename,
+                     mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 if __name__ == "__main__":

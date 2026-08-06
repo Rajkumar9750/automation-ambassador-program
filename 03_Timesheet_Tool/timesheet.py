@@ -293,9 +293,9 @@ TICKET_PALETTE = [
 
 
 def export_to_excel(rows, month, year):
-    month_str  = datetime(year, month, 1).strftime("%B_%Y")
-    filename   = f"Timesheet_{month_str}.xlsx"
-    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    import io as _io
+    month_str = datetime(year, month, 1).strftime("%B_%Y")
+    filename  = f"Timesheet_{month_str}.xlsx"
 
     # Assign a unique colour to each ticket ID
     colour_map = {}
@@ -374,8 +374,15 @@ def export_to_excel(rows, month, year):
     # ── Daily View tab ────────────────────────────────────────
     _build_daily_sheet(wb, rows, month, year, colour_map, JIRA_BASE_URL)
 
-    wb.save(output_path)
-    return output_path
+    buf = _io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    # Also save to disk for CLI usage
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    with open(output_path, "wb") as f:
+        f.write(buf.getvalue())
+    buf.seek(0)
+    return buf, filename
 
 
 def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
@@ -471,15 +478,22 @@ def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
             ws.row_dimensions[ri].height = 18
             ri += 1
 
-        # Merge the date cell across all ticket rows for this day
+        # Merge the date cell across all ticket rows for this day and set
+        # borders on every cell in the range (openpyxl requirement for merged cells)
+        row_end = ri - 1
         if n > 1:
             ws.merge_cells(start_row=row_start, start_column=1,
-                           end_row=ri - 1,      end_column=1)
+                           end_row=row_end,     end_column=1)
+        for r in range(row_start, row_end + 1):
+            top_side    = thin if r == row_start else Side(style=None)
+            bottom_side = thin if r == row_end   else Side(style=None)
+            ws.cell(row=r, column=1).border = Border(
+                left=thin, right=thin, top=top_side, bottom=bottom_side
+            )
+            ws.cell(row=r, column=1).fill = band_fill
         date_cell = ws.cell(row=row_start, column=1, value=date_str)
         date_cell.font      = bold_font
-        date_cell.fill      = band_fill
         date_cell.alignment = date_align
-        date_cell.border    = Border(left=thin, right=thin, top=thin, bottom=thin)
 
     ws.freeze_panes = "A2"
     if ri > 2:
@@ -607,8 +621,15 @@ def export_year_to_excel(month_data: dict, year: int):
         ws_m.auto_filter.ref = f"A1:{get_column_letter(len(COLS))}1"
         ws_m.freeze_panes = "A2"
 
-    wb.save(output_path)
-    return output_path
+    import io as _io
+    buf = _io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    with open(output_path, "wb") as f:
+        f.write(buf.getvalue())
+    buf.seek(0)
+    return buf, filename
 
 
 def main():
@@ -641,9 +662,9 @@ def main():
         print("No tickets found for the selected month.")
         return
 
-    path = export_to_excel(rows, month, year)
+    _, filename = export_to_excel(rows, month, year)
     total_days = sum(r["duration"] for r in rows if isinstance(r["duration"], int))
-    print(f"\n  Saved: {path}")
+    print(f"\n  Saved: {filename}")
     print(f"  Tickets: {len(rows)}  |  Total days: {total_days}")
 
 
