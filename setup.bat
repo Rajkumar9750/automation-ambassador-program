@@ -79,26 +79,30 @@ echo.
 
 echo [1/4] Setting up Monitor...
 call :make_venv "venv" "%PYTHON%"
-venv\Scripts\pip install -q --upgrade pip 2>nul
-venv\Scripts\pip install -q -r requirements.txt
+if %errorlevel% neq 0 ( echo   FAILED — see above. & pause & exit /b 1 )
+venv\Scripts\pip install --upgrade pip
+venv\Scripts\pip install -r requirements.txt
 echo   Done.
 
 echo [2/4] Setting up Dashboard Factory...
 call :make_venv "01_Dashboard_Factory\venv" "%PYTHON%"
-01_Dashboard_Factory\venv\Scripts\pip install -q --upgrade pip 2>nul
-01_Dashboard_Factory\venv\Scripts\pip install -q -r 01_Dashboard_Factory\requirements.txt
+if %errorlevel% neq 0 ( echo   FAILED — see above. & pause & exit /b 1 )
+01_Dashboard_Factory\venv\Scripts\pip install --upgrade pip
+01_Dashboard_Factory\venv\Scripts\pip install -r 01_Dashboard_Factory\requirements.txt
 echo   Done.
 
 echo [3/4] Setting up Dashboard Factory QA...
 call :make_venv "02_Dashboard_Factory_QA\.venv" "%PYTHON%"
-02_Dashboard_Factory_QA\.venv\Scripts\pip install -q --upgrade pip 2>nul
-02_Dashboard_Factory_QA\.venv\Scripts\pip install -q -r 02_Dashboard_Factory_QA\requirements.txt
+if %errorlevel% neq 0 ( echo   FAILED — see above. & pause & exit /b 1 )
+02_Dashboard_Factory_QA\.venv\Scripts\pip install --upgrade pip
+02_Dashboard_Factory_QA\.venv\Scripts\pip install -r 02_Dashboard_Factory_QA\requirements.txt
 echo   Done.
 
 echo [4/4] Setting up Timesheet Tool...
 call :make_venv "03_Timesheet_Tool\venv" "%PYTHON%"
-03_Timesheet_Tool\venv\Scripts\pip install -q --upgrade pip 2>nul
-03_Timesheet_Tool\venv\Scripts\pip install -q -r 03_Timesheet_Tool\requirements.txt
+if %errorlevel% neq 0 ( echo   FAILED — see above. & pause & exit /b 1 )
+03_Timesheet_Tool\venv\Scripts\pip install --upgrade pip
+03_Timesheet_Tool\venv\Scripts\pip install -r 03_Timesheet_Tool\requirements.txt
 echo   Done.
 
 echo.
@@ -125,10 +129,23 @@ if exist "%VPATH%\Scripts\python.exe" (
     echo   Wrong Python version in %VPATH% — recreating...
     rmdir /s /q "%VPATH%" 2>nul
 )
-%VPY% -m venv "%VPATH%" 2>nul
+%VPY% -m venv "%VPATH%"
 if %errorlevel% neq 0 (
-    %VPY% -m pip install --quiet virtualenv 2>nul
-    %VPY% -m virtualenv "%VPATH%" --quiet
+    echo   venv failed, trying virtualenv...
+    %VPY% -m pip install --quiet virtualenv
+    %VPY% -m virtualenv "%VPATH%"
+    if %errorlevel% neq 0 (
+        echo.
+        echo   ERROR: Could not create venv at %VPATH%
+        echo   Python used: %VPY%
+        echo   Try re-running install.ps1 to fix Python installation.
+        echo.
+        exit /b 1
+    )
+)
+if not exist "%VPATH%\Scripts\python.exe" (
+    echo   ERROR: venv was created but python.exe is missing at %VPATH%\Scripts\python.exe
+    exit /b 1
 )
 exit /b 0
 

@@ -109,6 +109,14 @@ Start-Process -FilePath "cmd.exe" -ArgumentList "/c setup.bat" -Wait -NoNewWindo
 
 Write-Host ""
 
-# ── 4. Launch ───────────────────────────────────────────
+# ── 4. Create .env for Timesheet Tool if missing ────────
+$envFile = "$DEST\03_Timesheet_Tool\.env"
+if (-not (Test-Path $envFile)) {
+    Write-Host "► Creating Timesheet Tool .env..."
+    Set-Content -Path $envFile -Value "JIRA_BASE_URL=https://cbremb.atlassian.net"
+    Write-Host "  ✔ Created $envFile"
+}
+
+# ── 5. Launch ───────────────────────────────────────────
 Write-Host "► Launching Monitor..."
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"Launch Monitor.bat`""
