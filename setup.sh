@@ -21,29 +21,30 @@ python_ok() {
   command -v "$py" &>/dev/null || return 1
   local ver; ver=$("$py" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>/dev/null) || return 1
   local major="${ver%%.*}"; local minor="${ver##*.}"
-  # Accept 3.9, 3.10, 3.11 only — 3.12+ breaks pandas and other dependencies
-  [[ "$major" -eq 3 && "$minor" -ge 9 && "$minor" -le 11 ]]
+  # Accept 3.9+ — all dependencies support 3.12+
+  [[ "$major" -eq 3 && "$minor" -ge 9 ]]
 }
 
 find_python() {
-  # Check all known locations including pyenv (no-admin fallback)
+  # Check all known locations — no-admin paths first
   for p in \
+    "/usr/bin/python3" \
     "$HOME/.pyenv/versions/3.11.9/bin/python3.11" \
+    "/opt/homebrew/opt/python@3.12/bin/python3.12" \
     "/opt/homebrew/opt/python@3.11/bin/python3.11" \
-    "/usr/local/opt/python@3.11/bin/python3.11"; do
+    "/usr/local/opt/python@3.11/bin/python3.11" \
+    "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3" \
+    "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3"; do
     [[ -x "$p" ]] && python_ok "$p" && echo "$p" && return 0
   done
-  for py in python3.11 python3.10 python3.9; do
+  for py in python3.12 python3.11 python3.10 python3.9 python3; do
     python_ok "$py" && echo "$py" && return 0
   done
   return 1
 }
 
 install_python_macos() {
-  echo "  Python $REQUIRED_MAJOR.$REQUIRED_MINOR+ not found. Attempting auto-install..."
-  echo ""
-
-  # Try Homebrew
+  # Try Homebrew if available (no sudo needed if already installed)
   if command -v brew &>/dev/null; then
     echo "  Homebrew found — installing Python 3.11..."
     brew install python@3.11
@@ -51,30 +52,12 @@ install_python_macos() {
     return 0
   fi
 
-  # Try to install Homebrew first
-  echo "  Homebrew not found — installing Homebrew first..."
-  echo "  (You may be prompted for your Mac password)"
-  echo ""
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-  # Add brew to PATH for Apple Silicon
-  if [[ -f /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  fi
-
-  if command -v brew &>/dev/null; then
-    echo ""
-    echo "  Installing Python 3.11 via Homebrew..."
-    brew install python@3.11
-    brew link --overwrite python@3.11 2>/dev/null || true
-    return 0
-  fi
-
   echo ""
   echo "  ╔══════════════════════════════════════════════════╗"
-  echo "  ║  Auto-install failed.                            ║"
-  echo "  ║  Please install Python 3.9+ manually:           ║"
+  echo "  ║  Python 3.9+ not found.                         ║"
+  echo "  ║  Download and install Python (no admin needed): ║"
   echo "  ║  https://www.python.org/downloads/              ║"
+  echo "  ║  Then re-run this setup.                        ║"
   echo "  ╚══════════════════════════════════════════════════╝"
   exit 1
 }
