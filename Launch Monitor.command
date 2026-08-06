@@ -17,9 +17,12 @@ echo "║     Automation Ambassador Program Monitor        ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
-# Run setup if venv missing
-if [ ! -f "venv/bin/python3" ]; then
-  echo "First run — running setup..."
+# Run setup if monitor venv or any tool venv is missing
+if [ ! -f "venv/bin/python3" ] || \
+   [ ! -f "01_Dashboard_Factory/venv/bin/python3" ] || \
+   [ ! -f "02_Dashboard_Factory_QA/.venv/bin/python3" ] || \
+   [ ! -f "03_Timesheet_Tool/venv/bin/python3" ]; then
+  echo "First run (or missing venv) — running setup..."
   bash setup.sh
   echo ""
 fi

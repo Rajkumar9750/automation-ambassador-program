@@ -291,7 +291,8 @@ async def api_start(tool_id: str):
     try:
         proc = subprocess.Popen(tool["cmd"], **popen_kwargs)
     except FileNotFoundError as e:
-        return JSONResponse({"error": f"Could not launch {tool['name']}: {e}. Try re-running install.ps1."}, status_code=500)
+        fix = "install.ps1" if _IS_WIN else "setup.sh"
+        return JSONResponse({"error": f"Could not launch {tool['name']}: {e}. Try re-running {fix}."}, status_code=500)
     PROCS[tool_id] = {"proc": proc, "started_at": time.time(), "log_lines": []}
 
     # Wait before starting capture threads — if the process dies within this window
