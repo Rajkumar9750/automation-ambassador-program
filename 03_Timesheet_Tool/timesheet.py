@@ -328,14 +328,14 @@ def export_to_excel(rows, month, year):
     left_align   = Alignment(horizontal="left",   vertical="center", wrap_text=True)
 
     columns  = ["Ticket ID", "Summary", "Category", "Reporter",
-                "Project Code", "Activity Code", "Due Date",
+                "Project Code", "Activity Code",
                 "Start Date", "End Date", "Days"]
     col_keys = ["ticketId", "summary", "category", "reporter",
-                "projectCode", "activityCode", "dueDate",
+                "projectCode", "activityCode",
                 "startDate", "endDate", "duration"]
 
     # ── Column widths ─────────────────────────────────────────
-    col_widths = [14, 70, 10, 22, 16, 18, 12, 12, 12, 6]
+    col_widths = [14, 70, 10, 22, 16, 18, 12, 12, 6]
     for i, w in enumerate(col_widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
