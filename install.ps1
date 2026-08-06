@@ -10,17 +10,34 @@ Write-Host "|   Automation Ambassador Program - Installer      |"
 Write-Host "+==================================================+"
 Write-Host ""
 
-# ── 1. Python 3.11 ──────────────────────────────────────
+# ── 1. Kill any running instances first (release file locks) ──
+Write-Host "► Stopping any running instances..."
+cmd /c "taskkill /F /IM python.exe /T >nul 2>&1"
+cmd /c "taskkill /F /IM python3.exe /T >nul 2>&1"
+cmd /c "taskkill /F /IM uvicorn.exe /T >nul 2>&1"
+Start-Sleep -Seconds 3
+Write-Host ""
+
+# ── 2. Python 3.11 ──────────────────────────────────────
 # Force Python 3.11 — 3.12+ breaks pandas and other dependencies
 Write-Host "► Ensuring Python 3.11 is installed..."
 
-$pyCheck = & python --version 2>&1
-$needPython = $pyCheck -notmatch "3\.11"
+$pyDir = "$HOME\python311"
+
+# Check embeddable Python first, then fall back to PATH
+$needPython = $true
+if (Test-Path "$pyDir\python.exe") {
+    $pyCheck = & "$pyDir\python.exe" --version 2>&1
+    if ($pyCheck -match "3\.11") { $needPython = $false }
+}
+if ($needPython) {
+    $pyCheck = & python --version 2>&1
+    if ($pyCheck -match "3\.11") { $needPython = $false }
+}
 
 if ($needPython) {
     # Use the embeddable zip — pure zip extract, no installer EXE, no UAC prompt on any machine
     Write-Host "  Downloading Python 3.11 embeddable package (no admin needed)..."
-    $pyDir = "$HOME\python311"
     $pyZip = "$env:TEMP\python311-embed.zip"
     Invoke-WebRequest -UseBasicParsing -Uri "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip" -OutFile $pyZip
     Expand-Archive -Path $pyZip -DestinationPath $pyDir -Force
@@ -40,18 +57,22 @@ if ($needPython) {
     # Embeddable Python has no venv module — install virtualenv as replacement
     Write-Host "  Installing virtualenv..."
     & "$pyDir\python.exe" -m pip install --quiet virtualenv
+} else {
+    Write-Host "  ✔ Python 3.11 already installed — skipping download"
+}
 
-    # Add to user PATH persistently
+# Add embeddable Python to PATH for this session (and persist if not already there)
+if (Test-Path "$pyDir\python.exe") {
     $userPath = [Environment]::GetEnvironmentVariable("Path","User")
     if ($userPath -notlike "*python311*") {
         [Environment]::SetEnvironmentVariable("Path", "$pyDir\Scripts;$pyDir;$userPath", "User")
     }
     $env:Path = "$pyDir\Scripts;$pyDir;$env:Path"
-    Write-Host "  ✔ Python 3.11 ready at $pyDir"
 }
+Write-Host "  ✔ Python 3.11 ready at $pyDir"
 Write-Host ""
 
-# ── 2. Git ──────────────────────────────────────────────
+# ── 3. Git ──────────────────────────────────────────────
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "► Git not found — downloading PortableGit (no admin needed)..."
     $gitVersion  = "2.49.0"
@@ -76,15 +97,6 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 
 Write-Host ""
 
-# ── 3. Kill any running instances (release file locks) ──
-Write-Host "► Stopping any running instances..."
-# Use taskkill — most reliable way to force-kill on Windows
-cmd /c "taskkill /F /IM python.exe /T >nul 2>&1"
-cmd /c "taskkill /F /IM python3.exe /T >nul 2>&1"
-cmd /c "taskkill /F /IM uvicorn.exe /T >nul 2>&1"
-Start-Sleep -Seconds 3
-Write-Host ""
-
 # ── 4. Clone fresh ──────────────────────────────────────
 if (Test-Path $DEST) {
     Write-Host "► Removing existing folder..."
@@ -103,13 +115,13 @@ Set-Location $DEST
 
 Write-Host ""
 
-# ── 3. Setup ────────────────────────────────────────────
+# ── 5. Setup ────────────────────────────────────────────
 Write-Host "► Running setup..."
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c setup.bat" -Wait -NoNewWindow
 
 Write-Host ""
 
-# ── 4. Create .env for Timesheet Tool if missing ────────
+# ── 6. Create .env for Timesheet Tool if missing ────────
 $envFile = "$DEST\03_Timesheet_Tool\.env"
 if (-not (Test-Path $envFile)) {
     Write-Host "► Creating Timesheet Tool .env..."
@@ -117,6 +129,6 @@ if (-not (Test-Path $envFile)) {
     Write-Host "  ✔ Created $envFile"
 }
 
-# ── 5. Launch ───────────────────────────────────────────
+# ── 7. Launch ───────────────────────────────────────────
 Write-Host "► Launching Monitor..."
 Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"Launch Monitor.bat`""
