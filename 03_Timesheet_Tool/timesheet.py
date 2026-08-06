@@ -408,7 +408,8 @@ def _build_daily_sheet(wb, rows, month, year, colour_map, jira_base_url):
         end   = min(end,   last)
         d = start
         while d <= end:
-            day_map.setdefault(d, []).append(row)
+            if d.weekday() < 5:  # 0=Mon … 4=Fri, skip Sat/Sun
+                day_map.setdefault(d, []).append(row)
             d += dt.timedelta(days=1)
 
     ws = wb.create_sheet(title="Daily View")
