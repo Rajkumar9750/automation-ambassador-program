@@ -371,6 +371,34 @@ def export_to_excel(rows, month, year):
     ws.auto_filter.ref = f"A1:{get_column_letter(len(columns))}1"
     ws.freeze_panes   = "A2"
 
+    # ── Unique-days total row ─────────────────────────────────
+    import datetime as _dt
+    unique_days: set = set()
+    for row in rows:
+        try:
+            s = _dt.date.fromisoformat(row["startDate"])
+            e = _dt.date.fromisoformat(row["endDate"])
+        except Exception:
+            continue
+        d = s
+        while d <= e:
+            if d.weekday() < 5:
+                unique_days.add(d)
+            d += _dt.timedelta(days=1)
+    total_row = len(rows) + 2
+    total_fill = PatternFill(start_color="002147", end_color="002147", fill_type="solid")
+    total_font = Font(bold=True, color="FFFFFF", size=10, name="Calibri")
+    total_border = Border(top=Side(style="medium", color="FFFFFF"))
+    ws.row_dimensions[total_row].height = 22
+    for ci in range(1, len(columns) + 1):
+        c = ws.cell(row=total_row, column=ci)
+        c.fill = total_fill; c.border = total_border
+        c.font = total_font
+        c.alignment = Alignment(horizontal="center", vertical="center")
+    ws.cell(row=total_row, column=1).value = "Total Unique Working Days"
+    ws.cell(row=total_row, column=1).alignment = Alignment(horizontal="left", vertical="center")
+    ws.cell(row=total_row, column=len(columns)).value = len(unique_days)
+
     # ── Daily View tab ────────────────────────────────────────
     _build_daily_sheet(wb, rows, month, year, colour_map, JIRA_BASE_URL)
 
@@ -540,10 +568,10 @@ def export_year_to_excel(month_data: dict, year: int):
     left_align    = Alignment(horizontal="left",   vertical="center", wrap_text=True)
 
     COLS      = ["Ticket ID", "Summary", "Category", "Reporter",
-                 "Project Code", "Activity Code", "Due Date", "Start Date", "End Date", "Days"]
+                 "Project Code", "Activity Code", "Start Date", "End Date", "Days"]
     COL_KEYS  = ["ticketId", "summary", "category", "reporter",
-                 "projectCode", "activityCode", "dueDate", "startDate", "endDate", "duration"]
-    COL_W     = [14, 70, 10, 22, 16, 18, 12, 12, 12, 6]
+                 "projectCode", "activityCode", "startDate", "endDate", "duration"]
+    COL_W     = [14, 70, 10, 22, 16, 18, 12, 12, 6]
 
     ALL_COLS  = ["Month"] + COLS
     ALL_KEYS  = ["_month_label"] + COL_KEYS
@@ -567,7 +595,7 @@ def export_year_to_excel(month_data: dict, year: int):
             cell.border = border
             cell.alignment = (
                 center_align if key in ("category", "duration", "startDate",
-                                        "endDate", "dueDate", "_month_label")
+                                        "endDate", "_month_label")
                 else left_align
             )
             if key == "ticketId":
